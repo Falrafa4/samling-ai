@@ -20,12 +20,13 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from app.databases.database import Base
+from app.database.database import Base
 from app.models.zones import Zone
 from app.models.citizen_reports import CitizenReport
 from app.models.route_recommendations import RouteRecommendation
 from app.models.sensor_data import SensorData
 from app.models.volume_predictions import VolumePrediction
+from app.models.drivers import Driver
 
 target_metadata = Base.metadata
 
