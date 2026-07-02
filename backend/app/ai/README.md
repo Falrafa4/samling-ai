@@ -1,0 +1,1 @@
+This folder (ai) contains the AI resources for the Samling project. It is intended to store all AI-related files, including models, scripts and any other necessary resources.
