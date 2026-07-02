@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, Text
 from sqlalchemy.sql import func
-from app.databases.database import Base
+from app.database.database import Base
 
 class RouteRecommendation(Base):
     __tablename__ = "route_recommendations"
