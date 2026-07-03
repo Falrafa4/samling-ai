@@ -1,8 +1,8 @@
-"""initial_migration
+"""initial_migration_fresh
 
-Revision ID: 0f9ca25c77fb
+Revision ID: 85fdb0f2bacc
 Revises: 
-Create Date: 2026-07-02 09:19:03.668985
+Create Date: 2026-07-02 20:02:00.038277
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '0f9ca25c77fb'
+revision: str = '85fdb0f2bacc'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -57,6 +57,20 @@ def upgrade() -> None:
         batch_op.create_index(batch_op.f('ix_citizen_reports_id'), ['id'], unique=False)
         batch_op.create_index(batch_op.f('ix_citizen_reports_whatsapp_number'), ['whatsapp_number'], unique=False)
 
+    op.create_table('drivers',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(), nullable=True),
+    sa.Column('whatsapp_number', sa.String(), nullable=True),
+    sa.Column('zone_id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['zone_id'], ['zones.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('drivers', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_drivers_id'), ['id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_drivers_name'), ['name'], unique=False)
+        batch_op.create_index(batch_op.f('ix_drivers_whatsapp_number'), ['whatsapp_number'], unique=False)
+
     op.create_table('sensor_data',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('zone_id', sa.Integer(), nullable=False),
@@ -76,6 +90,7 @@ def upgrade() -> None:
     sa.Column('zone_id', sa.Integer(), nullable=False),
     sa.Column('predicted_volume', sa.Float(), nullable=True),
     sa.Column('target_time', sa.DateTime(), nullable=True),
+    sa.Column('confidence_score', sa.Float(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['zone_id'], ['zones.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -98,6 +113,12 @@ def downgrade() -> None:
         batch_op.drop_index(batch_op.f('ix_sensor_data_id'))
 
     op.drop_table('sensor_data')
+    with op.batch_alter_table('drivers', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_drivers_whatsapp_number'))
+        batch_op.drop_index(batch_op.f('ix_drivers_name'))
+        batch_op.drop_index(batch_op.f('ix_drivers_id'))
+
+    op.drop_table('drivers')
     with op.batch_alter_table('citizen_reports', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_citizen_reports_whatsapp_number'))
         batch_op.drop_index(batch_op.f('ix_citizen_reports_id'))
