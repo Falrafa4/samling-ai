@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.database.database import Base
 
 class SensorData(Base):
@@ -11,3 +12,5 @@ class SensorData(Base):
     fill_percentage = Column(Float)
     value = Column(Float)
     created_at = Column(DateTime, default=func.now())
+
+    zone = relationship("Zone")
