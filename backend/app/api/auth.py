@@ -4,6 +4,7 @@ from app.database.database import get_db
 from app.models.users import User
 from app.schemas.auth import LoginRequest
 from app.utils.security import verify_password, create_access_token
+from app.utils.response import response_success
 
 router = APIRouter(tags=["authentication"])
 
@@ -24,13 +25,15 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     # Generate JWT Token dengan subject username
     access_token = create_access_token(data={"sub": user.username})
     
-    return {
-        "message": "Login berhasil!",
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "role": user.role
-        }
-    }
+    return response_success(
+        data={
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "role": user.role
+            }
+        },
+        message="Login berhasil!"
+    )

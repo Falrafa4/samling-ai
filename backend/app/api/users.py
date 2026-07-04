@@ -5,10 +5,11 @@ from app.models.users import User
 from app.schemas.users import UserCreate, UserResponse
 from app.utils.security import get_password_hash
 from app.api.deps import get_current_user
+from app.utils.response import response_success
 
 router = APIRouter(tags=["users"])
 
-@router.post("/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/users", status_code=status.HTTP_201_CREATED)
 def create_admin(
     user_data: UserCreate, 
     db: Session = Depends(get_db),
@@ -38,4 +39,6 @@ def create_admin(
     db.commit()
     db.refresh(new_user)
     
-    return new_user
+    # Serialisasi ke Pydantic schema sebelum dibungkus envelope sukses
+    data = UserResponse.model_validate(new_user)
+    return response_success(data=data, message="Admin baru berhasil dibuat.")
