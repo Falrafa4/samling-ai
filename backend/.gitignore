@@ -3,3 +3,7 @@ venv
 .env
 __pycache__
 *.pyc
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
