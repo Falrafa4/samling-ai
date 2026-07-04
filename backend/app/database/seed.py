@@ -8,6 +8,7 @@ from app.database.database import SessionLocal, engine
 from app.models.users import User
 from app.models.zones import Zone
 from app.models.drivers import Driver
+from app.utils.security import get_password_hash
 
 # Anda bisa menggunakan passlib untuk hashing password admin jika sudah ada helper authnya
 # Untuk sementara, ini di-seed dengan text biasa atau placeholder hash
@@ -20,7 +21,7 @@ def seed_data():
         if db.query(User).count() == 0:
             admin_user = User(
                 username="admin_samling",
-                password="supersecurepassword",  # Sebaiknya di-hash di real application
+                password=get_password_hash("supersecurepassword"),
                 role="admin"
             )
             db.add(admin_user)
