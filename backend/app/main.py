@@ -5,7 +5,7 @@ from app.database.database import get_db
 from app.models.users import User
 from app.utils.security import verify_password
 from app.api import zones
-from backend.app.schemas.auth import LoginRequest
+from app.schemas.auth import LoginRequest
 
 app = FastAPI(title="Samling API", version="1.0.0")
 
