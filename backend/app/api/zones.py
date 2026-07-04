@@ -5,7 +5,7 @@ from app.models.zones import Zone
 from app.schemas.zones import ZoneCreate, ZoneUpdate, ZoneResponse
 from app.utils.response import response_success
 
-router = APIRouter()
+router = APIRouter(tags=["zones"])
 
 @router.get("/zones")
 def get_zones(db: Session = Depends(get_db)):

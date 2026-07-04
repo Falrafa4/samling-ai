@@ -10,6 +10,7 @@ from app.models.users import User
 from app.models.zones import Zone
 from app.models.drivers import Driver
 from app.models.sensor_data import SensorData
+from app.models.volume_predictions import VolumePrediction
 from app.utils.security import get_password_hash
 
 def seed_data():
@@ -20,6 +21,7 @@ def seed_data():
         # Bersihkan data lama agar seeder selalu fresh dan tidak memicu constraint/duplikasi
         db.query(Driver).delete()
         db.query(SensorData).delete()
+        db.query(VolumePrediction).delete()
         db.query(Zone).delete()
         db.query(User).delete()
         db.commit()
@@ -35,7 +37,6 @@ def seed_data():
         print("✅ User admin berhasil di-seed.")
 
         # 2. Seed 5 Zones (Wilayah TPS)
-        # Status risiko awal diselaraskan dengan telemetri terakhir yang akan di-seed
         zones_data = [
             Zone(name="TPS 01 - Kebon Jeruk", latitude=-6.1944, longitude=106.7672, risk_status="High Priority"),
             Zone(name="TPS 02 - Grogol", latitude=-6.1566, longitude=106.7892, risk_status="Normal"),
@@ -60,7 +61,7 @@ def seed_data():
 
         # 4. Seed 15 SensorData (Simulasi Telemetri Nyata)
         # Menghasilkan 3 pembacaan historis per zona (total 15 data)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         sensor_data_records = []
 
         # Zone 1 (TPS 01 - Kebon Jeruk) -> Mengisi bertahap hingga High Priority (>80%)
@@ -100,6 +101,53 @@ def seed_data():
 
         db.add_all(sensor_data_records)
         print("✅ Tabel sensor_data (15 data pembacaan simulasi) berhasil di-seed.")
+
+        # 5. Seed 20 VolumePredictions (Proyeksi 4 Hari ke Depan untuk 5 Wilayah)
+        # Menghasilkan 4 hari prediksi ke depan per wilayah (total 20 data)
+        prediction_records = []
+        
+        # Zone 1 -> Tren meningkat tajam
+        prediction_records.extend([
+            VolumePrediction(zone_id=zones_data[0].id, predicted_volume=90.0, target_time=now + timedelta(days=1), confidence_score=0.95),
+            VolumePrediction(zone_id=zones_data[0].id, predicted_volume=95.0, target_time=now + timedelta(days=2), confidence_score=0.90),
+            VolumePrediction(zone_id=zones_data[0].id, predicted_volume=100.0, target_time=now + timedelta(days=3), confidence_score=0.85),
+            VolumePrediction(zone_id=zones_data[0].id, predicted_volume=105.0, target_time=now + timedelta(days=4), confidence_score=0.80),
+        ])
+
+        # Zone 2 -> Tren meningkat lambat (Normal)
+        prediction_records.extend([
+            VolumePrediction(zone_id=zones_data[1].id, predicted_volume=30.0, target_time=now + timedelta(days=1), confidence_score=0.98),
+            VolumePrediction(zone_id=zones_data[1].id, predicted_volume=35.0, target_time=now + timedelta(days=2), confidence_score=0.95),
+            VolumePrediction(zone_id=zones_data[1].id, predicted_volume=40.0, target_time=now + timedelta(days=3), confidence_score=0.92),
+            VolumePrediction(zone_id=zones_data[1].id, predicted_volume=45.0, target_time=now + timedelta(days=4), confidence_score=0.89),
+        ])
+
+        # Zone 3 -> Tren Warning ke High
+        prediction_records.extend([
+            VolumePrediction(zone_id=zones_data[2].id, predicted_volume=70.0, target_time=now + timedelta(days=1), confidence_score=0.94),
+            VolumePrediction(zone_id=zones_data[2].id, predicted_volume=75.0, target_time=now + timedelta(days=2), confidence_score=0.88),
+            VolumePrediction(zone_id=zones_data[2].id, predicted_volume=80.0, target_time=now + timedelta(days=3), confidence_score=0.85),
+            VolumePrediction(zone_id=zones_data[2].id, predicted_volume=85.0, target_time=now + timedelta(days=4), confidence_score=0.80),
+        ])
+
+        # Zone 4 -> Sangat lambat (Sangat aman)
+        prediction_records.extend([
+            VolumePrediction(zone_id=zones_data[3].id, predicted_volume=20.0, target_time=now + timedelta(days=1), confidence_score=0.97),
+            VolumePrediction(zone_id=zones_data[3].id, predicted_volume=25.0, target_time=now + timedelta(days=2), confidence_score=0.94),
+            VolumePrediction(zone_id=zones_data[3].id, predicted_volume=30.0, target_time=now + timedelta(days=3), confidence_score=0.90),
+            VolumePrediction(zone_id=zones_data[3].id, predicted_volume=35.0, target_time=now + timedelta(days=4), confidence_score=0.85),
+        ])
+
+        # Zone 5 -> Tren Warning stabil
+        prediction_records.extend([
+            VolumePrediction(zone_id=zones_data[4].id, predicted_volume=75.0, target_time=now + timedelta(days=1), confidence_score=0.93),
+            VolumePrediction(zone_id=zones_data[4].id, predicted_volume=80.0, target_time=now + timedelta(days=2), confidence_score=0.90),
+            VolumePrediction(zone_id=zones_data[4].id, predicted_volume=85.0, target_time=now + timedelta(days=3), confidence_score=0.86),
+            VolumePrediction(zone_id=zones_data[4].id, predicted_volume=90.0, target_time=now + timedelta(days=4), confidence_score=0.80),
+        ])
+
+        db.add_all(prediction_records)
+        print("✅ Tabel volume_predictions (20 data simulasi proyeksi) berhasil di-seed.")
 
         db.commit()
         print("🎉 Seeding selesai dengan sukses!")
