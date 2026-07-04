@@ -1,11 +1,8 @@
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from app.database.database import get_db
-from app.models.users import User
-from app.utils.security import verify_password
-from app.api import zones
-from app.schemas.auth import LoginRequest
+from app.api.zones import router as zones_router
+from app.api.auth import router as auth_router
+from app.api.users import router as users_router
 
 app = FastAPI(title="Samling API", version="1.0.0")
 
@@ -21,20 +18,7 @@ app.add_middleware(
 def root():
     return {"message": "Welcome to Samling API!"}
 
-@app.post("/login")
-def login(data: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == data.username).first()
-
-    if not user or not verify_password(data.password, user.password):
-        raise HTTPException(
-            status_code=401, 
-            detail="Username atau password salah."
-        )
-    
-    return {
-        "message": "Login berhasil!",
-        "user_id": user.id,
-        "role": user.role
-    }
-
-app.include_router(zones.router)
+# Register all API routes under the /api/v1 prefix
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(users_router, prefix="/api/v1")
+app.include_router(zones_router, prefix="/api/v1")
