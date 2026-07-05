@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
+from typing import Optional
+from app.schemas.drivers import DriverResponse
 
 class RouteRecommendationCreate(BaseModel):
     driver_id: int
@@ -12,6 +14,7 @@ class RouteRecommendationResponse(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
+    driver: Optional[DriverResponse] = None
 
     class Config:
         from_attributes = True

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 import json
 
 from app.database.database import get_db
@@ -59,7 +59,15 @@ def create_route_recommendation(route_in: RouteRecommendationCreate, db: Session
     db.commit()
     db.refresh(new_route)
 
-    data = RouteRecommendationResponse.model_validate(new_route)
+    # Reload dengan driver ter-eager load untuk serialisasi relasi
+    new_route_loaded = (
+        db.query(RouteRecommendation)
+        .options(joinedload(RouteRecommendation.driver))
+        .filter(RouteRecommendation.id == new_route.id)
+        .first()
+    )
+
+    data = RouteRecommendationResponse.model_validate(new_route_loaded)
     return response_success(data=data, message="Rekomendasi rute baru berhasil disimpan.")
 
 @router.get("/route-recommendations/latest")
@@ -67,7 +75,12 @@ def get_latest_route_recommendation(db: Session = Depends(get_db)):
     """
     Mengambil Rute Optimal Terkini secara global (Memerlukan Autentikasi).
     """
-    route = db.query(RouteRecommendation).order_by(RouteRecommendation.created_at.desc()).first()
+    route = (
+        db.query(RouteRecommendation)
+        .options(joinedload(RouteRecommendation.driver))
+        .order_by(RouteRecommendation.created_at.desc())
+        .first()
+    )
     if not route:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
