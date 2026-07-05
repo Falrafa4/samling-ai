@@ -9,7 +9,7 @@ class CitizenReport(Base):
     id = Column(Integer, primary_key=True, index=True)
     whatsapp_number = Column(String, index=True)
     report_content = Column(String)
-    zone_id = Column(Integer, ForeignKey("zones.id"), nullable=True)
+    zone_id = Column(Integer, ForeignKey("zones.id"), nullable=False)
     status = Column(String, default="Baru", index=True)  # Pilihan: Baru, Sedang Ditangani, Selesai
     is_grouped = Column(Boolean, default=False)
     created_at = Column(DateTime, default=func.now())

@@ -181,15 +181,53 @@ def delete_citizen_report(
 def whatsapp_webhook(webhook_in: WhatsAppWebhookInput, db: Session = Depends(get_db)):
     """
     WhatsApp Chatbot Webhook (Endpoint Publik untuk Twilio/Chatbot Gateway).
-    Menyimpan pesan aduan warga langsung ke citizen_reports tanpa zone_id awal.
+    Menyimpan pesan aduan warga langsung ke citizen_reports dengan zone_id dan deteksi duplikasi dalam 12 jam terakhir.
     """
+    # 1. Validasi zone_id ada di database
+    zone = db.query(Zone).filter(Zone.id == webhook_in.zone_id).first()
+    if not zone:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Zone dengan ID {webhook_in.zone_id} tidak terdaftar di sistem."
+        )
+
+    # 2. Ambil laporan di zona yang sama dalam 12 jam terakhir
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    twelve_hours_ago = now - timedelta(hours=12)
+    
+    previous_reports = (
+        db.query(CitizenReport)
+        .filter(
+            CitizenReport.zone_id == webhook_in.zone_id,
+            CitizenReport.created_at >= twelve_hours_ago
+        )
+        .all()
+    )
+
+    # 3. Hitung kemiripan teks menggunakan SequenceMatcher
+    is_duplicate = False
+    matching_reports = []
+    
+    for r in previous_reports:
+        ratio = SequenceMatcher(None, r.report_content.strip().lower(), webhook_in.report_content.strip().lower()).ratio()
+        if ratio > 0.60:
+            is_duplicate = True
+            matching_reports.append(r)
+
+    # 4. Simpan aduan baru
     new_report = CitizenReport(
         whatsapp_number=webhook_in.whatsapp_number,
         report_content=webhook_in.report_content,
-        zone_id=None,
+        zone_id=webhook_in.zone_id,
         status="Baru",
-        is_grouped=False
+        is_grouped=is_duplicate
     )
     db.add(new_report)
+
+    # 5. Jika terdeteksi duplikat, set is_grouped = True pada laporan pembanding sebelumnya
+    if is_duplicate:
+        for r in matching_reports:
+            r.is_grouped = True
+
     db.commit()
     return {"status": "success", "message": "Report saved"}
