@@ -91,6 +91,44 @@ export const api = {
   },
 
   /**
+   * Membuat wilayah TPS baru.
+   * Endpoint: POST /zones
+   */
+  async createZone(data) {
+    return fetchWithAuth('/zones', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Memperbarui data wilayah TPS.
+   * Endpoint: PUT /zones/{zone_id}
+   */
+  async updateZone(zoneId, data) {
+    return fetchWithAuth(`/zones/${zoneId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Menghapus wilayah TPS berdasarkan ID.
+   * Endpoint: DELETE /zones/{zone_id}
+   */
+  async deleteZone(zoneId) {
+    return fetchWithAuth(`/zones/${zoneId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /**
    * Mengambil seluruh daftar driver aktif.
    * Endpoint: GET /drivers
    */

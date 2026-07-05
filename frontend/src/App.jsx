@@ -9,6 +9,7 @@ import Overview from './pages/Overview';
 import PredictiveMap from './pages/PredictiveMap';
 import FleetDispatch from './pages/FleetDispatch';
 import CitizenReports from './pages/CitizenReports';
+import Zones from './pages/Zones';
 
 // Layout
 import AdminLayout from './components/layout/AdminLayout';
@@ -60,6 +61,7 @@ export default function App() {
             <Route path="map" element={<PredictiveMap />} />
             <Route path="fleet" element={<FleetDispatch />} />
             <Route path="reports" element={<CitizenReports />} />
+            <Route path="zones" element={<Zones />} />
           </Route>
 
           {/* Fallback Redirect */}

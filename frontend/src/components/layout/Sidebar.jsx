@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router';
 import { useLocalStorage } from 'react-use';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -7,18 +8,22 @@ import {
   faMap,
   faTruck,
   faCommentDots,
+  faLocationDot,
   faRightFromBracket
 } from '@fortawesome/free-solid-svg-icons';
+import ConfirmModal from '../fragments/ConfirmModal';
 
 export default function Sidebar() {
   const [, setAdminToken] = useLocalStorage('admin_token', null);
   const [adminUser] = useLocalStorage('admin_user', null);
   const navigate = useNavigate();
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   const handleLogout = () => {
     setAdminToken(null);
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
+    setLogoutConfirmOpen(false);
     navigate('/login');
   };
 
@@ -27,6 +32,7 @@ export default function Sidebar() {
     { path: '/admin/map', label: 'Peta Pemantauan', icon: faMap },
     { path: '/admin/fleet', label: 'Manajemen Rute', icon: faTruck },
     { path: '/admin/reports', label: 'Laporan Warga', icon: faCommentDots },
+    { path: '/admin/zones', label: 'Kelola Wilayah', icon: faLocationDot },
   ];
 
   return (
@@ -35,8 +41,12 @@ export default function Sidebar() {
       <div className="p-6 border-b border-slate-800 flex items-center gap-3">
         <FontAwesomeIcon icon={faLeaf} className="text-emerald-500 text-2xl" />
         <div>
-          <h1 className="font-bold text-lg leading-none text-emerald-500">Samling AI</h1>
-          <span className="text-[10px] text-slate-400 font-medium">ADMIN DASHBOARD</span>
+          <h1 className="font-bold text-lg leading-none text-emerald-500">
+            Samling AI
+          </h1>
+          <span className="text-[10px] text-slate-400 font-medium">
+            ADMIN DASHBOARD
+          </span>
         </div>
       </div>
 
@@ -49,8 +59,8 @@ export default function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-4 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-900/30'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/30"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
               }`
             }
           >
@@ -64,25 +74,40 @@ export default function Sidebar() {
       <div className="p-4 border-t border-slate-800 bg-slate-950/40">
         <div className="flex items-center gap-3 px-2 py-2 mb-3">
           <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center font-bold text-emerald-400">
-            {adminUser?.username?.[0]?.toUpperCase() || 'A'}
+            {adminUser?.username?.[0]?.toUpperCase() || "A"}
           </div>
           <div className="overflow-hidden">
             <p className="text-xs font-semibold text-slate-200 truncate leading-none mb-1">
-              {adminUser?.username || 'Administrator'}
+              {adminUser?.username || "Administrator"}
             </p>
             <span className="text-[10px] text-slate-400 capitalize">
-              {adminUser?.role || 'Admin'}
+              {adminUser?.role || "Admin"}
             </span>
           </div>
         </div>
         <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors duration-200 text-left"
+          onClick={() => setLogoutConfirmOpen(true)}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors duration-200 text-left cursor-pointer"
         >
-          <FontAwesomeIcon icon={faRightFromBracket} className="w-4 text-center" />
+          <FontAwesomeIcon
+            icon={faRightFromBracket}
+            className="w-4 text-center"
+          />
           <span>Keluar Aplikasi</span>
         </button>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        isOpen={logoutConfirmOpen}
+        onClose={() => setLogoutConfirmOpen(false)}
+        onConfirm={handleLogout}
+        title="Keluar Aplikasi?"
+        message="Apakah Anda yakin ingin keluar dari Dashboard Admin Samling AI? Anda perlu masuk kembali untuk mengakses data pemantauan sampah."
+        confirmText="Keluar Sekarang"
+        confirmBgColorClass="bg-red-600 hover:bg-red-500"
+        icon={faRightFromBracket}
+      />
     </aside>
   );
 }
