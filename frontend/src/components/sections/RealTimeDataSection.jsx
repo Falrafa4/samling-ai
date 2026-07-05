@@ -1,0 +1,233 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrashAlt, faTruck, faWind, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import { useState, useEffect, useRef } from 'react';
+
+// Smooth counting up animation for numbers as they enter viewport
+function CountUp({ target, duration = 1200, formatter = (v) => Math.floor(v).toLocaleString('id-ID') }) {
+  const [count, setCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const elementRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (elementRef.current) {
+      observer.observe(elementRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    let startTimestamp = null;
+    let animationFrameId = null;
+
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      
+      // Easing function: easeOutQuad
+      const easeProgress = progress * (2 - progress);
+      
+      setCount(easeProgress * target);
+
+      if (progress < 1) {
+        animationFrameId = window.requestAnimationFrame(step);
+      }
+    };
+
+    animationFrameId = window.requestAnimationFrame(step);
+
+    return () => {
+      if (animationFrameId) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [isVisible, target, duration]);
+
+  return <span ref={elementRef}>{formatter(count)}</span>;
+}
+
+// Sub-component to animate digits as they change
+function AnimatedDigit({ value, label }) {
+  return (
+    <div className="flex flex-col items-center bg-white/10 px-4 py-3 rounded-xl min-w-[70px] backdrop-blur-sm border border-white/10 relative overflow-hidden group hover:bg-white/15 transition-colors">
+      <div className="overflow-hidden h-8 md:h-10 flex items-center justify-center">
+        <span
+          key={value}
+          className="inline-block text-2xl md:text-3xl font-extrabold text-white select-none animate-[slideDown_0.25s_cubic-bezier(0.16,1,0.3,1)_forwards]"
+        >
+          {String(value).padStart(2, '0')}
+        </span>
+      </div>
+      <span className="text-[10px] md:text-xs font-semibold text-white/80 mt-1 uppercase tracking-wider">{label}</span>
+    </div>
+  );
+}
+
+export default function RealTimeDataSection() {
+  const [countdown, setCountdown] = useState({ days: 5, hours: 12, minutes: 30, seconds: 0 });
+
+  // Ticking countdown effect (every second)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        let { days, hours, minutes, seconds } = prev;
+        if (seconds > 0) {
+          seconds--;
+        } else {
+          seconds = 59;
+          if (minutes > 0) {
+            minutes--;
+          } else {
+            minutes = 59;
+            if (hours > 0) {
+              hours--;
+            } else {
+              hours = 23;
+              if (days > 0) {
+                days--;
+              } else {
+                // Countdown reached 0, reset to dummy target
+                return { days: 5, hours: 12, minutes: 30, seconds: 0 };
+              }
+            }
+          }
+        }
+        return { days, hours, minutes, seconds };
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <section id="data" className="py-24 bg-neutral-secondary-medium">
+      {/* Animation Styles */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes slideDown {
+          0% { transform: translateY(-50%); opacity: 0; filter: blur(2px); }
+          100% { transform: translateY(0); opacity: 1; filter: blur(0); }
+        }
+      `}} />
+
+      <div className="container mx-auto px-6 max-w-7xl">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-heading">Informasi Real-Time & Prediksi Berbasis AI</h2>
+          <p className="text-body text-lg">
+            Update kapasitas TPST Bantar Gebang, kualitas udara (ISPU), serta deteksi dini lonjakan event terdekat.
+          </p>
+        </div>
+
+        {/* AI Predictive Event Card (The new recommendation from PRD) */}
+        <div className="mb-12">
+          <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 rounded-2xl p-8 md:p-10 shadow-lg text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-64 h-64 bg-white opacity-10 rounded-full blur-2xl"></div>
+            
+            <div className="relative z-10 flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="bg-white/20 p-2 rounded-lg">
+                  <FontAwesomeIcon icon={faCalendarAlt} className="text-white" />
+                </div>
+                <span className="uppercase tracking-wider font-bold text-sm text-white/90">AI Predictive Alert</span>
+              </div>
+              <h3 className="text-2xl font-bold mb-2 text-white">Prediksi Lonjakan Sampah Event Terdekat: <br/><span className="text-amber-200 font-extrabold">Hari Raya Lebaran</span></h3>
+              <p className="text-white/90">Estimasi kenaikan <span className="font-bold text-amber-200 bg-amber-400/15 border border-amber-400/20 px-2 py-0.5 rounded shadow-sm backdrop-blur-sm">+15% Volume Sampah</span>. Armada tambahan disiagakan.</p>
+            </div>
+            
+            <div className="relative z-10 bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-6 text-center min-w-[320px]">
+              <div className="text-sm font-medium mb-3 text-white/95">Waktu menuju Event:</div>
+              <div className="flex justify-center items-center gap-2 md:gap-3">
+                <AnimatedDigit value={countdown.days} label="Hari" />
+                <span className="text-xl md:text-2xl font-bold text-white/70 select-none">:</span>
+                <AnimatedDigit value={countdown.hours} label="Jam" />
+                <span className="text-xl md:text-2xl font-bold text-white/70 select-none">:</span>
+                <AnimatedDigit value={countdown.minutes} label="Menit" />
+                <span className="text-xl md:text-2xl font-bold text-white/70 select-none">:</span>
+                <AnimatedDigit value={countdown.seconds} label="Detik" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 4 Data Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          
+          {/* Card 1: Sampah Masuk */}
+          <div className="bg-white rounded-2xl p-6 shadow-soft border border-orange-100 border-t-4 border-t-orange-500 hover:shadow-lg transition-shadow">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center text-xl">
+                <FontAwesomeIcon icon={faTrashAlt} />
+              </div>
+              <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Hari Ini</span>
+            </div>
+            <h4 className="text-gray-500 text-sm font-bold mb-1">Volume Sampah (TPST)</h4>
+            <div className="text-3xl font-bold text-heading"><CountUp target={7421} /> <span className="text-lg font-normal text-gray-500">Ton</span></div>
+            <div className="text-xs text-red-500 mt-2 font-medium flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+              +2.4% dari kemarin
+            </div>
+          </div>
+
+          {/* Card 2: Truk Masuk */}
+          <div className="bg-white rounded-2xl p-6 shadow-soft border border-yellow-100 border-t-4 border-t-yellow-400 hover:shadow-lg transition-shadow">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-xl flex items-center justify-center text-xl">
+                <FontAwesomeIcon icon={faTruck} />
+              </div>
+              <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Hari Ini</span>
+            </div>
+            <h4 className="text-gray-500 text-sm font-bold mb-1">Total Truk Beroperasi</h4>
+            <div className="text-3xl font-bold text-heading"><CountUp target={695} /> <span className="text-lg font-normal text-gray-500">Unit</span></div>
+            <div className="text-xs text-green-500 mt-2 font-medium flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+              -1.2% dari kemarin
+            </div>
+          </div>
+
+          {/* Card 3: Kualitas Udara Terbaik */}
+          <div className="bg-white rounded-2xl p-6 shadow-soft border border-green-100 border-t-4 border-t-green-500 hover:shadow-lg transition-shadow">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center text-xl">
+                <FontAwesomeIcon icon={faWind} />
+              </div>
+              <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Live ISPU</span>
+            </div>
+            <h4 className="text-gray-500 text-sm font-bold mb-1">Udara Terbaik (ISPU)</h4>
+            <div className="text-3xl font-bold text-heading text-green-500"><CountUp target={42} /> <span className="text-lg font-normal text-gray-500">/ Baik</span></div>
+            <div className="text-xs text-gray-600 mt-2 font-medium">
+              📍 Jakarta Selatan (Jagakarsa)
+            </div>
+          </div>
+
+          {/* Card 4: Kualitas Udara Terburuk */}
+          <div className="bg-white rounded-2xl p-6 shadow-soft border border-red-100 border-t-4 border-t-red-500 hover:shadow-lg transition-shadow">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center text-xl">
+                <FontAwesomeIcon icon={faWind} />
+              </div>
+              <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Live ISPU</span>
+            </div>
+            <h4 className="text-gray-500 text-sm font-bold mb-1">Udara Terburuk (ISPU)</h4>
+            <div className="text-3xl font-bold text-heading text-red-500"><CountUp target={115} /> <span className="text-lg font-normal text-gray-500">/ Tidak Sehat</span></div>
+            <div className="text-xs text-gray-600 mt-2 font-medium">
+              📍 Jakarta Timur (Cipayung)
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+}
