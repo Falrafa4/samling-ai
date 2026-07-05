@@ -14,6 +14,7 @@ import Zones from './pages/Zones';
 // Layout
 import AdminLayout from './components/layout/AdminLayout';
 import './App.css';
+import LandingPage from './pages/LandingPage';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -41,8 +42,8 @@ export default function App() {
       {/* Global Splash Screen Overlay */}
       {showSplash && (
         <div
-          className={`fixed inset-0 z-50 transition-opacity duration-500 ease-out ${
-            isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          className={`fixed inset-0 z-100 transition-opacity duration-500 ease-out ${
+            isFading ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
         >
           <Splash />
@@ -51,6 +52,9 @@ export default function App() {
 
       <BrowserRouter>
         <Routes>
+          {/* Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+
           {/* Auth Route */}
           <Route path="/login" element={<Login />} />
 
@@ -65,7 +69,6 @@ export default function App() {
           </Route>
 
           {/* Fallback Redirect */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
