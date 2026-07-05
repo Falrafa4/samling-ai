@@ -68,7 +68,7 @@ export const api = {
     }));
 
     if (!response.ok) {
-      throw new Error(result.message || 'Email/Katasandi admin salah.');
+      throw new Error(result.message || 'Username atau Password admin salah.');
     }
 
     return result;

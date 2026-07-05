@@ -11,9 +11,11 @@ import {
   faTruckLoading,
   faCheck,
   faTimes,
+  faTriangleExclamation
 } from "@fortawesome/free-solid-svg-icons";
 import LeafletMap from "../components/LeafletMap";
 import { api } from "../services/api";
+import ConfirmModal from "../components/fragments/ConfirmModal";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -23,6 +25,7 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shake, setShake] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
 
   // Cooldown & Toast State for Lapor Angkut
   const [cooldownTime, setCooldownTime] = useState(0); // in seconds
@@ -120,7 +123,7 @@ export default function Login() {
     const trimmedPass = passwordInput.trim();
 
     if (!trimmedUser || !trimmedPass) {
-      setErrorMessage("Harap masukkan Email dan Katasandi.");
+      setErrorMessage("Harap masukkan username dan password.");
       setShake(true);
       setIsSubmitting(false);
       return;
@@ -146,7 +149,7 @@ export default function Login() {
         setIsSubmitting(false);
       }
     } catch (error) {
-      setErrorMessage(error.message || "Email atau Katasandi admin salah.");
+      setErrorMessage(error.message || "Username atau Password admin salah.");
       setShake(true);
       setIsSubmitting(false);
     }
@@ -320,7 +323,7 @@ export default function Login() {
               {/* Username Input */}
               <div className="mb-5">
                 <label className="block text-gray-750 dark:text-gray-300 text-sm font-medium mb-2 ml-1">
-                  Email / Username
+                  Username
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-3.5 text-gray-400">
@@ -330,7 +333,7 @@ export default function Login() {
                     type="text"
                     value={usernameInput}
                     onChange={(e) => setUsernameInput(e.target.value)}
-                    placeholder="Masukkan ID Petugas"
+                    placeholder="Masukkan username"
                     className="w-full bg-gray-50 dark:bg-slate-700 border border-gray-250 dark:border-slate-600 px-4 py-3 pl-11 rounded-xl focus:border-brand dark:focus:border-emerald-400 focus:ring-1 focus:ring-brand dark:focus:ring-emerald-400 outline-none text-gray-900 dark:text-white transition-colors"
                   />
                 </div>
@@ -339,7 +342,7 @@ export default function Login() {
               {/* Password Input */}
               <div className="mb-2">
                 <label className="block text-gray-755 dark:text-gray-300 text-sm font-medium mb-2 ml-1">
-                  Katasandi (Gunakan sandi "1")
+                  Password
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-3.5 text-gray-400">
@@ -380,6 +383,10 @@ export default function Login() {
                 </label>
                 <a
                   href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setForgotPasswordOpen(true);
+                  }}
                   className="text-brand dark:text-emerald-400 hover:underline font-medium"
                 >
                   Lupa Password?
@@ -398,6 +405,19 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      {/* Lupa Password Info Modal */}
+      <ConfirmModal
+        isOpen={forgotPasswordOpen}
+        onClose={() => setForgotPasswordOpen(false)}
+        onConfirm={() => setForgotPasswordOpen(false)}
+        title="Lupa Password Admin?"
+        message="Akun ini terdaftar sebagai Administrator Utama. Demi keamanan sistem, pemulihan password secara otomatis dinonaktifkan. Silakan hubungi pengembang utama (Developer Utama) Samling AI melalui IT Support Pusat untuk melakukan reset password."
+        confirmText="Saya Mengerti"
+        confirmBgColorClass="bg-emerald-600 hover:bg-emerald-500 focus:ring-emerald-500"
+        icon={faTriangleExclamation}
+        showCancel={false}
+      />
     </div>
   );
 }
