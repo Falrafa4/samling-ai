@@ -26,7 +26,7 @@ from app.models.citizen_reports import CitizenReport
 from app.models.route_recommendations import RouteRecommendation
 from app.models.sensor_data import SensorData
 from app.models.volume_predictions import VolumePrediction
-from app.models.drivers import Driver
+from app.models.users import User
 
 target_metadata = Base.metadata
 
