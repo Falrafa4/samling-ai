@@ -18,3 +18,6 @@ class RouteRecommendationResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class RouteStatusUpdate(BaseModel):
+    status: str = Field(..., description="Pilihan: Pending, In Progress, Completed")

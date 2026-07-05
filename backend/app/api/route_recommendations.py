@@ -6,7 +6,7 @@ from app.database.database import get_db
 from app.models.route_recommendations import RouteRecommendation
 from app.models.users import User
 from app.models.zones import Zone
-from app.schemas.route_recommendations import RouteRecommendationCreate, RouteRecommendationResponse
+from app.schemas.route_recommendations import RouteRecommendationCreate, RouteRecommendationResponse, RouteStatusUpdate
 from app.api.deps import get_current_user
 from app.utils.response import response_success
 
@@ -178,3 +178,74 @@ def dispatch_route_recommendation(driver_id: int, db: Session = Depends(get_db))
         data=dispatch_data,
         message=f"Manifes rute berhasil dikirim ke WhatsApp Supir {driver.name}."
     )
+
+@router.get("/route-recommendations/driver/{driver_id}")
+def get_driver_route_recommendations(driver_id: int, db: Session = Depends(get_db)):
+    """
+    Mengambil rute rekomendasi milik supir tertentu (Aplikasi Driver).
+    Hanya rute dengan status 'Pending' atau 'In Progress'.
+    """
+    # 1. Validasi driver terdaftar sebagai supir
+    driver = db.query(User).filter(User.id == driver_id, User.role == "driver").first()
+    if not driver:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Driver tidak ditemukan."
+        )
+
+    # 2. Query rute Pending/In Progress
+    routes = (
+        db.query(RouteRecommendation)
+        .options(joinedload(RouteRecommendation.driver))
+        .filter(
+            RouteRecommendation.driver_id == driver_id,
+            RouteRecommendation.status.in_(["Pending", "In Progress"])
+        )
+        .order_by(RouteRecommendation.created_at.desc())
+        .all()
+    )
+
+    data = [RouteRecommendationResponse.model_validate(r) for r in routes]
+    return response_success(data=data, message="Daftar rute driver berhasil diambil.")
+
+@router.put("/route-recommendations/{id}/status")
+def update_route_status(id: int, status_in: RouteStatusUpdate, db: Session = Depends(get_db)):
+    """
+    Memperbarui status rute rekomendasi (Aplikasi Driver).
+    Menerima status baru (Pending, In Progress, Completed).
+    """
+    route = db.query(RouteRecommendation).filter(RouteRecommendation.id == id).first()
+    if not route:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Rekomendasi rute tidak ditemukan."
+        )
+
+    allowed_statuses = ["Pending", "In Progress", "Completed"]
+    if status_in.status not in allowed_statuses:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Status tidak valid. Harus salah satu dari: {', '.join(allowed_statuses)}"
+        )
+
+    # Update status rute
+    route.status = status_in.status
+
+    # Jika diselesaikan, kembalikan ketersediaan driver menjadi 'Available'
+    if status_in.status == "Completed":
+        driver = db.query(User).filter(User.id == route.driver_id).first()
+        if driver:
+            driver.status = "Available"
+
+    db.commit()
+    
+    # Reload dengan driver ter-eager load
+    route_loaded = (
+        db.query(RouteRecommendation)
+        .options(joinedload(RouteRecommendation.driver))
+        .filter(RouteRecommendation.id == id)
+        .first()
+    )
+
+    data = RouteRecommendationResponse.model_validate(route_loaded)
+    return response_success(data=data, message="Status rute berhasil diperbarui.")

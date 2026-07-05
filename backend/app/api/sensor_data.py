@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from typing import List
+from datetime import datetime, timedelta, timezone
 
 from app.database.database import get_db
 from app.models.sensor_data import SensorData
@@ -17,7 +18,7 @@ def create_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(g
     """
     Kirim Data Sensor Baru (Endpoint Publik untuk IoT Device).
     Secara dinamis memperbarui risk_status dari wilayah terkait berdasarkan fill_percentage:
-    - _> 80% -> High Priority
+    - > 80% -> High Priority
     - 50% - 80% -> Warning
     - < 50% -> Normal
     """
@@ -74,3 +75,34 @@ def get_latest_sensor_data(db: Session = Depends(get_db), current_user = Depends
 
     data = [SensorDataResponse.model_validate(record) for record in latest_records]
     return response_success(data=data, message="Data sensor terbaru per wilayah berhasil diambil.")
+
+@router.get("/sensor-data/history")
+def get_sensor_data_history(zone_id: int, days: int = 7, db: Session = Depends(get_db)):
+    """
+    Mengambil data sensor historis untuk wilayah tertentu (AI Forecasting).
+    """
+    # 1. Validasi zone_id ada di database
+    zone = db.query(Zone).filter(Zone.id == zone_id).first()
+    if not zone:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Zone dengan ID {zone_id} tidak ditemukan."
+        )
+
+    # 2. Filter rentang waktu ke belakang (UTC naive datetime untuk SQLite)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    start_date = now - timedelta(days=days)
+
+    history = (
+        db.query(SensorData)
+        .options(joinedload(SensorData.zone))
+        .filter(
+            SensorData.zone_id == zone_id,
+            SensorData.created_at >= start_date
+        )
+        .order_by(SensorData.created_at.asc())
+        .all()
+    )
+
+    data = [SensorDataResponse.model_validate(record) for record in history]
+    return response_success(data=data, message="Data historis sensor berhasil diambil.")

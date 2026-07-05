@@ -7,7 +7,7 @@ from difflib import SequenceMatcher
 from app.database.database import get_db
 from app.models.citizen_reports import CitizenReport
 from app.models.zones import Zone
-from app.schemas.citizen_reports import CitizenReportCreate, CitizenReportUpdate, CitizenReportResponse
+from app.schemas.citizen_reports import CitizenReportCreate, CitizenReportUpdate, CitizenReportResponse, WhatsAppWebhookInput
 from app.api.deps import get_current_user
 from app.utils.response import response_success
 
@@ -176,3 +176,20 @@ def delete_citizen_report(
     db.delete(report)
     db.commit()
     return response_success(message="Laporan aduan warga berhasil dihapus.")
+
+@router.post("/webhook/whatsapp", status_code=status.HTTP_201_CREATED)
+def whatsapp_webhook(webhook_in: WhatsAppWebhookInput, db: Session = Depends(get_db)):
+    """
+    WhatsApp Chatbot Webhook (Endpoint Publik untuk Twilio/Chatbot Gateway).
+    Menyimpan pesan aduan warga langsung ke citizen_reports tanpa zone_id awal.
+    """
+    new_report = CitizenReport(
+        whatsapp_number=webhook_in.whatsapp_number,
+        report_content=webhook_in.report_content,
+        zone_id=None,
+        status="Baru",
+        is_grouped=False
+    )
+    db.add(new_report)
+    db.commit()
+    return {"status": "success", "message": "Report saved"}
