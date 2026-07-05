@@ -11,6 +11,7 @@ from app.models.zones import Zone
 from app.models.drivers import Driver
 from app.models.sensor_data import SensorData
 from app.models.volume_predictions import VolumePrediction
+from app.models.citizen_reports import CitizenReport
 from app.utils.security import get_password_hash
 
 def seed_data():
@@ -22,6 +23,7 @@ def seed_data():
         db.query(Driver).delete()
         db.query(SensorData).delete()
         db.query(VolumePrediction).delete()
+        db.query(CitizenReport).delete()
         db.query(Zone).delete()
         db.query(User).delete()
         db.commit()
@@ -60,7 +62,6 @@ def seed_data():
         print("✅ Tabel drivers (5 driver supir armada) berhasil di-seed.")
 
         # 4. Seed 15 SensorData (Simulasi Telemetri Nyata)
-        # Menghasilkan 3 pembacaan historis per zona (total 15 data)
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         sensor_data_records = []
 
@@ -103,10 +104,9 @@ def seed_data():
         print("✅ Tabel sensor_data (15 data pembacaan simulasi) berhasil di-seed.")
 
         # 5. Seed 20 VolumePredictions (Proyeksi 4 Hari ke Depan untuk 5 Wilayah)
-        # Menghasilkan 4 hari prediksi ke depan per wilayah (total 20 data)
         prediction_records = []
         
-        # Zone 1 -> Tren meningkat tajam
+        # Zone 1
         prediction_records.extend([
             VolumePrediction(zone_id=zones_data[0].id, predicted_volume=90.0, target_time=now + timedelta(days=1), confidence_score=0.95),
             VolumePrediction(zone_id=zones_data[0].id, predicted_volume=95.0, target_time=now + timedelta(days=2), confidence_score=0.90),
@@ -114,7 +114,7 @@ def seed_data():
             VolumePrediction(zone_id=zones_data[0].id, predicted_volume=105.0, target_time=now + timedelta(days=4), confidence_score=0.80),
         ])
 
-        # Zone 2 -> Tren meningkat lambat (Normal)
+        # Zone 2
         prediction_records.extend([
             VolumePrediction(zone_id=zones_data[1].id, predicted_volume=30.0, target_time=now + timedelta(days=1), confidence_score=0.98),
             VolumePrediction(zone_id=zones_data[1].id, predicted_volume=35.0, target_time=now + timedelta(days=2), confidence_score=0.95),
@@ -122,7 +122,7 @@ def seed_data():
             VolumePrediction(zone_id=zones_data[1].id, predicted_volume=45.0, target_time=now + timedelta(days=4), confidence_score=0.89),
         ])
 
-        # Zone 3 -> Tren Warning ke High
+        # Zone 3
         prediction_records.extend([
             VolumePrediction(zone_id=zones_data[2].id, predicted_volume=70.0, target_time=now + timedelta(days=1), confidence_score=0.94),
             VolumePrediction(zone_id=zones_data[2].id, predicted_volume=75.0, target_time=now + timedelta(days=2), confidence_score=0.88),
@@ -130,7 +130,7 @@ def seed_data():
             VolumePrediction(zone_id=zones_data[2].id, predicted_volume=85.0, target_time=now + timedelta(days=4), confidence_score=0.80),
         ])
 
-        # Zone 4 -> Sangat lambat (Sangat aman)
+        # Zone 4
         prediction_records.extend([
             VolumePrediction(zone_id=zones_data[3].id, predicted_volume=20.0, target_time=now + timedelta(days=1), confidence_score=0.97),
             VolumePrediction(zone_id=zones_data[3].id, predicted_volume=25.0, target_time=now + timedelta(days=2), confidence_score=0.94),
@@ -138,7 +138,7 @@ def seed_data():
             VolumePrediction(zone_id=zones_data[3].id, predicted_volume=35.0, target_time=now + timedelta(days=4), confidence_score=0.85),
         ])
 
-        # Zone 5 -> Tren Warning stabil
+        # Zone 5
         prediction_records.extend([
             VolumePrediction(zone_id=zones_data[4].id, predicted_volume=75.0, target_time=now + timedelta(days=1), confidence_score=0.93),
             VolumePrediction(zone_id=zones_data[4].id, predicted_volume=80.0, target_time=now + timedelta(days=2), confidence_score=0.90),
@@ -148,6 +148,104 @@ def seed_data():
 
         db.add_all(prediction_records)
         print("✅ Tabel volume_predictions (20 data simulasi proyeksi) berhasil di-seed.")
+
+        # 6. Seed CitizenReports (Laporan Pengaduan Warga)
+        # Menghasilkan 10 aduan warga yang realistis, lengkap dengan data berkelompok (duplikat)
+        citizen_reports_data = [
+            # Zone 1 (Kebon Jeruk) -> Kasus Duplikat sampah plastik (is_grouped = True)
+            CitizenReport(
+                whatsapp_number="6281234567890",
+                report_content="Ada tumpukan sampah plastik menumpuk banyak di dekat gerbang TPS 01 Kebon Jeruk, tolong segera diangkut.",
+                zone_id=zones_data[0].id,
+                status="Baru",
+                is_grouped=True,
+                created_at=now - timedelta(hours=4)
+            ),
+            CitizenReport(
+                whatsapp_number="6281298765432",
+                report_content="Tolong angkut sampah plastik menumpuk di gerbang TPS 01 Kebon Jeruk, baunya mulai mengganggu.",
+                zone_id=zones_data[0].id,
+                status="Baru",
+                is_grouped=True,
+                created_at=now - timedelta(hours=2)
+            ),
+            # Zone 1 -> Laporan lama yang sudah ditangani (is_grouped = False)
+            CitizenReport(
+                whatsapp_number="6281311112222",
+                report_content="Laporan bak sampah di TPS Kebon Jeruk jebol pada bagian penahan bawah.",
+                zone_id=zones_data[0].id,
+                status="Sedang Ditangani",
+                is_grouped=False,
+                created_at=now - timedelta(days=1)
+            ),
+
+            # Zone 2 (Grogol) -> Laporan sudah selesai ditangani
+            CitizenReport(
+                whatsapp_number="6281255556666",
+                report_content="Sampah daun kering berserakan di depan TPS 02 Grogol.",
+                zone_id=zones_data[1].id,
+                status="Selesai",
+                is_grouped=False,
+                created_at=now - timedelta(days=3)
+            ),
+
+            # Zone 3 (Palmerah) -> Kasus Duplikat sampah bau (is_grouped = True)
+            CitizenReport(
+                whatsapp_number="6281288889999",
+                report_content="Sampah basah menumpuk banyak di TPS Palmerah, baunya menyengat.",
+                zone_id=zones_data[2].id,
+                status="Baru",
+                is_grouped=True,
+                created_at=now - timedelta(hours=5)
+            ),
+            CitizenReport(
+                whatsapp_number="6281344445555",
+                report_content="Baunya menyengat sekali dari tumpukan sampah basah di TPS Palmerah. Mohon dikirim supir pengangkut.",
+                zone_id=zones_data[2].id,
+                status="Baru",
+                is_grouped=True,
+                created_at=now - timedelta(hours=3)
+            ),
+            # Zone 3 -> Laporan biasa
+            CitizenReport(
+                whatsapp_number="6281277778888",
+                report_content="Warga membuang kasur bekas sembarangan di luar TPS Palmerah.",
+                zone_id=zones_data[2].id,
+                status="Baru",
+                is_grouped=False,
+                created_at=now - timedelta(hours=8)
+            ),
+
+            # Zone 4 (Kemanggisan) -> Aduan normal baru
+            CitizenReport(
+                whatsapp_number="6281322223333",
+                report_content="Ada sampah sisa material bangunan dibuang di depan TPS 04 Kemanggisan.",
+                zone_id=zones_data[3].id,
+                status="Baru",
+                is_grouped=False,
+                created_at=now - timedelta(hours=6)
+            ),
+
+            # Zone 5 (Kembangan) -> Sedang ditangani
+            CitizenReport(
+                whatsapp_number="6281366667777",
+                report_content="Tumpukan sampah pasar meluap hingga memakan bahu jalan di TPS 05 Kembangan.",
+                zone_id=zones_data[4].id,
+                status="Sedang Ditangani",
+                is_grouped=False,
+                created_at=now - timedelta(hours=14)
+            ),
+            CitizenReport(
+                whatsapp_number="6281211223344",
+                report_content="Lampu penerangan di TPS Kembangan mati sejak kemarin malam.",
+                zone_id=zones_data[4].id,
+                status="Selesai",
+                is_grouped=False,
+                created_at=now - timedelta(days=2)
+            ),
+        ]
+        db.add_all(citizen_reports_data)
+        print("✅ Tabel citizen_reports (10 data aduan warga) berhasil di-seed.")
 
         db.commit()
         print("🎉 Seeding selesai dengan sukses!")
