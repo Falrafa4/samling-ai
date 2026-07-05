@@ -1,6 +1,7 @@
 import sys
 import os
 from datetime import datetime, timedelta, timezone
+import json
 
 # Menambahkan root directory proyek ke sys.path agar module app dapat ditemukan
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -12,6 +13,7 @@ from app.models.drivers import Driver
 from app.models.sensor_data import SensorData
 from app.models.volume_predictions import VolumePrediction
 from app.models.citizen_reports import CitizenReport
+from app.models.route_recommendations import RouteRecommendation
 from app.utils.security import get_password_hash
 
 def seed_data():
@@ -24,6 +26,7 @@ def seed_data():
         db.query(SensorData).delete()
         db.query(VolumePrediction).delete()
         db.query(CitizenReport).delete()
+        db.query(RouteRecommendation).delete()
         db.query(Zone).delete()
         db.query(User).delete()
         db.commit()
@@ -150,9 +153,7 @@ def seed_data():
         print("✅ Tabel volume_predictions (20 data simulasi proyeksi) berhasil di-seed.")
 
         # 6. Seed CitizenReports (Laporan Pengaduan Warga)
-        # Menghasilkan 10 aduan warga yang realistis, lengkap dengan data berkelompok (duplikat)
         citizen_reports_data = [
-            # Zone 1 (Kebon Jeruk) -> Kasus Duplikat sampah plastik (is_grouped = True)
             CitizenReport(
                 whatsapp_number="6281234567890",
                 report_content="Ada tumpukan sampah plastik menumpuk banyak di dekat gerbang TPS 01 Kebon Jeruk, tolong segera diangkut.",
@@ -169,7 +170,6 @@ def seed_data():
                 is_grouped=True,
                 created_at=now - timedelta(hours=2)
             ),
-            # Zone 1 -> Laporan lama yang sudah ditangani (is_grouped = False)
             CitizenReport(
                 whatsapp_number="6281311112222",
                 report_content="Laporan bak sampah di TPS Kebon Jeruk jebol pada bagian penahan bawah.",
@@ -178,8 +178,6 @@ def seed_data():
                 is_grouped=False,
                 created_at=now - timedelta(days=1)
             ),
-
-            # Zone 2 (Grogol) -> Laporan sudah selesai ditangani
             CitizenReport(
                 whatsapp_number="6281255556666",
                 report_content="Sampah daun kering berserakan di depan TPS 02 Grogol.",
@@ -188,8 +186,6 @@ def seed_data():
                 is_grouped=False,
                 created_at=now - timedelta(days=3)
             ),
-
-            # Zone 3 (Palmerah) -> Kasus Duplikat sampah bau (is_grouped = True)
             CitizenReport(
                 whatsapp_number="6281288889999",
                 report_content="Sampah basah menumpuk banyak di TPS Palmerah, baunya menyengat.",
@@ -206,7 +202,6 @@ def seed_data():
                 is_grouped=True,
                 created_at=now - timedelta(hours=3)
             ),
-            # Zone 3 -> Laporan biasa
             CitizenReport(
                 whatsapp_number="6281277778888",
                 report_content="Warga membuang kasur bekas sembarangan di luar TPS Palmerah.",
@@ -215,8 +210,6 @@ def seed_data():
                 is_grouped=False,
                 created_at=now - timedelta(hours=8)
             ),
-
-            # Zone 4 (Kemanggisan) -> Aduan normal baru
             CitizenReport(
                 whatsapp_number="6281322223333",
                 report_content="Ada sampah sisa material bangunan dibuang di depan TPS 04 Kemanggisan.",
@@ -225,8 +218,6 @@ def seed_data():
                 is_grouped=False,
                 created_at=now - timedelta(hours=6)
             ),
-
-            # Zone 5 (Kembangan) -> Sedang ditangani
             CitizenReport(
                 whatsapp_number="6281366667777",
                 report_content="Tumpukan sampah pasar meluap hingga memakan bahu jalan di TPS 05 Kembangan.",
@@ -246,6 +237,17 @@ def seed_data():
         ]
         db.add_all(citizen_reports_data)
         print("✅ Tabel citizen_reports (10 data aduan warga) berhasil di-seed.")
+
+        # 7. Seed RouteRecommendations (Rekomendasi Rute Supir)
+        # Menghasilkan rute terurut optimal berdasarkan tingkat risiko (High Priority -> Warning -> Normal)
+        # TPS 01 (1) -> TPS 03 (3) -> TPS 05 (5) -> TPS 02 (2) -> TPS 04 (4)
+        tps_ids_ordered = [zones_data[0].id, zones_data[2].id, zones_data[4].id, zones_data[1].id, zones_data[3].id]
+        route_recommendation = RouteRecommendation(
+            route_json=json.dumps(tps_ids_ordered),
+            created_at=now - timedelta(hours=1)
+        )
+        db.add(route_recommendation)
+        print("✅ Tabel route_recommendations (1 rute optimal terurut) berhasil di-seed.")
 
         db.commit()
         print("🎉 Seeding selesai dengan sukses!")
