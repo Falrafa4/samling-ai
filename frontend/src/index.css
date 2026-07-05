@@ -5,12 +5,14 @@
 @theme {
   --font-sans: "DM Sans", sans-serif;
 
-  --color-primary: #16a34a;
-  --color-primary-hover: #15803d;
+  --color-primary: #10b981;
+  --color-primary-hover: #059669;
+  --color-primary-light: #e6f4ea;
 
-  --color-brand: #16a34a;
-  --color-brand-medium: #16a34a;
-  --color-brand-strong: #15803d;
+  --color-risk-normal: #22c55e;
+  --color-risk-warning: #f59e0b;
+  --color-risk-high: #ef4444;
+  --color-risk-offline: #94a3b8;
 
   --color-neutral-secondary-medium: #f9fafb;
   --color-default-medium: #e5e7eb;
@@ -21,6 +23,23 @@
   --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.05);
 
   --radius-base: 0.375rem;
+
+  --animate-fade-out: fade-out 0.5s ease-out forwards;
+  --animate-pulse-slow: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .4;
+    }
+  }
 }
 
 @layer base {

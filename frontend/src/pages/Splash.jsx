@@ -1,24 +1,7 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLeaf } from '@fortawesome/free-solid-svg-icons';
 
 export default function Splash() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      // Check if user is logged in, if so go to dashboard, else login
-      const username = localStorage.getItem('username');
-      if (username) {
-        navigate('/dashboard');
-      } else {
-        navigate('/login');
-      }
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900 flex flex-col justify-center items-center overflow-hidden transition-colors duration-200">

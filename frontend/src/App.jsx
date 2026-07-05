@@ -1,39 +1,72 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
+import { useEffectOnce } from 'react-use';
 import Splash from './pages/Splash';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Aktivitas from './pages/Aktivitas';
-import Mitra from './pages/Mitra';
-import RiwayatMitra from './pages/RiwayatMitra';
-import Tps from './pages/Tps';
-import CariTruk from './pages/CariTruk';
-import Akun from './pages/Akun';
+
+// Placeholder Pages (akan diimplementasikan bertahap)
+import Overview from './pages/Overview';
+import PredictiveMap from './pages/PredictiveMap';
+import FleetDispatch from './pages/FleetDispatch';
+import CitizenReports from './pages/CitizenReports';
+
+// Layout
+import AdminLayout from './components/layout/AdminLayout';
 import './App.css';
 
 export default function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        {/* Splash screen */}
-        <Route path="/" element={<Splash />} />
-        
-        {/* Auth Route */}
-        <Route path="/login" element={<Login />} />
-        
-        {/* Core Main Views */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/aktivitas" element={<Aktivitas />} />
-        <Route path="/mitra" element={<Mitra />} />
-        
-        {/* Subpages / Detail Views */}
-        <Route path="/riwayat-mitra" element={<RiwayatMitra />} />
-        <Route path="/tps" element={<Tps />} />
-        <Route path="/cari-truk" element={<CariTruk />} />
-        <Route path="/akun" element={<Akun />} />
+  const [showSplash, setShowSplash] = useState(true);
+  const [isFading, setIsFading] = useState(false);
 
-        {/* Fallback redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+  useEffectOnce(() => {
+    // Memulai transisi pudar setelah 2 detik
+    const fadeTimer = setTimeout(() => {
+      setIsFading(true);
+    }, 1500);
+
+    // Menghapus splash screen sepenuhnya setelah transisi selesai (2.5 detik)
+    const removeTimer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2000);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(removeTimer);
+    };
+  });
+
+  return (
+    <>
+      {/* Global Splash Screen Overlay */}
+      {showSplash && (
+        <div
+          className={`fixed inset-0 z-50 transition-opacity duration-500 ease-out ${
+            isFading ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+        >
+          <Splash />
+        </div>
+      )}
+
+      <BrowserRouter>
+        <Routes>
+          {/* Auth Route */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Admin Protected Routes */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="/admin/overview" replace />} />
+            <Route path="overview" element={<Overview />} />
+            <Route path="map" element={<PredictiveMap />} />
+            <Route path="fleet" element={<FleetDispatch />} />
+            <Route path="reports" element={<CitizenReports />} />
+          </Route>
+
+          {/* Fallback Redirect */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }

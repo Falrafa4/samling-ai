@@ -33,10 +33,10 @@ export default function Login() {
   const NOTIFICATIONS_KEY = "samling_notifications";
 
   useEffect(() => {
-    // If already logged in, redirect to dashboard
-    const username = localStorage.getItem("username");
-    if (username) {
-      navigate("/dashboard");
+    // If already logged in, redirect to admin dashboard
+    const adminToken = localStorage.getItem("admin_token");
+    if (adminToken) {
+      navigate("/admin/overview");
     }
 
     // Check cooldown state on mount
@@ -135,10 +135,16 @@ export default function Login() {
 
       if (userFound) {
         setErrorMessage("Login berhasil! Mengalihkan...");
-        localStorage.setItem("userDisplayName", userFound.displayName);
-        localStorage.setItem("username", userFound.username);
+        // Set session token untuk auth guard reaktif
+        localStorage.setItem("admin_token", "mock-jwt-token-samling");
+        localStorage.setItem("admin_user", JSON.stringify({
+          id: userFound.id || 1,
+          username: userFound.username,
+          displayName: userFound.displayName,
+          role: "admin"
+        }));
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/admin/overview");
         }, 800);
       } else {
         setErrorMessage("Email atau Katasandi salah.");
