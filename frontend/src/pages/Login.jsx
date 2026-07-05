@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
+import { useLocalStorage } from "react-use";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faLeaf,
@@ -12,6 +13,7 @@ import {
   faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import LeafletMap from "../components/LeafletMap";
+import { api } from "../services/api";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -32,9 +34,11 @@ export default function Login() {
   const LAST_REPORT_KEY = "lastReportTimestamp";
   const NOTIFICATIONS_KEY = "samling_notifications";
 
+  const [adminToken, setAdminToken] = useLocalStorage("admin_token", null);
+  const [, setAdminUser] = useLocalStorage("admin_user", null);
+
   useEffect(() => {
     // If already logged in, redirect to admin dashboard
-    const adminToken = localStorage.getItem("admin_token");
     if (adminToken) {
       navigate("/admin/overview");
     }
@@ -55,7 +59,7 @@ export default function Login() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [navigate]);
+  }, [adminToken, navigate]);
 
   const startTimer = (seconds) => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -122,37 +126,28 @@ export default function Login() {
       return;
     }
 
-    // Network delay simulation
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
     try {
-      const users = JSON.parse(localStorage.getItem("appUsers")) || [];
-      const userFound = users.find(
-        (user) =>
-          (user.email === trimmedUser || user.username === trimmedUser) &&
-          user.password === trimmedPass,
-      );
+      // Memanggil API loginAdmin riil dari services/api
+      const response = await api.loginAdmin(trimmedUser, trimmedPass);
 
-      if (userFound) {
+      if (response.success && response.data) {
         setErrorMessage("Login berhasil! Mengalihkan...");
-        // Set session token untuk auth guard reaktif
-        localStorage.setItem("admin_token", "mock-jwt-token-samling");
-        localStorage.setItem("admin_user", JSON.stringify({
-          id: userFound.id || 1,
-          username: userFound.username,
-          displayName: userFound.displayName,
-          role: "admin"
-        }));
+        
+        // Simpan token JWT dan informasi user admin ke localStorage secara reaktif (JSON encoded)
+        setAdminToken(response.data.access_token);
+        setAdminUser(response.data.user);
+
         setTimeout(() => {
           navigate("/admin/overview");
         }, 800);
       } else {
-        setErrorMessage("Email atau Katasandi salah.");
+        setErrorMessage(response.message || "Gagal melakukan autentikasi.");
         setShake(true);
         setIsSubmitting(false);
       }
-    } catch (e) {
-      setErrorMessage("Gagal memuat data pengguna.");
+    } catch (error) {
+      setErrorMessage(error.message || "Email atau Katasandi admin salah.");
+      setShake(true);
       setIsSubmitting(false);
     }
   };

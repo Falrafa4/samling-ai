@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocalStorage } from 'react-use';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -6,35 +6,194 @@ import {
   faCircleCheck,
   faCloudSun,
   faFileExport,
-  faCalendarDays
+  faCalendarDays,
+  faSpinner
 } from '@fortawesome/free-solid-svg-icons';
+import { api } from '../services/api';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 export default function Overview() {
   const [adminUser] = useLocalStorage('admin_user', null);
   const [activeDateFilter, setActiveDateFilter] = useState('7hari');
 
-  // Contoh data awal (akan dihubungkan ke API FastAPI /dashboard/summary pada Tahap selanjutnya)
+  // API States
+  const [summary, setSummary] = useState(null);
+  const [zones, setZones] = useState([]);
+  const [selectedZoneId, setSelectedZoneId] = useState('');
+  const [projections, setProjections] = useState([]);
+  const [loadingSummary, setLoadingSummary] = useState(true);
+  const [loadingProjections, setLoadingProjections] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Chart Refs
+  const chartRef = useRef(null);
+  const chartInstanceRef = useRef(null);
+
+  // Fetch summary & zones on mount
+  useEffect(() => {
+    async function initData() {
+      try {
+        setLoadingSummary(true);
+        const [summaryRes, zonesRes] = await Promise.all([
+          api.getDashboardSummary(),
+          api.getZones()
+        ]);
+
+        if (summaryRes.success) {
+          setSummary(summaryRes.data);
+        }
+        if (zonesRes.success && zonesRes.data.length > 0) {
+          setZones(zonesRes.data);
+          setSelectedZoneId(zonesRes.data[0].id); // Default to first zone
+        }
+      } catch (err) {
+        setErrorMessage(err.message || 'Gagal memuat data ringkasan dashboard.');
+      } finally {
+        setLoadingSummary(false);
+      }
+    }
+
+    initData();
+  }, []);
+
+  // Fetch projections whenever selectedZoneId changes
+  useEffect(() => {
+    if (!selectedZoneId) return;
+
+    async function fetchProjections() {
+      try {
+        setLoadingProjections(true);
+        const res = await api.getZoneProjections(selectedZoneId);
+        if (res.success) {
+          setProjections(res.data || []);
+        }
+      } catch (err) {
+        console.error('Gagal memuat proyeksi AI:', err);
+      } finally {
+        setLoadingProjections(false);
+      }
+    }
+
+    fetchProjections();
+  }, [selectedZoneId]);
+
+  // Render/Update Chart.js instance when projections update
+  useEffect(() => {
+    if (!chartRef.current || projections.length === 0) return;
+
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.destroy();
+    }
+
+    // Parse labels and values
+    const labels = projections.map(item => {
+      const date = new Date(item.target_time);
+      return date.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+    });
+    const dataValues = projections.map(item => item.predicted_volume);
+    const confidenceValues = projections.map(item => item.confidence_score);
+
+    const ctx = chartRef.current.getContext('2d');
+    chartInstanceRef.current = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Estimasi Volume Sampah (m³)',
+            data: dataValues,
+            borderColor: '#10b981', // Emerald 500
+            backgroundColor: 'rgba(16, 185, 129, 0.08)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 3,
+            pointBackgroundColor: '#10b981',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            padding: 12,
+            backgroundColor: 'rgba(15, 23, 42, 0.9)', // Slate 900
+            titleFont: { size: 12, weight: 'bold' },
+            bodyFont: { size: 12 },
+            callbacks: {
+              label: function (context) {
+                const confidence = confidenceValues[context.dataIndex] || 0;
+                return [
+                  ` Volume: ${context.parsed.y} m³`,
+                  ` Akurasi AI: ${Math.round(confidence * 100)}%`
+                ];
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              font: { size: 10 }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(226, 232, 240, 0.6)' // Slate 200/60
+            },
+            ticks: {
+              font: { size: 10 },
+              callback: function(value) {
+                return value + ' m³';
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return () => {
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.destroy();
+        chartInstanceRef.current = null;
+      }
+    };
+  }, [projections]);
+
   const metrics = [
     {
       title: 'Laporan Warga Aktif',
-      value: '11',
-      change: '+3 laporan baru hari ini',
-      status: 'warning',
-      color: 'border-amber-500 bg-amber-50 text-amber-700'
+      value: summary?.total_citizen_reports ?? '0',
+      change: 'Menunggu konfirmasi admin',
+      status: 'Aduan Baru',
+      color: 'border-amber-400 bg-amber-50 text-amber-700'
     },
     {
       title: 'TPS Status Kritis',
-      value: '3',
-      change: 'Dari total 6 TPS kota',
-      status: 'danger',
-      color: 'border-red-500 bg-red-50 text-red-700'
+      value: summary?.alert_zones_count ?? '0',
+      change: `Total terdaftar ${zones.length} wilayah TPS`,
+      status: 'Urgensi Tinggi',
+      color: 'border-red-400 bg-red-50 text-red-700'
     },
     {
-      title: 'Kesiapan Armada Driver',
-      value: '80%',
-      change: '4/5 Supir siap bertugas',
-      status: 'success',
-      color: 'border-emerald-500 bg-emerald-50 text-emerald-700'
+      title: 'Rata-rata Kapasitas TPS',
+      value: `${Math.round(summary?.average_fill_percentage ?? 0)}%`,
+      change: 'Akumulasi dari sensor IoT aktif',
+      status: 'Real-time',
+      color: 'border-emerald-400 bg-emerald-50 text-emerald-700'
     }
   ];
 
@@ -43,6 +202,15 @@ export default function Overview() {
     { id: 'besok', label: 'Besok' },
     { id: '7hari', label: '7 Hari Ke Depan' }
   ];
+
+  if (loadingSummary) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 text-slate-500">
+        <FontAwesomeIcon icon={faSpinner} className="text-3xl animate-spin text-emerald-500 mb-3" />
+        <p className="text-sm font-semibold">Memuat metrik dashboard utama...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-50">
@@ -74,7 +242,7 @@ export default function Overview() {
             ))}
           </div>
           {/* Export Report Button */}
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors shadow-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors shadow-sm cursor-pointer">
             <FontAwesomeIcon icon={faFileExport} />
             <span>Ekspor PDF</span>
           </button>
@@ -83,6 +251,12 @@ export default function Overview() {
 
       {/* Main Grid Content */}
       <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+        {errorMessage && (
+          <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl">
+            ⚠️ {errorMessage}
+          </div>
+        )}
+
         {/* Contextual Alert Banner */}
         <div className="p-4 bg-gradient-to-r from-amber-50 to-amber-100/50 border border-amber-200 rounded-xl flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-3">
@@ -128,30 +302,57 @@ export default function Overview() {
 
         {/* 2-Column Split: Grafik Proyeksi & Aktivitas Terbaru */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* AI Projections (Line Chart Placeholder) */}
-          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 flex flex-col justify-between shadow-sm min-h-[350px]">
-            <div className="flex justify-between items-center mb-6">
+          {/* AI Projections (Line Chart) */}
+          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 flex flex-col justify-between shadow-sm min-h-[380px]">
+            <div className="flex justify-between items-center mb-6 shrink-0">
               <div>
                 <h3 className="text-md font-bold text-slate-800">Proyeksi Estimasi Volume Sampah (7 Hari Ke Depan)</h3>
-                <p className="text-xs text-slate-500">Estimasi volume sampah harian hasil perhitungan AI Amadeus</p>
+                <p className="text-xs text-slate-500">Hasil prediksi algoritma AI Amadeus berdasarkan kalender event</p>
               </div>
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full">
-                Amadeus AI Model v2.4
-              </span>
+              
+              {/* Dropdown Pemilihan Wilayah TPS */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-slate-400">Pilih TPS:</span>
+                <select
+                  value={selectedZoneId}
+                  onChange={(e) => setSelectedZoneId(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                >
+                  {zones.map((z) => (
+                    <option key={z.id} value={z.id}>
+                      {z.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            {/* Grafik Placeholder */}
-            <div className="flex-1 bg-slate-50 border border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center p-6 text-slate-400">
-              <FontAwesomeIcon icon={faCalendarDays} className="text-4xl mb-3 text-slate-300" />
-              <p className="text-xs font-semibold">Visualisasi Grafik Proyeksi Volume Sampah</p>
-              <p className="text-[10px] mt-1 text-slate-400">
-                (Integrasi Chart.js akan dihubungkan ke endpoint /volume-predictions pada Tahap 3)
-              </p>
+
+            {/* Line Chart Viewport */}
+            <div className="flex-1 min-h-[220px] relative">
+              {loadingProjections ? (
+                <div className="absolute inset-0 bg-white/60 flex items-center justify-center text-slate-500 z-10">
+                  <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xl text-emerald-500 mr-2" />
+                  <span className="text-xs font-medium">Memuat proyeksi AI...</span>
+                </div>
+              ) : null}
+
+              {projections.length > 0 ? (
+                <canvas ref={chartRef} />
+              ) : (
+                <div className="w-full h-full bg-slate-50 border border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center p-6 text-slate-400">
+                  <FontAwesomeIcon icon={faCalendarDays} className="text-4xl mb-3 text-slate-300" />
+                  <p className="text-xs font-semibold">Tidak Ada Proyeksi AI Tersedia</p>
+                  <p className="text-[10px] mt-1 text-slate-500">
+                    Gagal menemukan data proyeksi model AI untuk TPS terpilih.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Aktivitas Terbaru & Driver Response Tracker */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col shadow-sm">
-            <h3 className="text-md font-bold text-slate-800 mb-4">Aktivitas & Respons Driver</h3>
+            <h3 className="text-md font-bold text-slate-800 mb-4">Aktivitas &amp; Respons Driver</h3>
             <div className="flex-1 space-y-4 overflow-y-auto pr-1">
               {/* Driver 1 */}
               <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
