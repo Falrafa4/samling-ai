@@ -134,5 +134,37 @@ export const api = {
    */
   async getZoneProjections(zoneId) {
     return fetchWithAuth(`/volume-predictions/${zoneId}/projections`);
+  },
+
+  /**
+   * Mengambil rute pengangkutan sampah aktif milik driver tertentu.
+   * Endpoint: GET /route-recommendations/driver/{driver_id}
+   */
+  async getDriverActiveRoute(driverId) {
+    return fetchWithAuth(`/route-recommendations/driver/${driverId}`);
+  },
+
+  /**
+   * Mengirim manifes rute ke WhatsApp supir dan mengaktifkan penugasan.
+   * Endpoint: POST /route-recommendations/dispatch/{driver_id}
+   */
+  async dispatchRoute(driverId) {
+    return fetchWithAuth(`/route-recommendations/dispatch/${driverId}`, {
+      method: 'POST',
+    });
+  },
+
+  /**
+   * Memperbarui status penyelesaian rute tugas supir.
+   * Endpoint: PUT /route-recommendations/{id}/status
+   */
+  async updateRouteStatus(routeId, status) {
+    return fetchWithAuth(`/route-recommendations/${routeId}/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    });
   }
 };
