@@ -9,7 +9,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from app.database.database import SessionLocal, engine
 from app.models.users import User
 from app.models.zones import Zone
-from app.models.drivers import Driver
 from app.models.sensor_data import SensorData
 from app.models.volume_predictions import VolumePrediction
 from app.models.citizen_reports import CitizenReport
@@ -22,21 +21,22 @@ def seed_data():
         print("🌱 Memulai proses seeding data dummy...")
 
         # Bersihkan data lama agar seeder selalu fresh dan tidak memicu constraint/duplikasi
-        db.query(Driver).delete()
         db.query(SensorData).delete()
         db.query(VolumePrediction).delete()
         db.query(CitizenReport).delete()
         db.query(RouteRecommendation).delete()
-        db.query(Zone).delete()
         db.query(User).delete()
+        db.query(Zone).delete()
         db.commit()
         print("🗑️ Data lama berhasil dibersihkan.")
 
         # 1. Seed Users (Admin)
         admin_user = User(
+            name="Super Admin Samling",
             username="admin_samling",
             password=get_password_hash("supersecurepassword"),
-            role="admin"
+            role="admin",
+            status=None
         )
         db.add(admin_user)
         print("✅ User admin berhasil di-seed.")
@@ -53,16 +53,17 @@ def seed_data():
         db.commit()  # Commit agar zone_id ter-generate untuk Foreign Key
         print("✅ Tabel zones (5 wilayah TPS) berhasil di-seed.")
 
-        # 3. Seed 5 Drivers
+        # 3. Seed 5 Drivers (sebagai User dengan role='driver')
         drivers_data = [
-            Driver(name="Budi Utomo", whatsapp_number="6281234567890", zone_id=zones_data[0].id),
-            Driver(name="Joko Susilo", whatsapp_number="6281298765432", zone_id=zones_data[1].id),
-            Driver(name="Agus Saputra", whatsapp_number="6281311223344", zone_id=zones_data[2].id),
-            Driver(name="Herman Wijaya", whatsapp_number="6281355667788", zone_id=zones_data[3].id),
-            Driver(name="Rudy Hermawan", whatsapp_number="6281288990011", zone_id=zones_data[4].id),
+            User(name="Budi Utomo", username="driver_budi", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281234567890", zone_id=zones_data[0].id, status="Offline"),
+            User(name="Joko Susilo", username="driver_joko", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281298765432", zone_id=zones_data[1].id, status="Offline"),
+            User(name="Agus Saputra", username="driver_agus", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281311223344", zone_id=zones_data[2].id, status="Offline"),
+            User(name="Herman Wijaya", username="driver_herman", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281355667788", zone_id=zones_data[3].id, status="Offline"),
+            User(name="Rudy Hermawan", username="driver_rudy", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281288990011", zone_id=zones_data[4].id, status="Offline"),
         ]
         db.add_all(drivers_data)
-        print("✅ Tabel drivers (5 driver supir armada) berhasil di-seed.")
+        db.commit()  # Commit agar driver/user ID ter-generate
+        print("✅ Tabel users (5 driver supir armada) berhasil di-seed.")
 
         # 4. Seed 15 SensorData (Simulasi Telemetri Nyata)
         now = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -239,11 +240,13 @@ def seed_data():
         print("✅ Tabel citizen_reports (10 data aduan warga) berhasil di-seed.")
 
         # 7. Seed RouteRecommendations (Rekomendasi Rute Supir)
-        # Menghasilkan rute terurut optimal berdasarkan tingkat risiko (High Priority -> Warning -> Normal)
+        # Menghasilkan rute terurut optimal untuk driver Budi Utomo (drivers_data[0])
         # TPS 01 (1) -> TPS 03 (3) -> TPS 05 (5) -> TPS 02 (2) -> TPS 04 (4)
         tps_ids_ordered = [zones_data[0].id, zones_data[2].id, zones_data[4].id, zones_data[1].id, zones_data[3].id]
         route_recommendation = RouteRecommendation(
+            driver_id=drivers_data[0].id,
             route_json=json.dumps(tps_ids_ordered),
+            status="Pending",
             created_at=now - timedelta(hours=1)
         )
         db.add(route_recommendation)

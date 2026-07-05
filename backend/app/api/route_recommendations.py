@@ -4,7 +4,7 @@ import json
 
 from app.database.database import get_db
 from app.models.route_recommendations import RouteRecommendation
-from app.models.drivers import Driver
+from app.models.users import User
 from app.models.zones import Zone
 from app.schemas.route_recommendations import RouteRecommendationCreate, RouteRecommendationResponse
 from app.api.deps import get_current_user
@@ -16,9 +16,17 @@ router = APIRouter(tags=["route-recommendations"], dependencies=[Depends(get_cur
 def create_route_recommendation(route_in: RouteRecommendationCreate, db: Session = Depends(get_db)):
     """
     Simpan Rekomendasi Rute Baru (Memerlukan Autentikasi).
-    Memvalidasi format route_json dan keabsahan zone_id di dalamnya.
+    Memvalidasi format route_json, keabsahan driver_id, dan keabsahan zone_id.
     """
-    # 1. Validasi format JSON dan tipe data array/list
+    # 1. Validasi driver_id terdaftar sebagai supir
+    driver = db.query(User).filter(User.id == route_in.driver_id, User.role == "driver").first()
+    if not driver:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Driver dengan ID {route_in.driver_id} tidak terdaftar di sistem."
+        )
+
+    # 2. Validasi format JSON dan tipe data array/list
     try:
         zone_ids = json.loads(route_in.route_json)
         if not isinstance(zone_ids, list):
@@ -32,18 +40,21 @@ def create_route_recommendation(route_in: RouteRecommendationCreate, db: Session
             detail="route_json harus berupa format string JSON list dari ID zona (contoh: '[1, 3, 5]')."
         )
 
-    # 2. Validasi keabsahan seluruh zone_id di database
+    # 3. Validasi keabsahan seluruh zone_id di database
     if zone_ids:
         existing_zones_count = db.query(Zone).filter(Zone.id.in_(zone_ids)).count()
-        # Menggunakan set(zone_ids) untuk menangani kemungkinan duplikasi ID di dalam daftar rute
         if existing_zones_count != len(set(zone_ids)):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Satu atau lebih zone_id di dalam rute tidak valid atau tidak terdaftar di sistem."
             )
 
-    # 3. Simpan rekomendasi rute baru
-    new_route = RouteRecommendation(route_json=route_in.route_json)
+    # 4. Simpan rekomendasi rute baru dengan status default 'Pending'
+    new_route = RouteRecommendation(
+        driver_id=route_in.driver_id,
+        route_json=route_in.route_json,
+        status="Pending"
+    )
     db.add(new_route)
     db.commit()
     db.refresh(new_route)
@@ -54,7 +65,7 @@ def create_route_recommendation(route_in: RouteRecommendationCreate, db: Session
 @router.get("/route-recommendations/latest")
 def get_latest_route_recommendation(db: Session = Depends(get_db)):
     """
-    Mengambil Rute Optimal Terkini (Memerlukan Autentikasi).
+    Mengambil Rute Optimal Terkini secara global (Memerlukan Autentikasi).
     """
     route = db.query(RouteRecommendation).order_by(RouteRecommendation.created_at.desc()).first()
     if not route:
@@ -70,23 +81,28 @@ def get_latest_route_recommendation(db: Session = Depends(get_db)):
 def dispatch_route_recommendation(driver_id: int, db: Session = Depends(get_db)):
     """
     Kirim Manifes Tugas ke Driver via WA (Memerlukan Autentikasi).
-    Mengambil rute terbaru, merelasikan dengan koordinat wilayah tugas, menyusun manifes terurut,
-    dan menyimulasikan pengiriman pesan navigasi Google Maps ke nomor WhatsApp driver.
+    Mengambil rute terbaru untuk driver ini, merelasikan dengan koordinat wilayah tugas, menyusun manifes terurut,
+    menyimulasikan pengiriman navigasi, dan memperbarui status rute menjadi 'In Progress'.
     """
     # 1. Validasi driver terdaftar di sistem
-    driver = db.query(Driver).filter(Driver.id == driver_id).first()
+    driver = db.query(User).filter(User.id == driver_id, User.role == "driver").first()
     if not driver:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Driver tidak ditemukan."
         )
 
-    # 2. Ambil rute optimal terbaru
-    latest_route = db.query(RouteRecommendation).order_by(RouteRecommendation.created_at.desc()).first()
+    # 2. Ambil rute optimal terbaru khusus driver ini
+    latest_route = (
+        db.query(RouteRecommendation)
+        .filter(RouteRecommendation.driver_id == driver_id)
+        .order_by(RouteRecommendation.created_at.desc())
+        .first()
+    )
     if not latest_route:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Belum ada rekomendasi rute optimal yang dibuat di sistem. Harap buat rute terlebih dahulu."
+            detail=f"Belum ada rekomendasi rute optimal yang ditugaskan ke driver {driver.name}."
         )
 
     # 3. Ekstrak dan urutkan wilayah tugas
@@ -100,7 +116,6 @@ def dispatch_route_recommendation(driver_id: int, db: Session = Depends(get_db))
     # Query seluruh zone yang masuk dalam rute
     zones = db.query(Zone).filter(Zone.id.in_(zone_ids)).all()
     zone_map = {z.id: z for z in zones}
-    
     ordered_zones = [zone_map[zid] for zid in zone_ids if zid in zone_map]
 
     # 4. Susun pesan manifes WhatsApp
@@ -129,12 +144,21 @@ def dispatch_route_recommendation(driver_id: int, db: Session = Depends(get_db))
     print(message_body)
     print("=========================================================================\n")
 
+    # 6. Perbarui status rute dan status ketersediaan driver
+    latest_route.status = "In Progress"
+    driver.status = "On Duty"
+    db.commit()
+    db.refresh(latest_route)
+    db.refresh(driver)
+
     dispatch_data = {
         "driver_id": driver.id,
         "driver_name": driver.name,
         "whatsapp_number": driver.whatsapp_number,
         "message_body": message_body,
-        "gmaps_url": gmaps_direction_url
+        "gmaps_url": gmaps_direction_url,
+        "route_status": latest_route.status,
+        "driver_status": driver.status
     }
 
     return response_success(

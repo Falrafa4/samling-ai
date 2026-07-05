@@ -4,6 +4,7 @@ from app.database.database import get_db
 from app.models.zones import Zone
 from app.schemas.zones import ZoneCreate, ZoneUpdate, ZoneResponse
 from app.utils.response import response_success
+from app.api.deps import get_current_user
 
 router = APIRouter(tags=["zones"])
 
@@ -28,7 +29,7 @@ def get_zone(zone_id: int, db: Session = Depends(get_db)):
     return response_success(data=data, message="Zone retrieved successfully")
 
 @router.post("/zones", status_code=status.HTTP_201_CREATED)
-def create_zone(zone: ZoneCreate, db: Session = Depends(get_db)):
+def create_zone(zone: ZoneCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """
     Membuat wilayah TPS baru.
     """
@@ -40,7 +41,7 @@ def create_zone(zone: ZoneCreate, db: Session = Depends(get_db)):
     return response_success(data=data, message="Zone created successfully")
 
 @router.put("/zones/{zone_id}")
-def update_zone(zone_id: int, zone: ZoneUpdate, db: Session = Depends(get_db)):
+def update_zone(zone_id: int, zone: ZoneUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """
     Memperbarui informasi wilayah TPS secara dinamis.
     """
@@ -57,7 +58,7 @@ def update_zone(zone_id: int, zone: ZoneUpdate, db: Session = Depends(get_db)):
     return response_success(data=data, message="Zone updated successfully")
 
 @router.delete("/zones/{zone_id}")
-def delete_zone(zone_id: int, db: Session = Depends(get_db)):
+def delete_zone(zone_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """
     Menghapus wilayah TPS berdasarkan ID.
     """
