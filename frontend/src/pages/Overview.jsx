@@ -218,7 +218,7 @@ export default function Overview() {
       <header className="px-8 py-6 bg-white border-b border-slate-200 flex justify-between items-center shrink-0">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">
-            Selamat Datang, {adminUser?.username || 'Admin'}
+            Selamat Datang, {adminUser?.name || 'Admin'}
           </h2>
           <p className="text-sm text-slate-500">
             Berikut ringkasan situasi darurat sampah kota hari ini.

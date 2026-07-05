@@ -32,6 +32,7 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
             "user": {
                 "id": user.id,
                 "username": user.username,
+                "name": user.name,
                 "role": user.role
             }
         },
@@ -57,6 +58,7 @@ def login_admin(username: str = Form(...), password: str = Form(...), db: Sessio
             "user": {
                 "id": user.id,
                 "username": user.username,
+                "name": user.name,
                 "role": user.role
             }
         },
@@ -82,6 +84,10 @@ def login_driver(username: str = Form(...), password: str = Form(...), db: Sessi
             "user": {
                 "id": user.id,
                 "username": user.username,
+                "name": user.name,
+                "whatsapp_number": user.whatsapp_number,
+                "zone_id": user.zone_id,
+                "status": user.status,
                 "role": user.role
             }
         },
