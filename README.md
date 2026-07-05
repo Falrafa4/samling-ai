@@ -1,42 +1,51 @@
-# 🛠️ Samling AI - Installation & Development Guide
+# 🛠️ Samling AI - Smart Waste Management & Forecasting System
 
-Dokumen ini menyediakan panduan instalasi serta dokumentasi teknis lengkap mengenai perubahan skema database, aturan routing API, tata cara migrasi, dan panduan untuk file dokumentasi pendukung pada proyek **Samling AI**.
-
----
-
-## 📋 Prasyarat Sistem (Prerequisites)
-
-Sebelum memulai, pastikan sistem Anda sudah terpasang:
-- **Node.js** (v18 atau lebih tinggi) & **npm**
-- **Python** (v3.10 atau lebih tinggi)
-- **pip** (Python package installer)
-- **SQLite3** (Driver bawaan Python)
+**Samling AI** adalah platform manajemen pengangkutan sampah cerdas berbasis Internet of Things (IoT) dan Artificial Intelligence (AI). Sistem ini mengintegrasikan pembacaan data kepenuhan tempat sampah (TPS), peramalan volume sampah di masa depan oleh AI (**Amadeus**), penampungan laporan keluhan warga melalui WhatsApp Chatbot (**Agung**) dengan fitur pengelompokan aduan duplikat, dan optimasi rute navigasi armada pengangkut supir.
 
 ---
 
-## 🖥️ Setup Aplikasi
+## 🌟 Fitur Utama (Core Features)
 
-### A. Frontend Setup
-1. Masuk ke direktori frontend:
-   ```bash
-   cd frontend
-   ```
-2. Instal dependensi:
-   ```bash
-   npm install
-   ```
-3. Jalankan server development:
-   ```bash
-   npm run dev
-   ```
-   *Aplikasi frontend akan berjalan di `http://localhost:3000`.*
+1. **Autentikasi Terpadu (JWT & Multi-Role)**: Sistem satu akun untuk Admin Dashboard dan Aplikasi Supir (Driver) dengan verifikasi peran ketat.
+2. **Integrasi Telemetri IoT (`/api/v1/sensor-data`)**: Menerima data kapasitas sampah dari sensor secara langsung dan memperbarui status risiko TPS secara dinamis.
+3. **AI Garbage Forecasting (`/api/v1/volume-predictions`)**: Menyimpan data ramalan volume sampah masa depan dan menampilkan proyeksi tren 7 hari ke depan.
+4. **WhatsApp Chatbot Webhook & Grouping Aduan (`/api/v1/webhook/whatsapp`)**: Menyimpan pesan pengaduan warga. Jika terdapat pesan serupa di zona yang sama dalam 12 jam terakhir (kemiripan teks $> 60\%$), aduan otomatis dikelompokkan (*grouped*) untuk menghindari *spamming*.
+5. **Optimasi Rute & Dispatch Supir (`/api/v1/route-recommendations`)**: Menugaskan manifes rute TPS optimal kepada supir, menyimulasikan pesan WhatsApp berisi daftar TPS terurut, menyusun URL navigasi multi-stop Google Maps, dan memantau status penyelesaian tugas driver.
+6. **Dasbor Ringkasan Admin (`/api/v1/dashboard/summary`)**: Agregasi metrik makro (TPS bahaya, rata-rata kapasitas, total laporan) yang cepat dimuat untuk visualisasi UI React.
 
-### B. Backend Setup
-1. Masuk ke direktori backend:
+---
+
+## 💻 Tech Stack & Kebutuhan Sistem
+
+### Tech Stack
+* **Frontend**: React.js, Vite, Tailwind CSS, Leaflet.js
+* **Backend**: FastAPI (Python), SQLAlchemy ORM, Alembic Migrations
+* **Database**: SQLite (`samling.db`)
+* **Utilitas**: Bcrypt (Password Hashing), PyJWT (Token JWT), Difflib (Text Similarity)
+
+### Prasyarat Instalasi (Prerequisites)
+Pastikan perangkat lokal Anda telah terpasang:
+* **Node.js** (v18 atau lebih tinggi) & **npm**
+* **Python** (v3.10 atau lebih tinggi)
+* **pip** (Python Package Installer)
+* **SQLite3**
+
+---
+
+## 🚀 Panduan Instalasi Lokal (Setup Guide)
+
+### 1. Klon Repositori & Masuk Proyek
+```bash
+git clone <repo-url>
+cd samling-ai
+```
+
+### 2. Setup Backend (FastAPI)
+1. Pindah ke direktori backend:
    ```bash
    cd backend
    ```
-2. Buat dan aktifkan virtual environment Python:
+2. Buat dan aktifkan Virtual Environment Python:
    * **Linux/macOS:**
      ```bash
      python3 -m venv .venv
@@ -47,109 +56,83 @@ Sebelum memulai, pastikan sistem Anda sudah terpasang:
      python -m venv .venv
      .venv\Scripts\Activate.ps1
      ```
-3. Instal paket dependensi:
+3. Pasang dependensi python:
    ```bash
    pip install -r requirements.txt
    ```
-4. Salin file environment:
+4. Buat berkas environment lokal dari contoh:
    ```bash
    cp .env.example .env
    ```
-5. Jalankan migrasi database SQLite:
+5. Jalankan migrasi database Alembic untuk membuat struktur tabel:
    ```bash
    alembic upgrade head
    ```
-6. Jalankan seeder untuk memasukkan data dummy (termasuk user admin dengan password terenkripsi):
+6. Jalankan script seeder untuk memasukkan data awal (wilayah TPS, supir, admin, sensor, volume, dll.):
    ```bash
    python app/database/seed.py
    ```
-7. Jalankan server FastAPI backend:
+7. Jalankan server FastAPI secara lokal:
    ```bash
    uvicorn app.main:app --reload
    ```
-   *Backend API akan berjalan di `http://127.0.0.1:8000`. Dokumentasi interaktif Swagger dapat diakses di `http://127.0.0.1:8000/docs`.*
+   * Server backend Anda akan berjalan di `http://127.0.0.1:8000`.
+   * Akses dokumentasi interaktif Swagger API di `http://127.0.0.1:8000/docs`.
 
----
-
-## 🗃️ Skema Database & Migrasi (Alembic)
-
-Database proyek ini menggunakan **SQLite** (`samling.db`). Struktur dan migrasi dikelola menggunakan **Alembic**.
-
-### 1. Perubahan Skema & Model Terbaru
-Berdasarkan pembaruan ERD proyek, penyesuaian berikut telah diterapkan pada model di `backend/app/models`:
-* **Tabel `users` (Baru)**: Ditambahkan untuk menangani autentikasi administrator. Kolom meliputi `id`, `username` (unique), `password` (Secure Bcrypt Hash), dan `role` (Enum `"admin"`).
-* **Tabel `zones` (Perbaikan Default)**: Kolom `risk_status` memiliki tipe Enum (`Normal`, `Warning`, `High Priority`). Nilai default telah diperbaiki menjadi `"Normal"` (sebelumnya `"Low"`, yang tidak didefinisikan di dalam opsi enum).
-* **Tabel `volume_predictions` (Kolom Baru)**: Ditambahkan kolom `confidence_score` (`Float`) untuk melacak tingkat keyakinan prediksi volume sampah oleh model AI.
-* **Tabel `drivers`**: Menyimpan data `name`, `whatsapp_number`, dan `zone_id` (relasi ke wilayah TPS).
-
-### 2. Konfigurasi Migrasi SQLite
-Untuk meminimalkan kendala bawaan SQLite yang kurang mendukung DDL dinamis (seperti penghapusan/modifikasi kolom):
-* **SQLite Batch Mode**: Opsi `render_as_batch=True` diaktifkan pada `backend/migrations/env.py`. Ini membuat Alembic mensimulasikan alter tabel dengan membuat tabel temporer baru dan memindahkan data secara aman.
-* **Dynamic Connection**: Database URL dibaca langsung secara dinamis dari file `.env` proyek menggunakan settings FastAPI.
-
----
-
-## 🔗 Aturan Routing API (Pencegahan Circular Import)
-
-FastAPI memerlukan struktur registrasi modul yang benar agar tidak terjadi masalah **Circular Import** (impor melingkar) yang dapat menghentikan jalannya server.
-
-### Aturan Utama:
-1. **Dilarang mengimpor objek `app` utama** langsung ke dalam sub-modul API (seperti `app/api/zones.py`).
-2. Gunakan **`APIRouter`** di setiap modul API:
-   ```python
-   # Di dalam app/api/zones.py
-   from fastapi import APIRouter
-   
-   router = APIRouter()
-   
-   @router.get("/zones")
-   def get_zones():
-       ...
+### 3. Setup Frontend (React + Vite)
+1. Pindah ke direktori frontend:
+   ```bash
+   cd ../frontend
    ```
-3. Daftarkan router tersebut di dalam **[app/main.py](file:///home/naufal/Documents/my-projects/samling-ai/backend/app/main.py)** menggunakan `app.include_router()`:
-   ```python
-   # Di dalam app/main.py
-   from app.api import zones
-   
-   app.include_router(zones.router)
+2. Pasang modul dependensi:
+   ```bash
+   npm install
+   ```
+3. Jalankan server development React:
+   ```bash
+   npm run dev
+   ```
+   * Aplikasi frontend Anda akan berjalan di `http://localhost:3000`.
+
+---
+
+## 🧪 Rangkaian Pengujian Integrasi (Testing)
+
+Untuk memastikan bahwa seluruh endpoint API, aturan *routing*, validasi Pydantic, dan koneksi database SQLite berjalan normal setelah modifikasi skema, Anda dapat menjalankan rangkaian uji otomatis yang berada di folder *scratch*:
+
+1. **Uji Coba Sensor IoT & Status Wilayah**:
+   ```bash
+   .venv/bin/python scratch/test_endpoints.py
+   ```
+2. **Uji Coba AI Volume Predictions & Proyeksi 7 Hari**:
+   ```bash
+   .venv/bin/python scratch/test_predictions.py
+   ```
+3. **Uji Coba Pengaduan Warga & Grouping Aduan Duplikat**:
+   ```bash
+   .venv/bin/python scratch/test_reports.py
+   ```
+4. **Uji Coba Rekomendasi Rute & Dispatch WA**:
+   ```bash
+   .venv/bin/python scratch/test_routes.py
+   ```
+5. **Uji Coba Endpoint Tambahan (Dashboard/Auth/Webhook)**:
+   ```bash
+   .venv/bin/python scratch/test_new_endpoints.py
    ```
 
-Pola pemisahan ini memutus dependensi sirkular antara `main.py` dan rute modular Anda.
+---
+
+## ⚠️ Panduan Pemecahan Masalah (Troubleshooting)
+
+| Masalah | Penyebab Utama | Solusi Solutif |
+| :--- | :--- | :--- |
+| **`OperationalError: no such table`** atau **`NOT NULL constraint failed`** | Skema database SQLite lokal tidak sinkron atau kotor karena sisa-sisa entitas lama. | Reset database dan seed ulang dari awal dengan menjalankan perintah:<br>`rm -f samling.db && alembic upgrade head && python app/database/seed.py` |
+| **`InsecureKeyLengthWarning` pada JWT** | String `SECRET_KEY` di file `.env` kurang dari 32 karakter (256-bit). | Ubah nilai `SECRET_KEY` di file `.env` Anda dengan kunci rahasia yang lebih panjang dan aman. |
+| **`Circular Import Error` saat startup** | Melakukan impor silang melingkar antar modul (misal mengimpor objek `app` ke dalam sub-router). | Pastikan sub-router hanya menggunakan `APIRouter()` dan daftarkan mereka secara eksklusif di `main.py` menggunakan `app.include_router()`. |
+| **CORS Policy Block** | Frontend berjalan pada port yang tidak diizinkan oleh konfigurasi CORS backend. | Pastikan port frontend Anda sesuai dengan daftar origin yang diperbolehkan di dalam berkas `backend/app/main.py`. |
 
 ---
 
-## 🧪 Seeder & Uji Coba Data Dummy
-
-Untuk mempermudah pengujian di lingkungan lokal, proyek menyediakan script seeding di [backend/app/database/seed.py](file:///home/naufal/Documents/my-projects/samling-ai/backend/app/database/seed.py).
-
-### Fitur Seeder:
-* **Password Hashing**: Menggunakan algoritma **Bcrypt** native untuk melakukan enkripsi password user admin dummy saat disimpan ke database.
-* **Idempotent (Aman Dijalankan Ulang)**: Script akan memeriksa apakah data sudah ada sebelum melakukan insert, menghindari terjadinya error data ganda.
-* **Relasi Presisi**: Driver dummy yang dibuat terhubung dengan ForeignKey `zone_id` dari wilayah TPS yang di-seed sebelumnya.
-
-Jalankan perintah ini untuk melakukan seeding data:
-```bash
-python app/database/seed.py
-```
-
----
-
-## 📂 Penjelasan Dokumen Pendukung (`/docs`)
-
-Berikut adalah berkas dokumentasi teknis pendukung yang berada di folder `docs`:
-
-1. **ERD_SAMLING.md**
-   * **Kegunaan**: Berisi dokumentasi skema relasi database (ERD), mendefinisikan seluruh tabel, kolom, tipe data, serta *foreign key constraints* yang valid dalam sistem Samling AI.
-2. **DESIGN_SYSTEM_ADMIN_SAMLING.md**
-   * **Kegunaan**: Panduan standarisasi visual antarmuka (UI/UX) untuk dashboard Admin. Dokumen ini merincikan grid sistem, tata letak kartu KPI, indikator chart garis prediksi AI, banner peringatan cuaca, serta interaksi state visual.
-3. **MIGRATION_CHEATSHEET.md**
-   * **Kegunaan**: Lembar contekan praktis untuk pengoperasian Alembic migrations. Berisi sintaks perintah rollback, incremental migration, fresh reset, dan solusi dari error database SQLite yang umum ditemui.
-
----
-
-## 🤖 Panduan Pengembang AI (AI Development Guidelines)
-
-Bagi tim pengembang AI yang bekerja di dalam direktori `backend/app/ai`:
-1. **Virtual Environment**: Selalu pastikan virtual environment `.venv` diaktifkan sebelum menginstal library baru.
-2. **Kebijakan Bobot Model (Model Weights)**: **Dilarang keras** men-commit file bobot model berukuran besar (`.pt`, `.bin`, `.safetensors`, `.onnx`) ke dalam repositori Git. Letakkan di folder lokal `backend/app/ai/models/` atau gunakan storage eksternal (HuggingFace/S3).
-3. **Detail Integrasi**: Baca petunjuk khusus AI pada berkas lokal `backend/app/ai/README.md`.
+## 📄 Dokumentasi Tambahan
+* **API_SPEC.md**: Daftar spesifikasi lengkap payload request dan response untuk mempermudah integrasi pengembang frontend dan tim chatbot.
