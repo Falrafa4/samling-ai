@@ -53,7 +53,7 @@ export default function Sidebar() {
         </div>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className={`absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-all shadow-xs cursor-pointer ${collapsed ? 'rotate-180' : ''}`}
+          className={`absolute -right-3 top-1/2 z-100 -translate-y-1/2 w-6 h-6 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-all shadow-xs cursor-pointer ${collapsed ? 'rotate-180' : ''}`}
         >
           <FontAwesomeIcon icon={faChevronLeft} className="text-[10px]" />
         </button>
