@@ -24,7 +24,7 @@ export default function HeroSection() {
             </h1>
             
             <p className="text-lg md:text-xl text-body mb-10 max-w-2xl mx-auto lg:mx-0">
-              SAMLING AI memprediksi lonjakan volume sampah dan mengoptimalkan rute armada dinas kebersihan demi lingkungan Jakarta yang lebih hijau.
+              SAMLING AI memprediksi lonjakan volume sampah dan mengoptimalkan rute armada dinas kebersihan untuk lingkungan Jakarta yang lebih hijau.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">

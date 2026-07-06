@@ -25,12 +25,7 @@ export default function Navbar() {
       <div className="container mx-auto px-6 max-w-7xl flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
-            S
-          </div>
-          <span className="font-bold text-xl tracking-tight text-heading">
-            SAMLING <span className="text-primary-600">AI</span>
-          </span>
+          <img src="/img/SAMLING%20AI%20-%20WEB.png" alt="Samling AI" className="h-8 w-auto" />
         </Link>
 
         {/* Desktop Menu */}

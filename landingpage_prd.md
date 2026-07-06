@@ -8,7 +8,7 @@ Rancangan ini disesuaikan dengan identitas proposal tim **Sekawan Engineers**, v
 * **Tujuan:** Mengenalkan SAMLING AI secara instan sebagai solusi pengelolaan sampah pintar berbasis AI kolaborasi dengan DLH.  
 * **Komponen Konten:**  
   * *Headline:* "Transformasi Pengelolaan Sampah Kota yang Responsif & Berbasis Data"  
-  * *Sub-headline:* "SAMLING AI memprediksi lonjakan volume sampah dan mengoptimalkan rute armada dinas kebersihan demi lingkungan Jakarta yang lebih hijau."  
+  * *Sub-headline:* "SAMLING AI memprediksi lonjakan volume sampah dan mengoptimalkan rute armada dinas kebersihan untuk lingkungan Jakarta yang lebih hijau."  
   * *CTA Button:* "Laporkan Sampah (WhatsApp)" & "Masuk Dashboard Admin"  
 * **Elemen Visual:** Ilustrasi 3D kota bersih, truk sampah modern, pepohonan hijau, dan ikon melayang (WhatsApp & Grafik AI).
 

@@ -3,7 +3,6 @@ import { NavLink, useNavigate } from 'react-router';
 import { useLocalStorage } from 'react-use';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faLeaf,
   faGauge,
   faMap,
   faTruck,
@@ -41,16 +40,8 @@ export default function Sidebar() {
   return (
     <aside className={`h-screen bg-white text-gray-700 flex flex-col border-r border-gray-200 transition-all duration-300 ease-in-out ${collapsed ? 'w-[72px]' : 'w-[260px]'}`}>
       {/* Header / Brand */}
-      <div className={`relative flex items-center border-b border-gray-200 transition-all duration-300 ${collapsed ? 'justify-center p-4' : 'p-5 gap-3'}`}>
-        <FontAwesomeIcon icon={faLeaf} className="text-emerald-500 text-2xl shrink-0" />
-        <div className={`overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-          <h1 className="font-bold text-base leading-none text-emerald-600">
-            Samling AI
-          </h1>
-          <span className="text-[9px] text-gray-400 font-medium">
-            ADMIN DASHBOARD
-          </span>
-        </div>
+      <div className={`relative flex items-center border-b border-gray-200 transition-all duration-300 ${collapsed ? 'justify-center p-4' : 'p-5'}`}>
+        <img src="/img/SAMLING%20AI%20-%20WEB.png" alt="Samling AI" className="h-9 w-auto" />
         <button
           onClick={() => setCollapsed(!collapsed)}
           className={`absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-all shadow-xs cursor-pointer ${collapsed ? 'rotate-180' : ''}`}

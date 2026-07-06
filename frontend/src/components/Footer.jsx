@@ -42,14 +42,7 @@ export default function Footer() {
             
             {/* Brand & Description */}
             <div>
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">
-                  S
-                </div>
-                <span className="font-bold text-xl tracking-tight text-slate-900">
-                  SAMLING <span className="text-primary-600">AI</span>
-                </span>
-              </div>
+              <img src="/img/SAMLING%20AI%20-%20WEB.png" alt="Samling AI" className="h-10 w-auto mb-6" />
               <p className="text-slate-600 mb-6 leading-relaxed font-medium">
                 Solusi pengelolaan sampah pintar berbasis AI untuk Dinas Lingkungan Hidup DKI Jakarta.
               </p>

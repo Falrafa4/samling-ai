@@ -25,6 +25,7 @@ export default function Header({ title, subtitle, showBack = false, onBack, righ
             <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
           </button>
         )}
+        <img src="/img/SAMLING%20AI%20-%20WEB.png" alt="Samling AI" className="h-8 w-auto" />
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white leading-tight">
             {title}

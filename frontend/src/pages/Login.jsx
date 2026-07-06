@@ -412,7 +412,7 @@ export default function Login() {
         onClose={() => setForgotPasswordOpen(false)}
         onConfirm={() => setForgotPasswordOpen(false)}
         title="Lupa Password Admin?"
-        message="Akun ini terdaftar sebagai Administrator Utama. Demi keamanan sistem, pemulihan password secara otomatis dinonaktifkan. Silakan hubungi pengembang utama (Developer Utama) Samling AI melalui IT Support Pusat untuk melakukan reset password."
+        message="Akun ini terdaftar sebagai Administrator Utama. Guna keamanan sistem, pemulihan password secara otomatis dinonaktifkan. Silakan hubungi pengembang utama (Developer Utama) Samling AI melalui IT Support Pusat untuk melakukan reset password."
         confirmText="Saya Mengerti"
         confirmBgColorClass="bg-emerald-600 hover:bg-emerald-500 focus:ring-emerald-500"
         icon={faTriangleExclamation}

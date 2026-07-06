@@ -1,24 +1,10 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLeaf } from '@fortawesome/free-solid-svg-icons';
-
 export default function Splash() {
-
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900 flex flex-col justify-center items-center overflow-hidden transition-colors duration-200">
-      <div className="text-center animate-fade-in">
-        {/* Leaf Logo with popIn animation */}
-        <div className="text-green-600 dark:text-emerald-500 text-[80px] mb-4 animate-bounce">
-          <FontAwesomeIcon icon={faLeaf} />
-        </div>
-        
-        {/* Title */}
-        <h1 className="text-4xl font-extrabold text-green-600 dark:text-emerald-500 tracking-wider">
-          Samling
-        </h1>
-        
-        {/* Tagline */}
-        <p className="text-md text-green-500 dark:text-emerald-400 mt-2 font-medium">
-          Sampah Lingkungan
+      <div className="text-center">
+        <img src="/img/SAMLING%20AI%20-%20WEB.png" alt="Samling AI" className="h-20 w-auto animate-fade-in" />
+        <p className="text center mt-2 text-lg md:text-xl text-gray-500 dark:text-gray-400 font-sans tracking-wide animate-[fadeIn_0.6s_ease-out_0.3s_forwards] opacity-0">
+          One Smart Solution for Jakarta
         </p>
       </div>
     </div>
