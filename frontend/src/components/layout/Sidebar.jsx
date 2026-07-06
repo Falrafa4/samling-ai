@@ -9,7 +9,9 @@ import {
   faTruck,
   faCommentDots,
   faLocationDot,
-  faRightFromBracket
+  faRightFromBracket,
+  faChevronLeft,
+  faChevronRight
 } from '@fortawesome/free-solid-svg-icons';
 import ConfirmModal from '../fragments/ConfirmModal';
 
@@ -18,6 +20,7 @@ export default function Sidebar() {
   const [adminUser] = useLocalStorage('admin_user', null);
   const navigate = useNavigate();
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
     setAdminToken(null);
@@ -36,64 +39,77 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-[260px] h-screen bg-slate-900 text-white flex flex-col border-r border-slate-800">
+    <aside className={`h-screen bg-white text-gray-700 flex flex-col border-r border-gray-200 transition-all duration-300 ease-in-out ${collapsed ? 'w-[72px]' : 'w-[260px]'}`}>
       {/* Header / Brand */}
-      <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-        <FontAwesomeIcon icon={faLeaf} className="text-emerald-500 text-2xl" />
-        <div>
-          <h1 className="font-bold text-lg leading-none text-emerald-500">
+      <div className={`relative flex items-center border-b border-gray-200 transition-all duration-300 ${collapsed ? 'justify-center p-4' : 'p-5 gap-3'}`}>
+        <FontAwesomeIcon icon={faLeaf} className="text-emerald-500 text-2xl shrink-0" />
+        <div className={`overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+          <h1 className="font-bold text-base leading-none text-emerald-600">
             Samling AI
           </h1>
-          <span className="text-[10px] text-slate-400 font-medium">
+          <span className="text-[9px] text-gray-400 font-medium">
             ADMIN DASHBOARD
           </span>
         </div>
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={`absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-all shadow-xs cursor-pointer ${collapsed ? 'rotate-180' : ''}`}
+        >
+          <FontAwesomeIcon icon={faChevronLeft} className="text-[10px]" />
+        </button>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 px-4 py-6 space-y-1">
+      <nav className="flex-1 px-3 py-5 space-y-1">
         {navItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-4 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+              `flex items-center rounded-lg text-sm font-medium transition-all duration-200 ${
+                collapsed
+                  ? 'justify-center w-full px-0 py-3'
+                  : 'gap-3 px-3.5 py-2.5'
+              } ${
                 isActive
-                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/30"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                  ? "bg-primary-50 text-primary-700"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-800"
               }`
             }
           >
-            <FontAwesomeIcon icon={item.icon} className="w-5 text-center" />
-            <span>{item.label}</span>
+            <FontAwesomeIcon icon={item.icon} className="w-5 text-center shrink-0" />
+            <span className={`overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+              {item.label}
+            </span>
           </NavLink>
         ))}
       </nav>
 
       {/* User Profile & Logout Section */}
-      <div className="p-4 border-t border-slate-800 bg-slate-950/40">
-        <div className="flex items-center gap-3 px-2 py-2 mb-3">
-          <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center font-bold text-emerald-400">
+      <div className={`border-t border-gray-200 bg-gray-50/80 transition-all duration-300 ${collapsed ? 'p-3' : 'p-4'}`}>
+        <div className={`flex items-center ${collapsed ? 'justify-center mb-3' : 'gap-3 px-2 py-2 mb-3'}`}>
+          <div className="w-8 h-8 rounded-full bg-primary-100 border border-primary-200 flex items-center justify-center font-bold text-primary-600 shrink-0">
             {adminUser?.name?.[0]?.toUpperCase() || "A"}
           </div>
-          <div className="overflow-hidden">
-            <p className="text-xs font-semibold text-slate-200 truncate leading-none">
+          <div className={`overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+            <p className="text-xs font-semibold text-gray-700 truncate leading-none">
               {adminUser?.name || "Administrator"}
             </p>
-            <span className="text-[10px] text-slate-400 capitalize">
+            <span className="text-[10px] text-gray-400 capitalize">
               {adminUser?.role || "Admin"}
             </span>
           </div>
         </div>
         <button
           onClick={() => setLogoutConfirmOpen(true)}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors duration-200 text-left cursor-pointer"
+          className={`w-full flex items-center rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors duration-200 cursor-pointer ${
+            collapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'
+          }`}
         >
-          <FontAwesomeIcon
-            icon={faRightFromBracket}
-            className="w-4 text-center"
-          />
-          <span>Keluar Aplikasi</span>
+          <FontAwesomeIcon icon={faRightFromBracket} className="w-4 text-center shrink-0" />
+          <span className={`overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+            Keluar Aplikasi
+          </span>
         </button>
       </div>
 

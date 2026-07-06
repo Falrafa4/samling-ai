@@ -38,10 +38,46 @@ export default function ServicesSection() {
   ];
 
   const otherServices = [
-    { id: 1, title: 'Informasi Publik', icon: faInfoCircle },
-    { id: 2, title: 'Uji Lab', icon: faVial },
-    { id: 3, title: 'Bus Toilet', icon: faBus },
-    { id: 4, title: 'Perizinan Lingkungan', icon: faFileSignature },
+    {
+      id: 1,
+      title: 'Informasi Publik',
+      description: 'Akses data dan informasi publik terkait kebersihan serta layanan DLH.',
+      icon: faInfoCircle,
+      color: 'text-blue-600',
+      bg: 'bg-blue-100',
+      borderHover: 'hover:border-blue-300',
+      href: 'https://lingkunganhidup.jakarta.go.id/layanan/ppid'
+    },
+    {
+      id: 2,
+      title: 'Uji Lab',
+      description: 'Layanan pengujian kualitas sampel air, tanah, dan udara.',
+      icon: faVial,
+      color: 'text-purple-600',
+      bg: 'bg-purple-100',
+      borderHover: 'hover:border-purple-300',
+      href: 'https://lingkunganhidup.jakarta.go.id/layanan/lab'
+    },
+    {
+      id: 3,
+      title: 'Bus Toilet',
+      description: 'Toilet umum bergerak untuk area publik, acara, dan tanggap darurat.',
+      icon: faBus,
+      color: 'text-cyan-600',
+      bg: 'bg-cyan-100',
+      borderHover: 'hover:border-cyan-300',
+      href: 'https://lingkunganhidup.jakarta.go.id/layanan/bus-toilet'
+    },
+    {
+      id: 4,
+      title: 'Perizinan Lingkungan',
+      description: 'Pengajuan dan pemantauan izin lingkungan secara daring.',
+      icon: faFileSignature,
+      color: 'text-amber-600',
+      bg: 'bg-amber-100',
+      borderHover: 'hover:border-amber-300',
+      href: 'https://lingkunganhidup.jakarta.go.id/layanan/perizinan-lingkungan'
+    },
   ];
 
   return (
@@ -54,7 +90,7 @@ export default function ServicesSection() {
           </p>
         </div>
 
-        {/* Main Services (Highlight Cards) */}
+        {/* Main Services */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
           {mainServices.map((service) => (
             <div key={service.id} className="group rounded-2xl border border-gray-200 p-8 hover:border-primary-500 hover:shadow-hover transition-all cursor-pointer bg-white">
@@ -71,17 +107,28 @@ export default function ServicesSection() {
           ))}
         </div>
 
-        {/* Other Services (Minimalist Grid) */}
+        {/* Other Services */}
         <div className="border-t border-gray-100 pt-16">
-          <h3 className="text-xl font-bold text-center mb-8 text-gray-500">LAYANAN LAINNYA</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <h3 className="text-xl font-bold text-center mb-10 text-gray-400 tracking-wider">LAYANAN LAINNYA</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {otherServices.map((service) => (
-              <div key={service.id} className="bg-neutral-secondary-medium rounded-xl p-6 text-center hover:bg-primary-50 hover:text-primary-700 transition-colors cursor-pointer group">
-                <div className="text-3xl text-gray-400 group-hover:text-primary-500 transition-colors mb-3">
+              <a
+                key={service.id}
+                href={service.href}
+                className={`group block rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:shadow-lg ${service.borderHover}`}
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg mb-4 transition-transform group-hover:scale-110 ${service.bg} ${service.color}`}>
                   <FontAwesomeIcon icon={service.icon} />
                 </div>
-                <h4 className="font-bold text-sm text-heading group-hover:text-primary-700">{service.title}</h4>
-              </div>
+                <h4 className="font-bold text-heading mb-2 group-hover:text-primary-600 transition-colors">{service.title}</h4>
+                <p className="text-sm text-body leading-relaxed mb-4">{service.description}</p>
+                <span className={`inline-flex items-center gap-1.5 text-sm font-semibold transition-all ${service.color}`}>
+                  Selengkapnya
+                  <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </span>
+              </a>
             ))}
           </div>
         </div>

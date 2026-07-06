@@ -29,7 +29,7 @@ export default function HeroSection() {
             
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
               <a 
-                href="https://wa.me/6281234567890" 
+                href="https://wa.me/62859171657331" 
                 target="_blank" 
                 rel="noreferrer"
                 className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-green-500 text-white font-bold hover:bg-green-600 hover:shadow-hover transition-all flex items-center justify-center gap-2 transform hover:-translate-y-1"
