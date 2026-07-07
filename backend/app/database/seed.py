@@ -3,10 +3,9 @@ import os
 from datetime import datetime, timedelta, timezone
 import json
 
-# Menambahkan root directory proyek ke sys.path agar module app dapat ditemukan
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from app.database.database import SessionLocal, engine
+from app.database.database import SessionLocal
 from app.models.users import User
 from app.models.zones import Zone
 from app.models.sensor_data import SensorData
@@ -15,12 +14,16 @@ from app.models.citizen_reports import CitizenReport
 from app.models.route_recommendations import RouteRecommendation
 from app.utils.security import get_password_hash
 
+DATA_DIR = os.path.join(os.path.dirname(__file__), "../../data")
+JSON_PATH = os.path.join(DATA_DIR, "tps_dki_enriched.json")
+
+
 def seed_data():
     db = SessionLocal()
     try:
-        print("🌱 Memulai proses seeding data dummy...")
+        print("Memulai proses seeding data...")
 
-        # Bersihkan data lama agar seeder selalu fresh dan tidak memicu constraint/duplikasi
+        # Clean existing data
         db.query(SensorData).delete()
         db.query(VolumePrediction).delete()
         db.query(CitizenReport).delete()
@@ -28,7 +31,7 @@ def seed_data():
         db.query(User).delete()
         db.query(Zone).delete()
         db.commit()
-        print("🗑️ Data lama berhasil dibersihkan.")
+        print("Data lama berhasil dibersihkan.")
 
         # 1. Seed Users (Admin)
         admin_user = User(
@@ -39,227 +42,272 @@ def seed_data():
             status=None
         )
         db.add(admin_user)
-        print("✅ User admin berhasil di-seed.")
+        print("User admin berhasil di-seed.")
 
-        # 2. Seed 5 Zones (Wilayah TPS)
-        zones_data = [
-            Zone(name="TPS 01 - Kebon Jeruk", latitude=-6.1944, longitude=106.7672, risk_status="High Priority"),
-            Zone(name="TPS 02 - Grogol", latitude=-6.1566, longitude=106.7892, risk_status="Normal"),
-            Zone(name="TPS 03 - Palmerah", latitude=-6.2084, longitude=106.7992, risk_status="Warning"),
-            Zone(name="TPS 04 - Kemanggisan", latitude=-6.2023, longitude=106.7842, risk_status="Normal"),
-            Zone(name="TPS 05 - Kembangan", latitude=-6.1843, longitude=106.7342, risk_status="Warning"),
-        ]
+        # 2. Seed Zones from enriched JSON
+        if not os.path.exists(JSON_PATH):
+            print(f"ERROR: File JSON tidak ditemukan di {JSON_PATH}")
+            print("Jalankan script convert_csv_to_json.py terlebih dahulu.")
+            db.rollback()
+            return
+
+        def normalize_kecamatan(raw):
+            title = raw.strip().title()
+            mapping = {
+                "Kramatjati": "Kramat Jati",
+                "Tamansari": "Taman Sari",
+                "Pulau Seribu Selatan": "Kepulauan Seribu Selatan",
+                "Pulau Seribu Utara": "Kepulauan Seribu Utara",
+                "Pal Merah": "Palmerah",
+            }
+            return mapping.get(title, title)
+
+        def normalize_wilayah(raw):
+            key = raw.strip().lower()
+            key = key.replace("kota adm. ", "").replace("kab. adm. ", "")
+            key = key.replace("kota adm ", "").replace("kab adm ", "")
+            key = key.replace(".", "").replace(",", "").strip()
+            mapping = {
+                "jakarta pusat": "Jakarta Pusat",
+                "jakarta utara": "Jakarta Utara",
+                "jakarta barat": "Jakarta Barat",
+                "jakarta selatan": "Jakarta Selatan",
+                "jakarta timur": "Jakarta Timur",
+                "kepulauan seribu": "Kepulauan Seribu",
+                "kep seribu": "Kepulauan Seribu",
+            }
+            return mapping.get(key, raw.strip())
+
+        with open(JSON_PATH, encoding="utf-8") as f:
+            tps_list = json.load(f)
+
+        zones_data = []
+        for tps in tps_list:
+            zone = Zone(
+                name=tps["name"],
+                wilayah=normalize_wilayah(tps.get("wilayah", "")),
+                kecamatan=normalize_kecamatan(tps.get("kecamatan", "")),
+                kelurahan=tps.get("kelurahan", "").strip().title(),
+                jenis_tps=tps.get("jenis_tps", "").strip().title(),
+                alamat=tps.get("alamat", "").strip(),
+                latitude=tps["latitude"],
+                longitude=tps["longitude"],
+                risk_status=tps.get("risk_status", "Normal"),
+            )
+            zones_data.append(zone)
+
         db.add_all(zones_data)
-        db.commit()  # Commit agar zone_id ter-generate untuk Foreign Key
-        print("✅ Tabel zones (5 wilayah TPS) berhasil di-seed.")
+        db.commit()
+        print(f"Tabel zones ({len(zones_data)} TPS) berhasil di-seed.")
 
-        # 3. Seed 5 Drivers (sebagai User dengan role='driver')
+        # Refresh zone references for related data
+        all_zones = db.query(Zone).order_by(Zone.id).all()
+
+        # Use first 5 TPS for sample operational data
+        zone_sample = all_zones[:5] if len(all_zones) >= 5 else all_zones
+        if len(zone_sample) < 5:
+            print(f"WARNING: Hanya {len(zone_sample)} TPS tersedia, sample data disesuaikan.")
+            zone_sample = (zone_sample * 5)[:5]
+
+        # 3. Seed Drivers
         drivers_data = [
-            User(name="Budi Utomo", username="driver_budi", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281234567890", zone_id=zones_data[0].id, status="Offline"),
-            User(name="Joko Susilo", username="driver_joko", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281298765432", zone_id=zones_data[1].id, status="Offline"),
-            User(name="Agus Saputra", username="driver_agus", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281311223344", zone_id=zones_data[2].id, status="Offline"),
-            User(name="Herman Wijaya", username="driver_herman", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281355667788", zone_id=zones_data[3].id, status="Offline"),
-            User(name="Rudy Hermawan", username="driver_rudy", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281288990011", zone_id=zones_data[4].id, status="Offline"),
+            User(name="Budi Utomo", username="driver_budi", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281234567890", zone_id=zone_sample[0].id, status="Offline"),
+            User(name="Joko Susilo", username="driver_joko", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281298765432", zone_id=zone_sample[1].id, status="Offline"),
+            User(name="Agus Saputra", username="driver_agus", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281311223344", zone_id=zone_sample[2].id, status="Offline"),
+            User(name="Herman Wijaya", username="driver_herman", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281355667788", zone_id=zone_sample[3].id, status="Offline"),
+            User(name="Rudy Hermawan", username="driver_rudy", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281288990011", zone_id=zone_sample[4].id, status="Offline"),
         ]
         db.add_all(drivers_data)
-        db.commit()  # Commit agar driver/user ID ter-generate
-        print("✅ Tabel users (5 driver supir armada) berhasil di-seed.")
+        db.commit()
+        print("Tabel users (5 driver) berhasil di-seed.")
 
-        # 4. Seed 15 SensorData (Simulasi Telemetri Nyata)
+        # 4. Seed SensorData
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         sensor_data_records = []
 
-        # Zone 1 (TPS 01 - Kebon Jeruk) -> Mengisi bertahap hingga High Priority (>80%)
+        zone1 = zone_sample[0]
         sensor_data_records.extend([
-            SensorData(zone_id=zones_data[0].id, sensor_type="Ultrasonic", fill_percentage=40.0, value=60.0, created_at=now - timedelta(hours=10)),
-            SensorData(zone_id=zones_data[0].id, sensor_type="Ultrasonic", fill_percentage=65.0, value=35.0, created_at=now - timedelta(hours=5)),
-            SensorData(zone_id=zones_data[0].id, sensor_type="Ultrasonic", fill_percentage=85.0, value=15.0, created_at=now - timedelta(hours=1)),
+            SensorData(zone_id=zone1.id, sensor_type="Ultrasonic", fill_percentage=40.0, value=60.0, created_at=now - timedelta(hours=10)),
+            SensorData(zone_id=zone1.id, sensor_type="Ultrasonic", fill_percentage=65.0, value=35.0, created_at=now - timedelta(hours=5)),
+            SensorData(zone_id=zone1.id, sensor_type="Ultrasonic", fill_percentage=85.0, value=15.0, created_at=now - timedelta(hours=1)),
         ])
 
-        # Zone 2 (TPS 02 - Grogol) -> Stabil di kondisi Normal (<50%)
+        zone2 = zone_sample[1]
         sensor_data_records.extend([
-            SensorData(zone_id=zones_data[1].id, sensor_type="Ultrasonic", fill_percentage=10.0, value=90.0, created_at=now - timedelta(hours=10)),
-            SensorData(zone_id=zones_data[1].id, sensor_type="Ultrasonic", fill_percentage=20.0, value=80.0, created_at=now - timedelta(hours=5)),
-            SensorData(zone_id=zones_data[1].id, sensor_type="Ultrasonic", fill_percentage=25.0, value=75.0, created_at=now - timedelta(hours=1)),
+            SensorData(zone_id=zone2.id, sensor_type="Ultrasonic", fill_percentage=10.0, value=90.0, created_at=now - timedelta(hours=10)),
+            SensorData(zone_id=zone2.id, sensor_type="Ultrasonic", fill_percentage=20.0, value=80.0, created_at=now - timedelta(hours=5)),
+            SensorData(zone_id=zone2.id, sensor_type="Ultrasonic", fill_percentage=25.0, value=75.0, created_at=now - timedelta(hours=1)),
         ])
 
-        # Zone 3 (TPS 03 - Palmerah) -> Mengisi bertahap hingga Warning (50% - 80%)
+        zone3 = zone_sample[2]
         sensor_data_records.extend([
-            SensorData(zone_id=zones_data[2].id, sensor_type="Ultrasonic", fill_percentage=30.0, value=70.0, created_at=now - timedelta(hours=10)),
-            SensorData(zone_id=zones_data[2].id, sensor_type="Ultrasonic", fill_percentage=50.0, value=50.0, created_at=now - timedelta(hours=5)),
-            SensorData(zone_id=zones_data[2].id, sensor_type="Ultrasonic", fill_percentage=65.0, value=35.0, created_at=now - timedelta(hours=1)),
+            SensorData(zone_id=zone3.id, sensor_type="Ultrasonic", fill_percentage=30.0, value=70.0, created_at=now - timedelta(hours=10)),
+            SensorData(zone_id=zone3.id, sensor_type="Ultrasonic", fill_percentage=50.0, value=50.0, created_at=now - timedelta(hours=5)),
+            SensorData(zone_id=zone3.id, sensor_type="Ultrasonic", fill_percentage=65.0, value=35.0, created_at=now - timedelta(hours=1)),
         ])
 
-        # Zone 4 (TPS 04 - Kemanggisan) -> Stabil di kondisi Normal (<50%)
+        zone4 = zone_sample[3]
         sensor_data_records.extend([
-            SensorData(zone_id=zones_data[3].id, sensor_type="Ultrasonic", fill_percentage=5.0, value=95.0, created_at=now - timedelta(hours=10)),
-            SensorData(zone_id=zones_data[3].id, sensor_type="Ultrasonic", fill_percentage=10.0, value=90.0, created_at=now - timedelta(hours=5)),
-            SensorData(zone_id=zones_data[3].id, sensor_type="Ultrasonic", fill_percentage=15.0, value=85.0, created_at=now - timedelta(hours=1)),
+            SensorData(zone_id=zone4.id, sensor_type="Ultrasonic", fill_percentage=5.0, value=95.0, created_at=now - timedelta(hours=10)),
+            SensorData(zone_id=zone4.id, sensor_type="Ultrasonic", fill_percentage=10.0, value=90.0, created_at=now - timedelta(hours=5)),
+            SensorData(zone_id=zone4.id, sensor_type="Ultrasonic", fill_percentage=15.0, value=85.0, created_at=now - timedelta(hours=1)),
         ])
 
-        # Zone 5 (TPS 05 - Kembangan) -> Mengisi bertahap hingga Warning (50% - 80%)
+        zone5 = zone_sample[4]
         sensor_data_records.extend([
-            SensorData(zone_id=zones_data[4].id, sensor_type="Ultrasonic", fill_percentage=45.0, value=55.0, created_at=now - timedelta(hours=10)),
-            SensorData(zone_id=zones_data[4].id, sensor_type="Ultrasonic", fill_percentage=60.0, value=40.0, created_at=now - timedelta(hours=5)),
-            SensorData(zone_id=zones_data[4].id, sensor_type="Ultrasonic", fill_percentage=70.0, value=30.0, created_at=now - timedelta(hours=1)),
+            SensorData(zone_id=zone5.id, sensor_type="Ultrasonic", fill_percentage=45.0, value=55.0, created_at=now - timedelta(hours=10)),
+            SensorData(zone_id=zone5.id, sensor_type="Ultrasonic", fill_percentage=60.0, value=40.0, created_at=now - timedelta(hours=5)),
+            SensorData(zone_id=zone5.id, sensor_type="Ultrasonic", fill_percentage=70.0, value=30.0, created_at=now - timedelta(hours=1)),
         ])
 
         db.add_all(sensor_data_records)
-        print("✅ Tabel sensor_data (15 data pembacaan simulasi) berhasil di-seed.")
+        print("Tabel sensor_data (15 data pembacaan) berhasil di-seed.")
 
-        # 5. Seed 20 VolumePredictions (Proyeksi 4 Hari ke Depan untuk 5 Wilayah)
+        # 5. Seed VolumePredictions
         prediction_records = []
-        
-        # Zone 1
-        prediction_records.extend([
-            VolumePrediction(zone_id=zones_data[0].id, predicted_volume=90.0, target_time=now + timedelta(days=1), confidence_score=0.95),
-            VolumePrediction(zone_id=zones_data[0].id, predicted_volume=95.0, target_time=now + timedelta(days=2), confidence_score=0.90),
-            VolumePrediction(zone_id=zones_data[0].id, predicted_volume=100.0, target_time=now + timedelta(days=3), confidence_score=0.85),
-            VolumePrediction(zone_id=zones_data[0].id, predicted_volume=105.0, target_time=now + timedelta(days=4), confidence_score=0.80),
-        ])
 
-        # Zone 2
         prediction_records.extend([
-            VolumePrediction(zone_id=zones_data[1].id, predicted_volume=30.0, target_time=now + timedelta(days=1), confidence_score=0.98),
-            VolumePrediction(zone_id=zones_data[1].id, predicted_volume=35.0, target_time=now + timedelta(days=2), confidence_score=0.95),
-            VolumePrediction(zone_id=zones_data[1].id, predicted_volume=40.0, target_time=now + timedelta(days=3), confidence_score=0.92),
-            VolumePrediction(zone_id=zones_data[1].id, predicted_volume=45.0, target_time=now + timedelta(days=4), confidence_score=0.89),
+            VolumePrediction(zone_id=zone1.id, predicted_volume=90.0, target_time=now + timedelta(days=1), confidence_score=0.95),
+            VolumePrediction(zone_id=zone1.id, predicted_volume=95.0, target_time=now + timedelta(days=2), confidence_score=0.90),
+            VolumePrediction(zone_id=zone1.id, predicted_volume=100.0, target_time=now + timedelta(days=3), confidence_score=0.85),
+            VolumePrediction(zone_id=zone1.id, predicted_volume=105.0, target_time=now + timedelta(days=4), confidence_score=0.80),
         ])
-
-        # Zone 3
         prediction_records.extend([
-            VolumePrediction(zone_id=zones_data[2].id, predicted_volume=70.0, target_time=now + timedelta(days=1), confidence_score=0.94),
-            VolumePrediction(zone_id=zones_data[2].id, predicted_volume=75.0, target_time=now + timedelta(days=2), confidence_score=0.88),
-            VolumePrediction(zone_id=zones_data[2].id, predicted_volume=80.0, target_time=now + timedelta(days=3), confidence_score=0.85),
-            VolumePrediction(zone_id=zones_data[2].id, predicted_volume=85.0, target_time=now + timedelta(days=4), confidence_score=0.80),
+            VolumePrediction(zone_id=zone2.id, predicted_volume=30.0, target_time=now + timedelta(days=1), confidence_score=0.98),
+            VolumePrediction(zone_id=zone2.id, predicted_volume=35.0, target_time=now + timedelta(days=2), confidence_score=0.95),
+            VolumePrediction(zone_id=zone2.id, predicted_volume=40.0, target_time=now + timedelta(days=3), confidence_score=0.92),
+            VolumePrediction(zone_id=zone2.id, predicted_volume=45.0, target_time=now + timedelta(days=4), confidence_score=0.89),
         ])
-
-        # Zone 4
         prediction_records.extend([
-            VolumePrediction(zone_id=zones_data[3].id, predicted_volume=20.0, target_time=now + timedelta(days=1), confidence_score=0.97),
-            VolumePrediction(zone_id=zones_data[3].id, predicted_volume=25.0, target_time=now + timedelta(days=2), confidence_score=0.94),
-            VolumePrediction(zone_id=zones_data[3].id, predicted_volume=30.0, target_time=now + timedelta(days=3), confidence_score=0.90),
-            VolumePrediction(zone_id=zones_data[3].id, predicted_volume=35.0, target_time=now + timedelta(days=4), confidence_score=0.85),
+            VolumePrediction(zone_id=zone3.id, predicted_volume=70.0, target_time=now + timedelta(days=1), confidence_score=0.94),
+            VolumePrediction(zone_id=zone3.id, predicted_volume=75.0, target_time=now + timedelta(days=2), confidence_score=0.88),
+            VolumePrediction(zone_id=zone3.id, predicted_volume=80.0, target_time=now + timedelta(days=3), confidence_score=0.85),
+            VolumePrediction(zone_id=zone3.id, predicted_volume=85.0, target_time=now + timedelta(days=4), confidence_score=0.80),
         ])
-
-        # Zone 5
         prediction_records.extend([
-            VolumePrediction(zone_id=zones_data[4].id, predicted_volume=75.0, target_time=now + timedelta(days=1), confidence_score=0.93),
-            VolumePrediction(zone_id=zones_data[4].id, predicted_volume=80.0, target_time=now + timedelta(days=2), confidence_score=0.90),
-            VolumePrediction(zone_id=zones_data[4].id, predicted_volume=85.0, target_time=now + timedelta(days=3), confidence_score=0.86),
-            VolumePrediction(zone_id=zones_data[4].id, predicted_volume=90.0, target_time=now + timedelta(days=4), confidence_score=0.80),
+            VolumePrediction(zone_id=zone4.id, predicted_volume=20.0, target_time=now + timedelta(days=1), confidence_score=0.97),
+            VolumePrediction(zone_id=zone4.id, predicted_volume=25.0, target_time=now + timedelta(days=2), confidence_score=0.94),
+            VolumePrediction(zone_id=zone4.id, predicted_volume=30.0, target_time=now + timedelta(days=3), confidence_score=0.90),
+            VolumePrediction(zone_id=zone4.id, predicted_volume=35.0, target_time=now + timedelta(days=4), confidence_score=0.85),
+        ])
+        prediction_records.extend([
+            VolumePrediction(zone_id=zone5.id, predicted_volume=75.0, target_time=now + timedelta(days=1), confidence_score=0.93),
+            VolumePrediction(zone_id=zone5.id, predicted_volume=80.0, target_time=now + timedelta(days=2), confidence_score=0.90),
+            VolumePrediction(zone_id=zone5.id, predicted_volume=85.0, target_time=now + timedelta(days=3), confidence_score=0.86),
+            VolumePrediction(zone_id=zone5.id, predicted_volume=90.0, target_time=now + timedelta(days=4), confidence_score=0.80),
         ])
 
         db.add_all(prediction_records)
-        print("✅ Tabel volume_predictions (20 data simulasi proyeksi) berhasil di-seed.")
+        print("Tabel volume_predictions (20 data proyeksi) berhasil di-seed.")
 
-        # 6. Seed CitizenReports (Laporan Pengaduan Warga)
+        # 6. Seed CitizenReports
         citizen_reports_data = [
             CitizenReport(
                 whatsapp_number="6281234567890",
-                report_content="Ada tumpukan sampah plastik menumpuk banyak di dekat gerbang TPS 01 Kebon Jeruk, tolong segera diangkut.",
-                zone_id=zones_data[0].id,
+                report_content="Ada tumpukan sampah plastik menumpuk banyak di dekat gerbang TPS, tolong segera diangkut.",
+                zone_id=zone1.id,
                 status="Baru",
                 is_grouped=True,
                 created_at=now - timedelta(hours=4)
             ),
             CitizenReport(
                 whatsapp_number="6281298765432",
-                report_content="Tolong angkut sampah plastik menumpuk di gerbang TPS 01 Kebon Jeruk, baunya mulai mengganggu.",
-                zone_id=zones_data[0].id,
+                report_content="Tolong angkut sampah plastik menumpuk di gerbang TPS, baunya mulai mengganggu.",
+                zone_id=zone1.id,
                 status="Baru",
                 is_grouped=True,
                 created_at=now - timedelta(hours=2)
             ),
             CitizenReport(
                 whatsapp_number="6281311112222",
-                report_content="Laporan bak sampah di TPS Kebon Jeruk jebol pada bagian penahan bawah.",
-                zone_id=zones_data[0].id,
+                report_content="Laporan bak sampah di TPS jebol pada bagian penahan bawah.",
+                zone_id=zone1.id,
                 status="Sedang Ditangani",
                 is_grouped=False,
                 created_at=now - timedelta(days=1)
             ),
             CitizenReport(
                 whatsapp_number="6281255556666",
-                report_content="Sampah daun kering berserakan di depan TPS 02 Grogol.",
-                zone_id=zones_data[1].id,
+                report_content="Sampah daun kering berserakan di depan TPS.",
+                zone_id=zone2.id,
                 status="Selesai",
                 is_grouped=False,
                 created_at=now - timedelta(days=3)
             ),
             CitizenReport(
                 whatsapp_number="6281288889999",
-                report_content="Sampah basah menumpuk banyak di TPS Palmerah, baunya menyengat.",
-                zone_id=zones_data[2].id,
+                report_content="Sampah basah menumpuk banyak di TPS, baunya menyengat.",
+                zone_id=zone3.id,
                 status="Baru",
                 is_grouped=True,
                 created_at=now - timedelta(hours=5)
             ),
             CitizenReport(
                 whatsapp_number="6281344445555",
-                report_content="Baunya menyengat sekali dari tumpukan sampah basah di TPS Palmerah. Mohon dikirim supir pengangkut.",
-                zone_id=zones_data[2].id,
+                report_content="Baunya menyengat sekali dari tumpukan sampah basah di TPS. Mohon dikirim supir pengangkut.",
+                zone_id=zone3.id,
                 status="Baru",
                 is_grouped=True,
                 created_at=now - timedelta(hours=3)
             ),
             CitizenReport(
                 whatsapp_number="6281277778888",
-                report_content="Warga membuang kasur bekas sembarangan di luar TPS Palmerah.",
-                zone_id=zones_data[2].id,
+                report_content="Warga membuang kasur bekas sembarangan di luar TPS.",
+                zone_id=zone3.id,
                 status="Baru",
                 is_grouped=False,
                 created_at=now - timedelta(hours=8)
             ),
             CitizenReport(
                 whatsapp_number="6281322223333",
-                report_content="Ada sampah sisa material bangunan dibuang di depan TPS 04 Kemanggisan.",
-                zone_id=zones_data[3].id,
+                report_content="Ada sampah sisa material bangunan dibuang di depan TPS.",
+                zone_id=zone4.id,
                 status="Baru",
                 is_grouped=False,
                 created_at=now - timedelta(hours=6)
             ),
             CitizenReport(
                 whatsapp_number="6281366667777",
-                report_content="Tumpukan sampah pasar meluap hingga memakan bahu jalan di TPS 05 Kembangan.",
-                zone_id=zones_data[4].id,
+                report_content="Tumpukan sampah pasar meluap hingga memakan bahu jalan di TPS.",
+                zone_id=zone5.id,
                 status="Sedang Ditangani",
                 is_grouped=False,
                 created_at=now - timedelta(hours=14)
             ),
             CitizenReport(
                 whatsapp_number="6281211223344",
-                report_content="Lampu penerangan di TPS Kembangan mati sejak kemarin malam.",
-                zone_id=zones_data[4].id,
+                report_content="Lampu penerangan di TPS mati sejak kemarin malam.",
+                zone_id=zone5.id,
                 status="Selesai",
                 is_grouped=False,
                 created_at=now - timedelta(days=2)
             ),
         ]
         db.add_all(citizen_reports_data)
-        print("✅ Tabel citizen_reports (10 data aduan warga) berhasil di-seed.")
+        print("Tabel citizen_reports (10 data aduan warga) berhasil di-seed.")
 
-        # 7. Seed RouteRecommendations (Rekomendasi Rute Supir)
-        # Menghasilkan rute terurut optimal untuk driver Budi Utomo (drivers_data[0])
-        # TPS 01 (1) -> TPS 03 (3) -> TPS 05 (5) -> TPS 02 (2) -> TPS 04 (4)
-        tps_ids_ordered = [zones_data[0].id, zones_data[2].id, zones_data[4].id, zones_data[1].id, zones_data[3].id]
-        route_recommendation = RouteRecommendation(
-            driver_id=drivers_data[0].id,
-            route_json=json.dumps(tps_ids_ordered),
-            status="Pending",
-            created_at=now - timedelta(hours=1)
-        )
-        db.add(route_recommendation)
-        print("✅ Tabel route_recommendations (1 rute optimal terurut) berhasil di-seed.")
+        # 7. Seed RouteRecommendations
+        tps_ids_ordered = [zone_sample[0].id, zone_sample[2].id, zone_sample[4].id, zone_sample[1].id, zone_sample[3].id]
+        all_drivers = db.query(User).filter(User.role == "driver").all()
+        if all_drivers:
+            route_recommendation = RouteRecommendation(
+                driver_id=all_drivers[0].id,
+                route_json=json.dumps(tps_ids_ordered),
+                status="Pending",
+                created_at=now - timedelta(hours=1)
+            )
+            db.add(route_recommendation)
+            print("Tabel route_recommendations (1 rute) berhasil di-seed.")
 
         db.commit()
-        print("🎉 Seeding selesai dengan sukses!")
+        print("Seeding selesai dengan sukses!")
 
     except Exception as e:
         db.rollback()
-        print(f"❌ Terjadi kesalahan saat seeding: {e}")
+        print(f"Terjadi kesalahan saat seeding: {e}")
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     seed_data()

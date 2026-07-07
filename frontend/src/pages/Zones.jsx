@@ -4,15 +4,25 @@ import {
   faPlus,
   faPen,
   faTrashCan,
+  faEye,
   faSpinner,
   faLocationDot,
   faTriangleExclamation,
   faMagnifyingGlass,
-  faCheckCircle
+  faCheckCircle,
+  faFilter,
+  faFilterCircleXmark,
+  faMapPin,
+  faLayerGroup,
+  faRoad,
+  faChevronLeft,
+  faChevronRight
 } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../services/api';
 import ZoneFormModal from '../components/fragments/ZoneFormModal';
 import ConfirmModal from '../components/fragments/ConfirmModal';
+import FilterModal from '../components/fragments/FilterModal';
+import ZoneDetailModal from '../components/fragments/ZoneDetailModal';
 
 export default function Zones() {
   const [zones, setZones] = useState([]);
@@ -32,6 +42,31 @@ export default function Zones() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deletingZone, setDeletingZone] = useState(null);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
+  // Filter states
+  const [filters, setFilters] = useState({
+    wilayah: '',
+    kecamatan: '',
+    kelurahan: '',
+    jenis_tps: ''
+  });
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+
+  // Detail modal states
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailZone, setDetailZone] = useState(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  // Count active filters
+  const activeFilterCount = [filters.wilayah, filters.kecamatan, filters.kelurahan, filters.jenis_tps].filter(Boolean).length;
+
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filters]);
 
   // Fetch all zones
   async function fetchZones() {
@@ -101,6 +136,11 @@ export default function Zones() {
       
       const payload = {
         name: formData.name,
+        wilayah: formData.wilayah,
+        kecamatan: formData.kecamatan,
+        kelurahan: formData.kelurahan,
+        jenis_tps: formData.jenis_tps,
+        alamat: formData.alamat,
         latitude: parseFloat(formData.latitude),
         longitude: parseFloat(formData.longitude),
         risk_status: formData.risk_status
@@ -148,10 +188,45 @@ export default function Zones() {
     }
   };
 
-  // Filter zones by search query
-  const filteredZones = zones.filter((z) =>
-    z.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // Open Detail Modal
+  const handleOpenDetail = (zone) => {
+    setDetailZone(zone);
+    setDetailModalOpen(true);
+  };
+
+  // Apply filters from FilterModal
+  const handleApplyFilters = (newFilters) => {
+    setFilters(newFilters);
+  };
+
+  // Filter zones by search query and filter params
+  const filteredZones = zones.filter((z) => {
+    const matchSearch = z.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchWilayah = !filters.wilayah || z.wilayah === filters.wilayah;
+    const matchKecamatan = !filters.kecamatan || z.kecamatan === filters.kecamatan;
+    const matchKelurahan = !filters.kelurahan || z.kelurahan === filters.kelurahan;
+    const matchJenisTps = !filters.jenis_tps || z.jenis_tps === filters.jenis_tps;
+    return matchSearch && matchWilayah && matchKecamatan && matchKelurahan && matchJenisTps;
+  });
+
+  // Paginate
+  const totalPages = Math.max(1, Math.ceil(filteredZones.length / ITEMS_PER_PAGE));
+  const paginatedZones = filteredZones.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
   );
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  };
 
   // Helper for risk status styling
   const getRiskBadgeClasses = (status) => {
@@ -201,24 +276,50 @@ export default function Zones() {
           </div>
         )}
 
-        {/* Search & Stats Card */}
+        {/* Search & Filter & Stats Card */}
         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative w-full md:w-80">
-            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none text-xs">
-              <FontAwesomeIcon icon={faMagnifyingGlass} />
-            </span>
-            <input
-              type="text"
-              placeholder="Cari nama wilayah TPS..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-            />
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="relative flex-1 md:w-72">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none text-xs">
+                <FontAwesomeIcon icon={faMagnifyingGlass} />
+              </span>
+              <input
+                type="text"
+                placeholder="Cari nama wilayah TPS..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+              />
+            </div>
+            <button
+              onClick={() => setFilterModalOpen(true)}
+              className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer border ${
+                activeFilterCount > 0
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                  : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <FontAwesomeIcon icon={activeFilterCount > 0 ? faFilterCircleXmark : faFilter} />
+              <span>Filter</span>
+              {activeFilterCount > 0 && (
+                <span className="w-4.5 h-4.5 rounded-full bg-emerald-600 text-white text-[9px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
           </div>
           
           <div className="flex gap-4 text-xs font-semibold text-slate-500">
             <div>
-              Total Wilayah: <span className="text-slate-800 font-bold">{zones.length}</span>
+              {activeFilterCount > 0 ? 'Hasil' : 'Total Wilayah'}:{' '}
+              <span className="text-slate-800 font-bold">
+                {filteredZones.length}
+              </span>
+              {filteredZones.length !== zones.length && (
+                <span className="text-slate-400 font-normal ml-1">
+                  dari {zones.length}
+                </span>
+              )}
             </div>
             <div className="w-px h-4 bg-slate-200" />
             <div>
@@ -230,65 +331,153 @@ export default function Zones() {
           </div>
         </div>
 
-        {/* Table Data Card */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
+        {/* TPS Card List */}
+        <div className="space-y-3">
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center text-slate-400">
-              <FontAwesomeIcon icon={faSpinner} className="animate-spin text-2xl text-emerald-500 mb-2" />
+            <div className="bg-white border border-slate-200 rounded-xl p-10 flex flex-col items-center justify-center text-slate-400">
+              <FontAwesomeIcon icon={faSpinner} className="animate-spin text-2xl text-emerald-500 mb-3" />
               <span className="text-xs font-semibold">Sinkronisasi data wilayah...</span>
             </div>
           ) : filteredZones.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-slate-50/75 border-b border-slate-200 text-slate-400 font-bold select-none">
-                    <th className="px-6 py-4">ID</th>
-                    <th className="px-6 py-4">Nama Wilayah TPS</th>
-                    <th className="px-6 py-4">Garis Lintang (Latitude)</th>
-                    <th className="px-6 py-4">Garis Bujur (Longitude)</th>
-                    <th className="px-6 py-4">Status Risiko AI</th>
-                    <th className="px-6 py-4 text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                  {filteredZones.map((zone) => (
-                    <tr key={zone.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 text-slate-400 font-bold">#{zone.id}</td>
-                      <td className="px-6 py-4 font-bold text-slate-800">{zone.name}</td>
-                      <td className="px-6 py-4 font-mono text-slate-500">{zone.latitude.toFixed(6)}</td>
-                      <td className="px-6 py-4 font-mono text-slate-500">{zone.longitude.toFixed(6)}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getRiskBadgeClasses(zone.risk_status)}`}>
+            <>
+              {paginatedZones.map((zone) => {
+              const riskAccent = zone.risk_status === 'High Priority' ? 'bg-red-500' : zone.risk_status === 'Warning' ? 'bg-amber-500' : 'bg-emerald-500';
+              return (
+                <div
+                  key={zone.id}
+                  className="group bg-white border border-slate-200 rounded-xl shadow-2xs hover:shadow-md hover:border-slate-300 transition-all duration-200 overflow-hidden"
+                >
+                  <div className="flex">
+                    <div className={`w-1 shrink-0 ${riskAccent}`} />
+
+                    <div className="flex-1 flex flex-col md:flex-row md:items-center gap-4 px-5 py-4 min-w-0">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded`}>
+                            #{zone.id}
+                          </span>
+                          {zone.jenis_tps && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200">
+                              {zone.jenis_tps}
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-800 truncate group-hover:text-emerald-700 transition-colors" title={zone.name}>
+                          {zone.name}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5">
+                          <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                            <FontAwesomeIcon icon={faMapPin} className="text-slate-400 text-[9px]" />
+                            {zone.wilayah || '-'}
+                          </span>
+                          <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                            <FontAwesomeIcon icon={faLayerGroup} className="text-slate-400 text-[9px]" />
+                            {zone.kecamatan || '-'}
+                          </span>
+                          {zone.kelurahan && (
+                            <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                              <FontAwesomeIcon icon={faLocationDot} className="text-slate-400 text-[9px]" />
+                              {zone.kelurahan}
+                            </span>
+                          )}
+                        </div>
+                        {zone.alamat && (
+                          <p className="text-[11px] text-slate-400 mt-1.5 truncate flex items-center gap-1" title={zone.alamat}>
+                            <FontAwesomeIcon icon={faRoad} className="text-slate-300 text-[9px] shrink-0" />
+                            <span className="truncate">{zone.alamat}</span>
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex md:flex-col items-center md:items-end gap-3 md:gap-2 shrink-0">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap ${getRiskBadgeClasses(zone.risk_status)}`}>
                           {zone.risk_status}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleOpenDetail(zone)}
+                            className="w-7 h-7 rounded-lg border border-sky-200 text-sky-500 hover:bg-sky-50 hover:border-sky-300 transition-all flex items-center justify-center cursor-pointer"
+                            title="Lihat Detail TPS"
+                          >
+                            <FontAwesomeIcon icon={faEye} className="text-[11px]" />
+                          </button>
                           <button
                             onClick={() => handleOpenEdit(zone)}
-                            className="w-8 h-8 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-center cursor-pointer"
+                            className="w-7 h-7 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center cursor-pointer"
                             title="Edit Wilayah"
                           >
-                            <FontAwesomeIcon icon={faPen} className="text-xs" />
+                            <FontAwesomeIcon icon={faPen} className="text-[11px]" />
                           </button>
                           <button
                             onClick={() => handleOpenDelete(zone)}
-                            className="w-8 h-8 rounded-lg border border-red-100 text-red-500 hover:bg-red-50 transition-colors flex items-center justify-center cursor-pointer"
+                            className="w-7 h-7 rounded-lg border border-red-100 text-red-400 hover:bg-red-50 hover:border-red-200 transition-all flex items-center justify-center cursor-pointer"
                             title="Hapus Wilayah"
                           >
-                            <FontAwesomeIcon icon={faTrashCan} className="text-xs" />
+                            <FontAwesomeIcon icon={faTrashCan} className="text-[11px]" />
                           </button>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+              {totalPages > 1 && (
+                <div className="bg-white border border-slate-200 rounded-xl px-5 py-3 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500 font-medium">
+                    Halaman {currentPage} dari {totalPages}
+                    <span className="text-slate-300 mx-1">|</span>
+                    {filteredZones.length} wilayah
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-all flex items-center justify-center cursor-pointer"
+                    >
+                      <FontAwesomeIcon icon={faChevronLeft} className="text-[10px]" />
+                    </button>
+                    {getPageNumbers().map(page => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`min-w-8 h-8 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center cursor-pointer ${
+                          page === currentPage
+                            ? 'bg-emerald-600 text-white shadow-sm'
+                            : 'border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-all flex items-center justify-center cursor-pointer"
+                    >
+                      <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="py-20 flex flex-col items-center justify-center text-slate-400">
-              <FontAwesomeIcon icon={faLocationDot} className="text-3xl text-slate-350 mb-2" />
-              <span className="text-xs font-semibold">Tidak ada wilayah TPS ditemukan</span>
+            <div className="bg-white border border-slate-200 rounded-xl py-20 flex flex-col items-center justify-center text-slate-400">
+              <FontAwesomeIcon icon={activeFilterCount > 0 ? faFilterCircleXmark : faLocationDot} className="text-3xl text-slate-300 mb-3" />
+              <span className="text-xs font-semibold">
+                {activeFilterCount > 0
+                  ? 'Tidak ada wilayah TPS yang cocok dengan filter'
+                  : 'Tidak ada wilayah TPS ditemukan'}
+              </span>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={() => setFilters({ wilayah: '', kecamatan: '', kelurahan: '', jenis_tps: '' })}
+                  className="mt-3 px-4 py-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer border border-emerald-200"
+                >
+                  Reset Filter
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -316,6 +505,22 @@ export default function Zones() {
         confirmBgColorClass="bg-red-600 hover:bg-red-500"
         icon={faTrashCan}
         submitting={deleteSubmitting}
+      />
+
+      {/* FILTER MODAL */}
+      <FilterModal
+        isOpen={filterModalOpen}
+        onClose={() => setFilterModalOpen(false)}
+        zones={zones}
+        onApply={handleApplyFilters}
+        initialFilters={filters}
+      />
+
+      {/* DETAIL MODAL */}
+      <ZoneDetailModal
+        isOpen={detailModalOpen}
+        onClose={() => setDetailModalOpen(false)}
+        zone={detailZone}
       />
     </div>
   );

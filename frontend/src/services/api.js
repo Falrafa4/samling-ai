@@ -204,5 +204,13 @@ export const api = {
       },
       body: JSON.stringify({ status }),
     });
+  },
+
+  /**
+   * Mengambil data sensor historis untuk wilayah tertentu.
+   * Endpoint: GET /sensor-data/history?zone_id={zoneId}&days={days}
+   */
+  async getSensorDataHistory(zoneId, days = 7) {
+    return fetchWithAuth(`/sensor-data/history?zone_id=${zoneId}&days=${days}`);
   }
 };
