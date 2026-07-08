@@ -13,6 +13,18 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { api } from '../services/api';
 
+// Fix Leaflet's default icon assets issue in bundlers (Vite)
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
 export default function FleetDispatch() {
   const [drivers, setDrivers] = useState([]);
   const [zones, setZones] = useState([]);
@@ -96,10 +108,10 @@ export default function FleetDispatch() {
     // Initialize map if not yet done
     if (!miniMapRef.current) {
       miniMapRef.current = L.map(miniMapContainerRef.current, {
-        zoomControl: false,
+        zoomControl: true,
         attributionControl: false,
-        scrollWheelZoom: false,
-        dragging: false
+        scrollWheelZoom: true,
+        dragging: true
       }).setView([-6.1944, 106.7672], 13);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMapRef.current);
@@ -112,6 +124,17 @@ export default function FleetDispatch() {
       }
     };
   }, []);
+
+  // Force map to invalidate size when loading is finished
+  useEffect(() => {
+    if (miniMapRef.current) {
+      setTimeout(() => {
+        if (miniMapRef.current) {
+          miniMapRef.current.invalidateSize();
+        }
+      }, 200);
+    }
+  }, [loading]);
 
   // Render polyline and markers on mini map when activeRoute updates
   useEffect(() => {
@@ -260,19 +283,18 @@ export default function FleetDispatch() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 text-slate-500">
-        <FontAwesomeIcon icon={faSpinner} className="text-3xl animate-spin text-emerald-500 mb-3" />
-        <p className="text-sm font-semibold">Memuat data armada & supir...</p>
-      </div>
-    );
-  }
-
   const milestones = getRouteMilestones();
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50">
+    <div className="flex-1 flex flex-col h-full bg-slate-50 relative">
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-xs flex flex-col items-center justify-center z-50 text-slate-500">
+          <FontAwesomeIcon icon={faSpinner} className="text-3xl animate-spin text-emerald-500 mb-3" />
+          <p className="text-sm font-semibold">Memuat data armada & supir...</p>
+        </div>
+      )}
+
       {/* Header */}
       <header className="px-8 py-6 bg-white border-b border-slate-200 shrink-0">
         <h2 className="text-2xl font-bold text-slate-800">Manajemen Rute &amp; Armada</h2>

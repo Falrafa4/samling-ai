@@ -10,6 +10,18 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { api } from '../services/api';
 
+// Fix Leaflet's default icon assets issue in bundlers (Vite)
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
 export default function PredictiveMap() {
   const [showNormalZones, setShowNormalZones] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -83,6 +95,17 @@ export default function PredictiveMap() {
       }
     };
   }, []);
+
+  // Force map to invalidate size when loading is finished
+  useEffect(() => {
+    if (mapRef.current) {
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize();
+        }
+      }, 200);
+    }
+  }, [loading]);
 
   // Render & Sync Markers on Map
   useEffect(() => {
@@ -198,25 +221,24 @@ export default function PredictiveMap() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100/60 text-slate-500">
-        <div className="relative mb-4">
-          <div className="absolute inset-0 bg-emerald-400/20 rounded-full blur-xl animate-pulse" />
-          <FontAwesomeIcon icon={faSpinner} className="text-3xl animate-spin text-emerald-500 relative" />
-        </div>
-        <p className="text-sm font-semibold tracking-wide">Memuat peta pemantauan</p>
-        <div className="mt-3 flex gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex-1 flex h-full relative overflow-hidden bg-slate-100">
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-xs flex flex-col items-center justify-center z-50 text-slate-500">
+          <div className="relative mb-4">
+            <div className="absolute inset-0 bg-emerald-400/20 rounded-full blur-xl animate-pulse" />
+            <FontAwesomeIcon icon={faSpinner} className="text-3xl animate-spin text-emerald-500 relative" />
+          </div>
+          <p className="text-sm font-semibold tracking-wide">Memuat peta pemantauan</p>
+          <div className="mt-3 flex gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
+        </div>
+      )}
+
       {/* Main Map Viewport — full screen */}
       <div className="flex-1 h-full relative z-0">
         {/* Container Peta Leaflet */}
@@ -225,7 +247,7 @@ export default function PredictiveMap() {
         {/* Floating Filter Toggle */}
         <button
           onClick={() => setFilterOpen((v) => !v)}
-          className="absolute top-4 left-4 z-30 w-11 h-11 rounded-2xl bg-white/90 backdrop-blur-md shadow-soft active:scale-90 transition-all duration-200 ease-out flex items-center justify-center text-slate-500 hover:text-emerald-600 cursor-pointer group"
+          className="absolute top-4 left-4 z-[1010] w-11 h-11 rounded-2xl bg-white/90 backdrop-blur-md shadow-soft active:scale-90 transition-all duration-200 ease-out flex items-center justify-center text-slate-500 hover:text-emerald-600 cursor-pointer group"
           title="Filter Peta"
         >
           <FontAwesomeIcon
@@ -236,7 +258,7 @@ export default function PredictiveMap() {
 
         {/* Floating Filter Panel — animated glass card */}
         <div
-          className={`absolute top-4 left-18 z-30 w-72 max-h-[calc(100%-6rem)] overflow-y-auto transition-all duration-200 ease-out origin-top-left rounded-2xl ${
+          className={`absolute top-4 left-18 z-[1010] w-72 max-h-[calc(100%-6rem)] overflow-y-auto transition-all duration-200 ease-out origin-top-left rounded-2xl ${
             filterOpen
               ? 'opacity-100 scale-100 pointer-events-auto'
               : 'opacity-0 scale-95 pointer-events-none'
@@ -326,7 +348,7 @@ export default function PredictiveMap() {
         </div>
 
         {/* Floating Controls — right side */}
-        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+        <div className="absolute top-4 right-4 z-[1010] flex flex-col gap-2">
           <button
             onClick={handleRecenter}
             className="w-11 h-11 rounded-2xl bg-white/90 backdrop-blur-md shadow-soft active:scale-90 transition-all duration-200 ease-out flex items-center justify-center text-slate-500 hover:text-emerald-600 cursor-pointer"
@@ -337,7 +359,7 @@ export default function PredictiveMap() {
         </div>
 
         {/* Floating Summary Overlay */}
-        <div className="absolute bottom-4 left-4 right-4 md:right-auto md:w-96 z-10 bg-white/80 backdrop-blur-xl border border-white/40 rounded-2xl shadow-soft p-5 overflow-hidden">
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto md:w-96 z-[1010] bg-white/80 backdrop-blur-xl border border-white/40 rounded-2xl shadow-soft p-5 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent" />
 
           <div className="flex justify-between items-start mb-3">
