@@ -107,6 +107,14 @@ export const api = {
   },
 
   /**
+   * Mengambil detail wilayah TPS berdasarkan ID.
+   * Endpoint: GET /zones/{zone_id}
+   */
+  async getZone(zoneId) {
+    return fetchWithAuth(`/zones/${zoneId}`);
+  },
+
+  /**
    * Membuat wilayah TPS baru.
    * Endpoint: POST /zones
    */
