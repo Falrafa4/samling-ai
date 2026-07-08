@@ -15,7 +15,7 @@ from app.models.route_recommendations import RouteRecommendation
 from app.utils.security import get_password_hash
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "../../data")
-JSON_PATH = os.path.join(DATA_DIR, "tps_dki_enriched.json")
+JSON_PATH = os.path.join(DATA_DIR, "tps_priority_dki_enriched.json")
 
 
 def seed_data():
