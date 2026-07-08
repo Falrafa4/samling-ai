@@ -133,7 +133,7 @@ export default function PredictiveMap() {
 
     // Tambahkan marker untuk setiap zone
     filteredZones.forEach((zone) => {
-      const sensor = sensorData.find((s) => s.zone_id === zone.id);
+      const sensor = sensorData.find((s) => s.zone_id === zone.id && s.sensor_type?.startsWith('Ultrasonic'));
       const capacity = sensor ? `${Math.round(sensor.fill_percentage)}%` : 'Offline';
       const status = sensor ? zone.risk_status : 'Offline';
 

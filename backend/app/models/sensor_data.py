@@ -12,5 +12,6 @@ class SensorData(Base):
     fill_percentage = Column(Float)
     value = Column(Float)
     created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     zone = relationship("Zone")

@@ -124,46 +124,32 @@ def seed_data():
         # 4. Seed SensorData
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         sensor_data_records = []
+        import random
+        random.seed(42)
 
-        zone1 = zone_sample[0]
-        sensor_data_records.extend([
-            SensorData(zone_id=zone1.id, sensor_type="Ultrasonic", fill_percentage=40.0, value=60.0, created_at=now - timedelta(hours=10)),
-            SensorData(zone_id=zone1.id, sensor_type="Ultrasonic", fill_percentage=65.0, value=35.0, created_at=now - timedelta(hours=5)),
-            SensorData(zone_id=zone1.id, sensor_type="Ultrasonic", fill_percentage=85.0, value=15.0, created_at=now - timedelta(hours=1)),
-        ])
+        for i, zone in enumerate(zone_sample):
+            # Seed fresh sensor data dengan nilai 0 (seolah baru dipasang)
+            sensor_data_records.extend([
+                SensorData(zone_id=zone.id, sensor_type="Ultrasonic-Organic", fill_percentage=0.0, value=0.0, created_at=now, updated_at=now),
+                SensorData(zone_id=zone.id, sensor_type="Ultrasonic-Anorganic", fill_percentage=0.0, value=0.0, created_at=now, updated_at=now),
+                SensorData(zone_id=zone.id, sensor_type="MQ-135", fill_percentage=0.0, value=0.0, created_at=now, updated_at=now),
+                SensorData(zone_id=zone.id, sensor_type="DHT-22-Temp", fill_percentage=0.0, value=0.0, created_at=now, updated_at=now),
+                SensorData(zone_id=zone.id, sensor_type="DHT-22-Humid", fill_percentage=0.0, value=0.0, created_at=now, updated_at=now)
+            ])
 
-        zone2 = zone_sample[1]
-        sensor_data_records.extend([
-            SensorData(zone_id=zone2.id, sensor_type="Ultrasonic", fill_percentage=10.0, value=90.0, created_at=now - timedelta(hours=10)),
-            SensorData(zone_id=zone2.id, sensor_type="Ultrasonic", fill_percentage=20.0, value=80.0, created_at=now - timedelta(hours=5)),
-            SensorData(zone_id=zone2.id, sensor_type="Ultrasonic", fill_percentage=25.0, value=75.0, created_at=now - timedelta(hours=1)),
-        ])
-
-        zone3 = zone_sample[2]
-        sensor_data_records.extend([
-            SensorData(zone_id=zone3.id, sensor_type="Ultrasonic", fill_percentage=30.0, value=70.0, created_at=now - timedelta(hours=10)),
-            SensorData(zone_id=zone3.id, sensor_type="Ultrasonic", fill_percentage=50.0, value=50.0, created_at=now - timedelta(hours=5)),
-            SensorData(zone_id=zone3.id, sensor_type="Ultrasonic", fill_percentage=65.0, value=35.0, created_at=now - timedelta(hours=1)),
-        ])
-
-        zone4 = zone_sample[3]
-        sensor_data_records.extend([
-            SensorData(zone_id=zone4.id, sensor_type="Ultrasonic", fill_percentage=5.0, value=95.0, created_at=now - timedelta(hours=10)),
-            SensorData(zone_id=zone4.id, sensor_type="Ultrasonic", fill_percentage=10.0, value=90.0, created_at=now - timedelta(hours=5)),
-            SensorData(zone_id=zone4.id, sensor_type="Ultrasonic", fill_percentage=15.0, value=85.0, created_at=now - timedelta(hours=1)),
-        ])
-
-        zone5 = zone_sample[4]
-        sensor_data_records.extend([
-            SensorData(zone_id=zone5.id, sensor_type="Ultrasonic", fill_percentage=45.0, value=55.0, created_at=now - timedelta(hours=10)),
-            SensorData(zone_id=zone5.id, sensor_type="Ultrasonic", fill_percentage=60.0, value=40.0, created_at=now - timedelta(hours=5)),
-            SensorData(zone_id=zone5.id, sensor_type="Ultrasonic", fill_percentage=70.0, value=30.0, created_at=now - timedelta(hours=1)),
-        ])
+            # Karena kosong, set status risiko ke Normal
+            zone.risk_status = "Normal"
 
         db.add_all(sensor_data_records)
-        print("Tabel sensor_data (15 data pembacaan) berhasil di-seed.")
+        print(f"Tabel sensor_data ({len(sensor_data_records)} data pembacaan IoT fresh bernilai 0) berhasil di-seed.")
 
         # 5. Seed VolumePredictions
+        zone1 = zone_sample[0]
+        zone2 = zone_sample[1]
+        zone3 = zone_sample[2]
+        zone4 = zone_sample[3]
+        zone5 = zone_sample[4]
+
         prediction_records = []
 
         prediction_records.extend([

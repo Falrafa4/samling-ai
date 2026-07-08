@@ -13,10 +13,12 @@ from app.utils.response import response_success
 
 router = APIRouter(tags=["sensor-data"])
 
-@router.post("/sensor-data", status_code=status.HTTP_201_CREATED)
-def create_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(get_db)):
+@router.put("/sensor-data", status_code=status.HTTP_200_OK)
+def update_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(get_db)):
     """
-    Kirim Data Sensor Baru (Endpoint Publik untuk IoT Device).
+    Perbarui Data Sensor (Endpoint Publik untuk IoT Device).
+    Jika data sensor dengan zone_id dan sensor_type tersebut sudah ada, perbarui nilainya.
+    Jika belum ada, buat baru (Upsert).
     Secara dinamis memperbarui risk_status dari wilayah terkait berdasarkan fill_percentage:
     - > 80% -> High Priority
     - 50% - 80% -> Warning
@@ -30,28 +32,59 @@ def create_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(g
             detail=f"Zone dengan ID {sensor_data_in.zone_id} tidak terdaftar di sistem."
         )
 
-    # 2. Simpan telemetry data ke database
-    new_sensor_data = SensorData(
-        zone_id=sensor_data_in.zone_id,
-        sensor_type=sensor_data_in.sensor_type,
-        fill_percentage=sensor_data_in.fill_percentage,
-        value=sensor_data_in.value
+    # 2. Cari data sensor lama untuk diperbarui (Upsert)
+    sensor_record = (
+        db.query(SensorData)
+        .filter(
+            SensorData.zone_id == sensor_data_in.zone_id,
+            SensorData.sensor_type == sensor_data_in.sensor_type
+        )
+        .first()
     )
-    db.add(new_sensor_data)
+
+    now = datetime.now()
+    if sensor_record:
+        # Update existing record
+        sensor_record.fill_percentage = sensor_data_in.fill_percentage
+        sensor_record.value = sensor_data_in.value
+        sensor_record.updated_at = now # Atur waktu terupdate
+    else:
+        # Create new record
+        sensor_record = SensorData(
+            zone_id=sensor_data_in.zone_id,
+            sensor_type=sensor_data_in.sensor_type,
+            fill_percentage=sensor_data_in.fill_percentage,
+            value=sensor_data_in.value,
+            created_at=now,
+            updated_at=now
+        )
+        db.add(sensor_record)
 
     # 3. Logika Pembaruan Status Wilayah (Dinamis Penuh)
-    if sensor_data_in.fill_percentage > 80.0:
-        zone.risk_status = "High Priority"
-    elif sensor_data_in.fill_percentage >= 50.0:
-        zone.risk_status = "Warning"
-    else:
-        zone.risk_status = "Normal"
+    if sensor_data_in.sensor_type.startswith("Ultrasonic"):
+        db.flush() # Sinkronisasi state memori ke database transaksi
+        ultrasonic_sensors = (
+            db.query(SensorData)
+            .filter(
+                SensorData.zone_id == sensor_data_in.zone_id,
+                SensorData.sensor_type.like("Ultrasonic%")
+            )
+            .all()
+        )
+        max_fill = max([s.fill_percentage for s in ultrasonic_sensors] + [sensor_data_in.fill_percentage])
+
+        if max_fill > 80.0:
+            zone.risk_status = "High Priority"
+        elif max_fill >= 50.0:
+            zone.risk_status = "Warning"
+        else:
+            zone.risk_status = "Normal"
 
     db.commit()
-    db.refresh(new_sensor_data)
+    db.refresh(sensor_record)
 
-    data = SensorDataResponse.model_validate(new_sensor_data)
-    return response_success(data=data, message="Data sensor berhasil disimpan dan status wilayah berhasil diperbarui.")
+    data = SensorDataResponse.model_validate(sensor_record)
+    return response_success(data=data, message="Data sensor berhasil diperbarui dan status wilayah berhasil disinkronkan.")
 
 @router.get("/sensor-data/latest")
 def get_latest_sensor_data(db: Session = Depends(get_db)):
@@ -59,10 +92,10 @@ def get_latest_sensor_data(db: Session = Depends(get_db)):
     Mengambil pembacaan data sensor terakhir untuk semua wilayah TPS (Memerlukan Autentikasi).
     Menghasilkan maksimal 1 data sensor terbaru untuk setiap zone_id.
     """
-    # Query untuk mengambil ID terbesar (terbaru) per zone_id
+    # Query untuk mengambil ID terbesar (terbaru) per zone_id dan sensor_type
     max_ids_query = (
         db.query(func.max(SensorData.id))
-        .group_by(SensorData.zone_id)
+        .group_by(SensorData.zone_id, SensorData.sensor_type)
     )
 
     # Mengambil objek SensorData berdasarkan ID yang cocok dengan query (Eager Loading dengan joinedload)
