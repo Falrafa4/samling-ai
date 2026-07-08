@@ -7,7 +7,7 @@ class SensorData(Base):
     __tablename__ = "sensor_data"
 
     id = Column(Integer, primary_key=True, index=True)
-    zone_id = Column(Integer, ForeignKey("zones.id"), nullable=False)
+    zone_id = Column(Integer, ForeignKey("zones.id"), nullable=False, index=True)
     sensor_type = Column(String, index=True)
     fill_percentage = Column(Float)
     value = Column(Float)

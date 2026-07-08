@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
-from typing import List
+from typing import List, Optional
 from datetime import datetime, timedelta, timezone
 
 from app.database.database import get_db
 from app.models.sensor_data import SensorData
 from app.models.zones import Zone
-from app.schemas.sensor_data import SensorDataCreate, SensorDataResponse
+from app.schemas.sensor_data import SensorDataCreate, SensorDataResponse, SensorDataBulkResponse
 from app.api.deps import get_current_user
 from app.utils.response import response_success
 
@@ -87,26 +87,40 @@ def update_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(g
     return response_success(data=data, message="Data sensor berhasil diperbarui dan status wilayah berhasil disinkronkan.")
 
 @router.get("/sensor-data/latest")
-def get_latest_sensor_data(db: Session = Depends(get_db)):
+def get_latest_sensor_data(
+    zone_id: Optional[int] = Query(None, description="Filter berdasarkan ID wilayah TPS"),
+    db: Session = Depends(get_db)
+):
     """
-    Mengambil pembacaan data sensor terakhir untuk semua wilayah TPS (Memerlukan Autentikasi).
-    Menghasilkan maksimal 1 data sensor terbaru untuk setiap zone_id.
+    Mengambil pembacaan data sensor terakhir untuk semua wilayah TPS (Mendukung filter zone_id).
+    Menghasilkan maksimal 1 data sensor terbaru untuk setiap zone_id dan sensor_type.
     """
     # Query untuk mengambil ID terbesar (terbaru) per zone_id dan sensor_type
     max_ids_query = (
         db.query(func.max(SensorData.id))
         .group_by(SensorData.zone_id, SensorData.sensor_type)
     )
+    
+    if zone_id is not None:
+        max_ids_query = max_ids_query.filter(SensorData.zone_id == zone_id)
+        
+        # Mengambil objek SensorData dengan eager loading zone (karena zone spesifik diminta)
+        latest_records = (
+            db.query(SensorData)
+            .options(joinedload(SensorData.zone))
+            .filter(SensorData.id.in_(max_ids_query))
+            .all()
+        )
+        data = [SensorDataResponse.model_validate(record) for record in latest_records]
+    else:
+        # Bulk query: tanpa eager loading zone untuk menghemat bandwidth
+        latest_records = (
+            db.query(SensorData)
+            .filter(SensorData.id.in_(max_ids_query))
+            .all()
+        )
+        data = [SensorDataBulkResponse.model_validate(record) for record in latest_records]
 
-    # Mengambil objek SensorData berdasarkan ID yang cocok dengan query (Eager Loading dengan joinedload)
-    latest_records = (
-        db.query(SensorData)
-        .options(joinedload(SensorData.zone))
-        .filter(SensorData.id.in_(max_ids_query))
-        .all()
-    )
-
-    data = [SensorDataResponse.model_validate(record) for record in latest_records]
     return response_success(data=data, message="Data sensor terbaru per wilayah berhasil diambil.")
 
 @router.get("/sensor-data/history")

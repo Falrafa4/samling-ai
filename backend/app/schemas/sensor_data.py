@@ -29,3 +29,15 @@ class SensorDataResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class SensorDataBulkResponse(BaseModel):
+    id: int
+    zone_id: int
+    sensor_type: str
+    fill_percentage: float
+    value: float
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

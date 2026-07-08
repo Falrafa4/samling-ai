@@ -56,8 +56,12 @@ export default function Zones() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [detailZone, setDetailZone] = useState(null);
 
-  // Pagination
+  // Pagination & Search States
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [allZones, setAllZones] = useState([]); // Untuk cascading filter dropdown
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const ITEMS_PER_PAGE = 10;
 
   // Count active filters
@@ -68,13 +72,31 @@ export default function Zones() {
     setCurrentPage(1);
   }, [searchQuery, filters]);
 
-  // Fetch all zones
+  // Debouncing search query input (300ms)
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // Fetch paginated zones from server
   async function fetchZones() {
     try {
       setLoading(true);
-      const res = await api.getZones();
+      const res = await api.getZones({
+        page: currentPage,
+        limit: ITEMS_PER_PAGE,
+        search: debouncedSearchQuery,
+        wilayah: filters.wilayah,
+        kecamatan: filters.kecamatan,
+        kelurahan: filters.kelurahan,
+        jenis_tps: filters.jenis_tps
+      });
       if (res.success) {
-        setZones(res.data || []);
+        setZones(res.data.data || []);
+        setTotalItems(res.data.total || 0);
+        setTotalPages(res.data.pages || 1);
       }
     } catch (err) {
       setErrorMessage(err.message || 'Gagal memuat data wilayah.');
@@ -83,8 +105,25 @@ export default function Zones() {
     }
   }
 
+  // Fetch all zones once on mount to populate cascading filter dropdowns
+  async function fetchAllZones() {
+    try {
+      const res = await api.getZones();
+      if (res.success) {
+        setAllZones(res.data || []);
+      }
+    } catch (err) {
+      console.error('Gagal memuat opsi filter:', err);
+    }
+  }
+
+  // Fetch when page, search query, or filters change
   useEffect(() => {
     fetchZones();
+  }, [currentPage, debouncedSearchQuery, filters]);
+
+  useEffect(() => {
+    fetchAllZones();
   }, []);
 
   // Open Form for Create
@@ -157,6 +196,7 @@ export default function Zones() {
         setSuccessMessage(editingZone ? 'Wilayah berhasil diperbarui.' : 'Wilayah baru berhasil ditambahkan.');
         setFormOpen(false);
         fetchZones();
+        fetchAllZones();
         setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (err) {
@@ -178,6 +218,7 @@ export default function Zones() {
         setDeleteModalOpen(false);
         setDeletingZone(null);
         fetchZones();
+        fetchAllZones();
         setTimeout(() => setSuccessMessage(''), 3000);
       }
     } catch (err) {
@@ -199,22 +240,8 @@ export default function Zones() {
     setFilters(newFilters);
   };
 
-  // Filter zones by search query and filter params
-  const filteredZones = zones.filter((z) => {
-    const matchSearch = z.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchWilayah = !filters.wilayah || z.wilayah === filters.wilayah;
-    const matchKecamatan = !filters.kecamatan || z.kecamatan === filters.kecamatan;
-    const matchKelurahan = !filters.kelurahan || z.kelurahan === filters.kelurahan;
-    const matchJenisTps = !filters.jenis_tps || z.jenis_tps === filters.jenis_tps;
-    return matchSearch && matchWilayah && matchKecamatan && matchKelurahan && matchJenisTps;
-  });
-
-  // Paginate
-  const totalPages = Math.max(1, Math.ceil(filteredZones.length / ITEMS_PER_PAGE));
-  const paginatedZones = filteredZones.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  // Paginasi dan pemfilteran dilakukan di sisi server
+  const paginatedZones = zones;
 
   const getPageNumbers = () => {
     const pages = [];
@@ -313,11 +340,11 @@ export default function Zones() {
             <div>
               {activeFilterCount > 0 ? 'Hasil' : 'Total Wilayah'}:{' '}
               <span className="text-slate-800 font-bold">
-                {filteredZones.length}
+                {totalItems}
               </span>
-              {filteredZones.length !== zones.length && (
+              {totalItems !== allZones.length && (
                 <span className="text-slate-400 font-normal ml-1">
-                  dari {zones.length}
+                  dari {allZones.length}
                 </span>
               )}
             </div>
@@ -325,7 +352,7 @@ export default function Zones() {
             <div>
               Kritis (High Priority):{' '}
               <span className="text-red-600 font-bold">
-                {zones.filter((z) => z.risk_status === 'High Priority').length}
+                {allZones.filter((z) => z.risk_status === 'High Priority').length}
               </span>
             </div>
           </div>
@@ -338,7 +365,7 @@ export default function Zones() {
               <FontAwesomeIcon icon={faSpinner} className="animate-spin text-2xl text-emerald-500 mb-3" />
               <span className="text-xs font-semibold">Sinkronisasi data wilayah...</span>
             </div>
-          ) : filteredZones.length > 0 ? (
+          ) : totalItems > 0 ? (
             <>
               {paginatedZones.map((zone) => {
               const riskAccent = zone.risk_status === 'High Priority' ? 'bg-red-500' : zone.risk_status === 'Warning' ? 'bg-amber-500' : 'bg-emerald-500';
@@ -428,7 +455,7 @@ export default function Zones() {
                   <span className="text-[11px] text-slate-500 font-medium">
                     Halaman {currentPage} dari {totalPages}
                     <span className="text-slate-300 mx-1">|</span>
-                    {filteredZones.length} wilayah
+                    {totalItems} wilayah
                   </span>
                   <div className="flex items-center gap-1">
                     <button

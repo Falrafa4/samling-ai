@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { api } from '../services/api';
 
 function SensorDashboard() {
   const [sensorData, setSensorData] = useState(null);
@@ -7,14 +8,10 @@ function SensorDashboard() {
 
   const fetchLatestData = async () => {
     try {
-      const response = await fetch('https://api-samling.naufalrafa.my.id/api/v1/sensor-data/latest');
-      if (!response.ok) {
-        throw new Error('Gagal mengambil data sensor');
-      }
-
-      const result = await response.json();
+      const result = await api.getLatestSensorData({ zone_id: 1 });
+      
       const zoneOneData = Array.isArray(result?.data)
-        ? result.data.find((item) => item?.zone_id === 1 || item?.zone?.id === 1)
+        ? result.data.find((item) => item?.sensor_type === 'DHT-22-Temp') || result.data[0]
         : null;
 
       setSensorData(zoneOneData ?? null);

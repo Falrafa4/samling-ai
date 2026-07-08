@@ -86,8 +86,24 @@ export const api = {
    * Mengambil seluruh daftar wilayah TPS untuk dipetakan.
    * Endpoint: GET /zones
    */
-  async getZones() {
-    return fetchWithAuth('/zones');
+  async getZones(params = {}) {
+    const cleanParams = {};
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        cleanParams[key] = params[key];
+      }
+    });
+    const query = new URLSearchParams(cleanParams).toString();
+    const url = query ? `/zones?${query}` : '/zones';
+    return fetchWithAuth(url);
+  },
+
+  /**
+   * Mengambil daftar opsi filter unik untuk wilayah TPS.
+   * Endpoint: GET /zones/filter-options
+   */
+  async getZonesFilterOptions() {
+    return fetchWithAuth('/zones/filter-options');
   },
 
   /**
@@ -140,8 +156,16 @@ export const api = {
    * Mengambil pembacaan data sensor terakhir per wilayah TPS.
    * Endpoint: GET /sensor-data/latest
    */
-  async getLatestSensorData() {
-    return fetchWithAuth('/sensor-data/latest');
+  async getLatestSensorData(params = {}) {
+    const cleanParams = {};
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        cleanParams[key] = params[key];
+      }
+    });
+    const query = new URLSearchParams(cleanParams).toString();
+    const url = query ? `/sensor-data/latest?${query}` : '/sensor-data/latest';
+    return fetchWithAuth(url);
   },
 
   /**
