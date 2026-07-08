@@ -54,7 +54,7 @@ def create_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(g
     return response_success(data=data, message="Data sensor berhasil disimpan dan status wilayah berhasil diperbarui.")
 
 @router.get("/sensor-data/latest")
-def get_latest_sensor_data(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def get_latest_sensor_data(db: Session = Depends(get_db)):
     """
     Mengambil pembacaan data sensor terakhir untuk semua wilayah TPS (Memerlukan Autentikasi).
     Menghasilkan maksimal 1 data sensor terbaru untuk setiap zone_id.
