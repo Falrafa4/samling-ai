@@ -15,6 +15,7 @@ import Zones from './pages/Zones';
 import AdminLayout from './components/layout/AdminLayout';
 import './App.css';
 import LandingPage from './pages/LandingPage';
+import SensorDashboard from './pages/SensorDashboard';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -54,6 +55,8 @@ export default function App() {
         <Routes>
           {/* Landing Page */}
           <Route path="/" element={<LandingPage />} />
+
+          <Route path="/sensor" element={<SensorDashboard />} />
 
           {/* Auth Route */}
           <Route path="/login" element={<Login />} />
