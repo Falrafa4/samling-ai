@@ -44,7 +44,7 @@ export default function App() {
       {/* Global Splash Screen Overlay */}
       {showSplash && (
         <div
-          className={`fixed inset-0 z-30 transition-opacity duration-500 ease-out ${
+          className={`fixed inset-0 z-1000 transition-opacity duration-500 ease-out ${
             isFading ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
         >
