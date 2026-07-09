@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import Optional
 import math
 from app.database.database import get_db
@@ -126,3 +127,37 @@ def delete_zone(zone_id: int, db: Session = Depends(get_db), current_user = Depe
     db.delete(zone)
     db.commit()
     return response_success(message="Zone deleted successfully")
+
+@router.get("/zones/kecamatan/{kecamatan}", response_model=dict)
+def get_zones_by_kecamatan(
+    kecamatan: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Mengambil seluruh daftar TPS berdasarkan nama kecamatan (Case-Insensitive).
+    """
+    clean_kecamatan = kecamatan.strip()
+    if not clean_kecamatan:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nama kecamatan tidak boleh kosong atau hanya berisi spasi."
+        )
+
+    zones = (
+        db.query(Zone)
+        .filter(func.lower(Zone.kecamatan) == func.lower(clean_kecamatan))
+        .all()
+    )
+
+    if not zones:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"TPS di kecamatan '{clean_kecamatan}' tidak ditemukan."
+        )
+
+    return {
+        "success": True,
+        "message": "Zone retrieved successfully",
+        "total_tps": len(zones),
+        "data": [ZoneResponse.model_validate(z) for z in zones]
+    }
