@@ -33,7 +33,7 @@ export default function Sidebar() {
   const navItems = [
     { path: '/admin/overview', label: 'Overview', icon: faGauge },
     { path: '/admin/map', label: 'Peta Pemantauan', icon: faMap },
-    { path: '/admin/zones', label: 'Wilayah dan Monitoring', icon: faMicrochip },
+    { path: '/admin/monitoring', label: 'Wilayah dan Monitoring', icon: faMicrochip },
     { path: '/admin/fleet', label: 'Manajemen Rute', icon: faTruck },
     { path: '/admin/reports', label: 'Laporan Warga', icon: faCommentDots },
   ];

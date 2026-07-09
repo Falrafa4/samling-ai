@@ -11,21 +11,26 @@ import {
   faThermometer,
   faDroplet,
   faWeightHanging,
-  faWind
+  faWind,
+  faExpand,
+  faCompress,
+  faMap
 } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../../services/api';
 import CircularProgress from '../CircularProgress';
 
-export default function ZoneDetailModal({ isOpen, onClose, zone }) {
+export default function ZoneDetailModal({ isOpen, onClose, zone, zones = [], onZoneChange }) {
   const [loading, setLoading] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [sensorLoading, setSensorLoading] = useState(false);
   const [sensors, setSensors] = useState({
     ultrasonicOrg: null,
     ultrasonicAnorg: null,
     gas: null,
     temp: null,
     humid: null,
-    organic: null, // loadcell organik (commented)
-    inorganic: null, // loadcell anorganik (commented)
+    organic: null,
+    inorganic: null,
     hasAny: false,
     updatedAt: null
   });
@@ -53,66 +58,79 @@ export default function ZoneDetailModal({ isOpen, onClose, zone }) {
     }
   };
 
+  const fetchSensorDetail = async (zoneId) => {
+    if (!zoneId) return;
+    try {
+      setSensorLoading(true);
+      const res = await api.getLatestSensorData();
+      if (res.success && res.data) {
+        const zoneSensors = res.data.filter(s => s.zone_id === zoneId);
+        
+        if (zoneSensors.length > 0) {
+          const ultrasonicOrg = zoneSensors.find(s => s.sensor_type === 'Ultrasonic-Organic');
+          const ultrasonicAnorg = zoneSensors.find(s => s.sensor_type === 'Ultrasonic-Anorganic');
+          const gas = zoneSensors.find(s => s.sensor_type === 'MQ-135');
+          const temp = zoneSensors.find(s => s.sensor_type === 'DHT-22-Temp');
+          const humid = zoneSensors.find(s => s.sensor_type === 'DHT-22-Humid');
+          const organic = zoneSensors.find(s => s.sensor_type === 'Loadcell-Organic');
+          const inorganic = zoneSensors.find(s => s.sensor_type === 'Loadcell-Inorganic');
+
+          const timestamps = zoneSensors.map(s => new Date(s.updated_at || s.created_at).getTime());
+          const maxTimestamp = new Date(Math.max(...timestamps));
+
+          setSensors({
+            ultrasonicOrg,
+            ultrasonicAnorg,
+            gas,
+            temp,
+            humid,
+            organic,
+            inorganic,
+            hasAny: true,
+            updatedAt: maxTimestamp
+          });
+        } else {
+          setSensors({
+            ultrasonicOrg: null,
+            ultrasonicAnorg: null,
+            gas: null,
+            temp: null,
+            humid: null,
+            organic: null,
+            inorganic: null,
+            hasAny: false,
+            updatedAt: null
+          });
+        }
+      } else {
+        setError('Gagal membaca data dari server.');
+      }
+    } catch (err) {
+      setError(err.message || 'Gagal memuat data sensor.');
+    } finally {
+      setSensorLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen || !zone) return;
 
-    async function fetchSensorDetail() {
-      try {
-        setLoading(true);
-        setError('');
+    setLoading(true);
+    setError('');
 
-        const res = await api.getLatestSensorData();
-        if (res.success && res.data) {
-          const zoneSensors = res.data.filter(s => s.zone_id === zone.id);
-          
-          if (zoneSensors.length > 0) {
-            const ultrasonicOrg = zoneSensors.find(s => s.sensor_type === 'Ultrasonic-Organic');
-            const ultrasonicAnorg = zoneSensors.find(s => s.sensor_type === 'Ultrasonic-Anorganic');
-            const gas = zoneSensors.find(s => s.sensor_type === 'MQ-135');
-            const temp = zoneSensors.find(s => s.sensor_type === 'DHT-22-Temp');
-            const humid = zoneSensors.find(s => s.sensor_type === 'DHT-22-Humid');
-            const organic = zoneSensors.find(s => s.sensor_type === 'Loadcell-Organic');
-            const inorganic = zoneSensors.find(s => s.sensor_type === 'Loadcell-Inorganic');
-
-            const timestamps = zoneSensors.map(s => new Date(s.updated_at || s.created_at).getTime());
-            const maxTimestamp = new Date(Math.max(...timestamps));
-
-            setSensors({
-              ultrasonicOrg,
-              ultrasonicAnorg,
-              gas,
-              temp,
-              humid,
-              organic,
-              inorganic,
-              hasAny: true,
-              updatedAt: maxTimestamp
-            });
-          } else {
-            setSensors({
-              ultrasonicOrg: null,
-              ultrasonicAnorg: null,
-              gas: null,
-              temp: null,
-              humid: null,
-              organic: null,
-              inorganic: null,
-              hasAny: false,
-              updatedAt: null
-            });
-          }
-        } else {
-          setError('Gagal membaca data dari server.');
-        }
-      } catch (err) {
-        setError(err.message || 'Gagal memuat data sensor.');
-      } finally {
-        setLoading(false);
-      }
+    async function initFetch() {
+      await fetchSensorDetail(zone.id);
+      setLoading(false);
     }
 
-    fetchSensorDetail();
-  }, [isOpen, zone]);
+    initFetch();
+
+    const interval = setInterval(() => {
+      fetchSensorDetail(zone.id);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, zone?.id]);
 
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) onClose();
@@ -133,26 +151,65 @@ export default function ZoneDetailModal({ isOpen, onClose, zone }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
-      onClick={handleOverlayClick}
+      className={isFullscreen
+        ? "fixed inset-0 z-50 bg-slate-50 flex flex-col w-full h-full overflow-y-auto no-scrollbar animate-fade-in"
+        : "fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"}
+      onClick={isFullscreen ? undefined : handleOverlayClick}
     >
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-in">
+      <div className={isFullscreen
+        ? "bg-slate-50 w-full h-full flex flex-col overflow-y-auto no-scrollbar shadow-none"
+        : "bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl animate-slide-in"}>
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100 sticky top-0 bg-white z-10 select-none">
           <div className="flex items-center gap-3 min-w-0">
             <span className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-              <FontAwesomeIcon icon={faLocationDot} className="text-sm animate-bounce" />
+              <FontAwesomeIcon icon={faLocationDot} className="text-sm" />
             </span>
-            <div className="min-w-0">
-              <h3 className="text-sm font-bold text-slate-800 truncate">{zone.name}</h3>
-              <p className="text-[11px] text-slate-400 font-medium">Detail Monitoring TPS</p>
-            </div>
+            {isFullscreen ? (
+              <div className="flex items-center gap-3 min-w-0">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider select-none shrink-0">Pilih TPS:</label>
+                <select
+                  value={zone.id}
+                  onChange={(e) => {
+                    const selected = zones.find(z => z.id === Number(e.target.value));
+                    if (selected && onZoneChange) onZoneChange(selected);
+                  }}
+                  className="px-3 py-1.5 bg-slate-50 border border-slate-250 hover:border-slate-350 hover:bg-white rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 cursor-pointer min-w-48 shadow-3xs transition-all duration-200"
+                >
+                  {zones.map((z) => (
+                    <option key={z.id} value={z.id}>
+                      {z.name} ({z.kecamatan})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-slate-800 truncate">{zone.name}</h3>
+                <p className="text-[11px] text-slate-400 font-medium">Detail Monitoring TPS</p>
+              </div>
+            )}
           </div>
-          <button
-            onClick={onClose}
-            className="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center cursor-pointer shrink-0"
-          >
-            <FontAwesomeIcon icon={faXmark} className="text-sm" />
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {sensorLoading && (
+              <span className="text-[9px] text-emerald-600 font-bold flex items-center gap-1 mr-2 select-none">
+                <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+                Live
+              </span>
+            )}
+            <button
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center cursor-pointer"
+              title={isFullscreen ? "Keluar Fullscreen" : "Fullscreen"}
+            >
+              <FontAwesomeIcon icon={isFullscreen ? faCompress : faExpand} className="text-xs" />
+            </button>
+            <button
+              onClick={onClose}
+              className="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center cursor-pointer"
+            >
+              <FontAwesomeIcon icon={faXmark} className="text-sm" />
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -166,7 +223,7 @@ export default function ZoneDetailModal({ isOpen, onClose, zone }) {
             <span className="text-xs font-semibold">{error}</span>
           </div>
         ) : (
-          <div className="p-6 space-y-6">
+          <div className={isFullscreen ? "flex-1 overflow-y-auto no-scrollbar p-8 max-w-6xl mx-auto w-full space-y-6" : "p-6 space-y-6"}>
             
             {/* Informasi TPS Card */}
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
@@ -193,12 +250,22 @@ export default function ZoneDetailModal({ isOpen, onClose, zone }) {
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Alamat Lengkap</p>
                 <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{zone.alamat || '-'}</p>
               </div>
-              <div className="mt-4 flex items-center gap-3">
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Status Risiko AI</p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Status Risiko AI & Rute</p>
                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1.5 ${getRiskBadgeClasses(zone.risk_status)}`}>
                   <FontAwesomeIcon icon={getRiskIcon(zone.risk_status)} />
                   {zone.risk_status}
                 </span>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${zone.latitude},${zone.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-0.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-800 rounded-full text-[10px] font-bold border border-slate-200 flex items-center gap-1.5 cursor-pointer transition-all shadow-3xs"
+                  title="Buka lokasi TPS di Google Maps"
+                >
+                  <FontAwesomeIcon icon={faMap} className="text-slate-400 text-[10px]" />
+                  <span>Google Maps</span>
+                </a>
               </div>
             </div>
 

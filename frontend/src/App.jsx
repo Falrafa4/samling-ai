@@ -81,8 +81,7 @@ export default function App() {
             <Route path="map" element={<PredictiveMap />} />
             <Route path="fleet" element={<FleetDispatch />} />
             <Route path="reports" element={<CitizenReports />} />
-            <Route path="zones" element={<Zones />} />
-            <Route path="monitoring" element={<Monitoring />} />
+            <Route path="monitoring" element={<Zones />} />
           </Route>
 
           {/* Fallback Redirect */}

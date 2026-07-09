@@ -5,6 +5,7 @@ import {
   faPen,
   faTrashCan,
   faEye,
+  faGaugeHigh,
   faSpinner,
   faLocationDot,
   faTriangleExclamation,
@@ -424,9 +425,9 @@ export default function Zones() {
                           <button
                             onClick={() => handleOpenDetail(zone)}
                             className="w-7 h-7 rounded-lg border border-sky-200 text-sky-500 hover:bg-sky-50 hover:border-sky-300 transition-all flex items-center justify-center cursor-pointer"
-                            title="Lihat Detail TPS"
+                            title="Monitoring Sensor TPS"
                           >
-                            <FontAwesomeIcon icon={faEye} className="text-[11px]" />
+                            <FontAwesomeIcon icon={faGaugeHigh} className="text-[11px]" />
                           </button>
                           <button
                             onClick={() => handleOpenEdit(zone)}
@@ -548,6 +549,8 @@ export default function Zones() {
         isOpen={detailModalOpen}
         onClose={() => setDetailModalOpen(false)}
         zone={detailZone}
+        zones={zones}
+        onZoneChange={setDetailZone}
       />
     </div>
   );
