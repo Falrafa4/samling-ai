@@ -29,6 +29,13 @@ async function fetchWithAuth(endpoint, options = {}) {
     headers,
   });
 
+  if (response.status === 401) {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+    window.location.href = '/login';
+    throw new Error('Sesi Anda telah berakhir. Silakan masuk kembali.');
+  }
+
   const result = await response.json().catch(() => ({
     success: false,
     message: 'Gagal memproses respon dari server.',
