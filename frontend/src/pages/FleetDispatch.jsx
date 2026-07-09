@@ -114,7 +114,9 @@ export default function FleetDispatch() {
         dragging: true
       }).setView([-6.1944, 106.7672], 13);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMapRef.current);
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      ).addTo(miniMapRef.current);
     }
 
     return () => {

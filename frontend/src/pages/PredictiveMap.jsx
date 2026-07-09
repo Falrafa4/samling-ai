@@ -78,9 +78,12 @@ export default function PredictiveMap() {
         scrollWheelZoom: true
       }).setView([-6.1944, 106.7672], 13);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(mapRef.current);
+      L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        {
+          attribution: `© <a href='https://carto.com/'>Carto</a>`,
+        },
+      ).addTo(mapRef.current);
 
       // Pindahkan zoom control ke pojok kanan bawah agar rapi
       L.control.zoom({
