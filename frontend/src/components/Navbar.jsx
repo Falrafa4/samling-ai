@@ -30,10 +30,10 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8 font-medium text-body">
-          <a href="#fitur" className="hover:text-primary-600 transition-colors">Fitur</a>
-          <a href="#data" className="hover:text-primary-600 transition-colors">Data Realtime</a>
-          <a href="#layanan" className="hover:text-primary-600 transition-colors">Layanan</a>
-          <a href="#kontak" className="hover:text-primary-600 transition-colors">Kontak</a>
+          <Link to="/#fitur" className="hover:text-primary-600 transition-colors">Fitur</Link>
+          <Link to="/#data" className="hover:text-primary-600 transition-colors">Data Realtime</Link>
+          <Link to="/#layanan" className="hover:text-primary-600 transition-colors">Layanan</Link>
+          <Link to="/#kontak" className="hover:text-primary-600 transition-colors">Kontak</Link>
         </div>
 
         {/* CTA */}

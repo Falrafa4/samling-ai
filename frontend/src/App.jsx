@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router';
 import { useEffectOnce } from 'react-use';
 import Splash from './pages/Splash';
 import Login from './pages/Login';
@@ -17,6 +17,17 @@ import AdminLayout from './components/layout/AdminLayout';
 import './App.css';
 import LandingPage from './pages/LandingPage';
 import SensorDashboard from './pages/SensorDashboard';
+
+// Komponen penolong untuk mereset posisi scroll ke atas pada setiap perubahan rute
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -53,6 +64,7 @@ export default function App() {
       )}
 
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           {/* Landing Page */}
           <Route path="/" element={<LandingPage />} />
