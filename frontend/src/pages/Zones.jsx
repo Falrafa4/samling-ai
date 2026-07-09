@@ -549,7 +549,6 @@ export default function Zones() {
         isOpen={detailModalOpen}
         onClose={() => setDetailModalOpen(false)}
         zone={detailZone}
-        zones={zones}
         onZoneChange={setDetailZone}
       />
     </div>

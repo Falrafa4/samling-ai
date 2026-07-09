@@ -19,7 +19,7 @@ import {
 import { api } from '../../services/api';
 import CircularProgress from '../CircularProgress';
 
-export default function ZoneDetailModal({ isOpen, onClose, zone, zones = [], onZoneChange }) {
+export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange }) {
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sensorLoading, setSensorLoading] = useState(false);
@@ -164,30 +164,10 @@ export default function ZoneDetailModal({ isOpen, onClose, zone, zones = [], onZ
             <span className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <FontAwesomeIcon icon={faLocationDot} className="text-sm" />
             </span>
-            {isFullscreen ? (
-              <div className="flex items-center gap-3 min-w-0">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider select-none shrink-0">Pilih TPS:</label>
-                <select
-                  value={zone.id}
-                  onChange={(e) => {
-                    const selected = zones.find(z => z.id === Number(e.target.value));
-                    if (selected && onZoneChange) onZoneChange(selected);
-                  }}
-                  className="px-3 py-1.5 bg-slate-50 border border-slate-250 hover:border-slate-350 hover:bg-white rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 cursor-pointer min-w-48 shadow-3xs transition-all duration-200"
-                >
-                  {zones.map((z) => (
-                    <option key={z.id} value={z.id}>
-                      {z.name} ({z.kecamatan})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
               <div className="min-w-0">
                 <h3 className="text-sm font-bold text-slate-800 truncate">{zone.name}</h3>
                 <p className="text-[11px] text-slate-400 font-medium">Detail Monitoring TPS</p>
               </div>
-            )}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {sensorLoading && (
