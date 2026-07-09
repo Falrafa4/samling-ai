@@ -272,7 +272,7 @@ export default function Zones() {
       {/* Header */}
       <header className="px-8 py-6 bg-white border-b border-slate-200 flex justify-between items-center shrink-0">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Kelola Wilayah TPS</h2>
+          <h2 className="text-2xl font-bold text-slate-800">Kelola Wilayah dan Monitoring TPS</h2>
           <p className="text-sm text-slate-500">
             Daftarkan, perbarui, dan hapus area cakupan TPS, koordinat geospasial GPS, serta tingkat urgensi sampah.
           </p>

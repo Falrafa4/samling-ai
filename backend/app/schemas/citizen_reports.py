@@ -7,10 +7,12 @@ class CitizenReportCreate(BaseModel):
     whatsapp_number: str = Field(..., pattern=r"^62\d{9,13}$")  # Format WhatsApp Indonesia (misal: 6281234567890)
     report_content: str
     zone_id: int  # Kembali menjadi wajib diisi
+    image_path: Optional[str] = None
 
 class CitizenReportUpdate(BaseModel):
     zone_id: Optional[int] = None
     status: Optional[str] = Field(None, description="Pilihan: Baru, Sedang Ditangani, Selesai")
+    image_path: Optional[str] = None
 
 class CitizenReportResponse(BaseModel):
     id: int
@@ -19,6 +21,7 @@ class CitizenReportResponse(BaseModel):
     zone_id: int  # Kembali menjadi wajib diisi
     status: str
     is_grouped: bool
+    image_path: Optional[str] = None
     created_at: datetime
     zone: Optional[ZoneResponse] = None
 

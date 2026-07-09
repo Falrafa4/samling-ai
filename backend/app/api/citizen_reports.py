@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form, File, UploadFile
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from difflib import SequenceMatcher
+import os
+import uuid
+from PIL import Image
 
 from app.database.database import get_db
 from app.models.citizen_reports import CitizenReport
@@ -14,18 +17,23 @@ from app.utils.response import response_success
 router = APIRouter(tags=["citizen-reports"])
 
 @router.post("/citizen-reports", status_code=status.HTTP_201_CREATED)
-def create_citizen_report(report_in: CitizenReportCreate, db: Session = Depends(get_db)):
+def create_citizen_report(
+    whatsapp_number: str = Form(...),
+    report_content: str = Form(...),
+    zone_id: int = Form(...),
+    image: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db)
+):
     """
-    Terima Laporan Pengaduan Warga Baru (Endpoint Publik untuk Webhook Chatbot WhatsApp).
+    Terima Laporan Pengaduan Warga Baru (Mendukung upload gambar opsional via form-data).
     Melakukan deteksi duplikasi dalam 12 jam terakhir di zona yang sama dengan threshold kemiripan teks > 60%.
-    Jika duplikat, laporan baru dan laporan pembanding sebelumnya akan ditandai is_grouped = True.
     """
     # 1. Validasi zone_id ada di database
-    zone = db.query(Zone).filter(Zone.id == report_in.zone_id).first()
+    zone = db.query(Zone).filter(Zone.id == zone_id).first()
     if not zone:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Zone dengan ID {report_in.zone_id} tidak terdaftar di sistem."
+            detail=f"Zone dengan ID {zone_id} tidak terdaftar di sistem."
         )
 
     # 2. Ambil laporan di zona yang sama dalam 12 jam terakhir
@@ -35,7 +43,7 @@ def create_citizen_report(report_in: CitizenReportCreate, db: Session = Depends(
     previous_reports = (
         db.query(CitizenReport)
         .filter(
-            CitizenReport.zone_id == report_in.zone_id,
+            CitizenReport.zone_id == zone_id,
             CitizenReport.created_at >= twelve_hours_ago
         )
         .all()
@@ -46,23 +54,62 @@ def create_citizen_report(report_in: CitizenReportCreate, db: Session = Depends(
     matching_reports = []
     
     for r in previous_reports:
-        # Menghitung rasio kemiripan konten aduan secara case-insensitive
-        ratio = SequenceMatcher(None, r.report_content.strip().lower(), report_in.report_content.strip().lower()).ratio()
+        ratio = SequenceMatcher(None, r.report_content.strip().lower(), report_content.strip().lower()).ratio()
         if ratio > 0.60:
             is_duplicate = True
             matching_reports.append(r)
 
-    # 4. Simpan aduan baru
+    # 4. Handle file upload jika ada
+    image_path = None
+    if image is not None and image.filename != "":
+        # Validasi format file harus gambar
+        if not image.content_type.startswith("image/"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File yang diunggah harus berupa gambar."
+            )
+        
+        # Buat nama berkas acak yang unik dengan ekstensi .webp
+        unique_filename = f"{uuid.uuid4().hex}.webp"
+        
+        # Path absolut penyimpanan di server
+        uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads"))
+        if not os.path.exists(uploads_dir):
+            os.makedirs(uploads_dir)
+            
+        file_path = os.path.join(uploads_dir, unique_filename)
+        
+        try:
+            # Membuka gambar menggunakan Pillow
+            img = Image.open(image.file)
+            
+            # Normalisasi palet warna untuk transparansi/mode warna lain
+            if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+                img = img.convert("RGBA")
+            else:
+                img = img.convert("RGB")
+                
+            # Simpan langsung ke format WEBP dengan kompresi kualitas 80% (sangat optimal untuk web)
+            img.save(file_path, "WEBP", quality=80)
+            image_path = f"uploads/{unique_filename}"
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Gagal mengonversi dan menyimpan gambar ke format WebP: {str(e)}"
+            )
+
+    # 5. Simpan aduan baru
     new_report = CitizenReport(
-        whatsapp_number=report_in.whatsapp_number,
-        report_content=report_in.report_content,
-        zone_id=report_in.zone_id,
+        whatsapp_number=whatsapp_number,
+        report_content=report_content,
+        zone_id=zone_id,
         status="Baru",
-        is_grouped=is_duplicate
+        is_grouped=is_duplicate,
+        image_path=image_path
     )
     db.add(new_report)
 
-    # 5. Jika terdeteksi duplikat, set is_grouped = True pada laporan pembanding sebelumnya
+    # 6. Jika terdeteksi duplikat, set is_grouped = True pada laporan pembanding sebelumnya
     if is_duplicate:
         for r in matching_reports:
             r.is_grouped = True

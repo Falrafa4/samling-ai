@@ -21,6 +21,13 @@ import {
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { api } from '../services/api';
 
+const getImageUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const baseUrl = import.meta.env.VITE_BASE_API_URL.replace('/api/v1', '');
+  return `${baseUrl}/${path.replace(/^\/+/, '')}`;
+};
+
 const COLUMNS = [
   {
     key: 'Baru',
@@ -380,11 +387,7 @@ export default function CitizenReports() {
                         `Halo,\n\nPengaduan Anda tentang penumpukan sampah di ${r.zone?.name || 'wilayah Anda'} telah kami terima. Tim supir pengangkut sedang menjadwalkan armada.`
                       );
                     }}
-                    onLightbox={() =>
-                      setLightboxImage(
-                        'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?auto=format&fit=crop&w=1000&q=80'
-                      )
-                    }
+                    onLightbox={setLightboxImage}
                   />
                 ))}
 
@@ -444,11 +447,7 @@ export default function CitizenReports() {
                   `Halo,\n\nPengaduan Anda tentang penumpukan sampah di ${r.zone?.name || 'wilayah Anda'} telah kami terima. Tim supir pengangkut sedang menjadwalkan armada.`
                 );
               }}
-              onLightbox={() =>
-                setLightboxImage(
-                  'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?auto=format&fit=crop&w=1000&q=80'
-                )
-              }
+              onLightbox={setLightboxImage}
             />
           ))}
 
@@ -623,21 +622,23 @@ function DesktopCard({ report, updatingId, onDragStart, onDragEnd, onReply, onLi
       </p>
 
       {/* Image */}
-      <div className="relative h-24 rounded-lg overflow-hidden mb-4 bg-slate-100 group/img border border-slate-100">
-        <img
-          src="https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?auto=format&fit=crop&w=350&q=80"
-          alt="Foto bukti sampah"
-          className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
-          loading="lazy"
-        />
-        <button
-          onClick={onLightbox}
-          className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 flex items-end justify-start p-2 text-white text-[10px] font-bold gap-1 cursor-pointer"
-        >
-          <FontAwesomeIcon icon={faMagnifyingGlassPlus} className="text-xs" />
-          <span>Perbesar</span>
-        </button>
-      </div>
+      {report.image_path && (
+        <div className="relative h-24 rounded-lg overflow-hidden mb-4 bg-slate-100 group/img border border-slate-100">
+          <img
+            src={getImageUrl(report.image_path)}
+            alt="Foto bukti sampah"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
+            loading="lazy"
+          />
+          <button
+            onClick={() => onLightbox(getImageUrl(report.image_path))}
+            className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 flex items-end justify-start p-2 text-white text-[10px] font-bold gap-1 cursor-pointer"
+          >
+            <FontAwesomeIcon icon={faMagnifyingGlassPlus} className="text-xs" />
+            <span>Perbesar</span>
+          </button>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[10px]">
@@ -706,17 +707,19 @@ function MobileCard({ report, updatingId, onStatusChange, onReply, onLightbox })
             &ldquo;{report.report_content}&rdquo;
           </p>
         </div>
-        <button
-          onClick={onLightbox}
-          className="w-14 h-14 rounded-lg overflow-hidden bg-slate-100 border border-slate-100 shrink-0 group"
-        >
-          <img
-            src="https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?auto=format&fit=crop&w=80&q=60"
-            alt="Foto"
-            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-            loading="lazy"
-          />
-        </button>
+        {report.image_path && (
+          <button
+            onClick={() => onLightbox(getImageUrl(report.image_path))}
+            className="w-14 h-14 rounded-lg overflow-hidden bg-slate-100 border border-slate-100 shrink-0 group"
+          >
+            <img
+              src={getImageUrl(report.image_path)}
+              alt="Foto"
+              className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+              loading="lazy"
+            />
+          </button>
+        )}
       </div>
 
       {/* Footer: Info + Actions */}

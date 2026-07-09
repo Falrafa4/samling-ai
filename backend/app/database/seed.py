@@ -194,6 +194,7 @@ def seed_data():
                 zone_id=zone1.id,
                 status="Baru",
                 is_grouped=True,
+                image_path="uploads/placeholder.avif",
                 created_at=now - timedelta(hours=4)
             ),
             CitizenReport(
@@ -202,6 +203,7 @@ def seed_data():
                 zone_id=zone1.id,
                 status="Baru",
                 is_grouped=True,
+                image_path="uploads/placeholder.avif",
                 created_at=now - timedelta(hours=2)
             ),
             CitizenReport(
@@ -210,6 +212,7 @@ def seed_data():
                 zone_id=zone1.id,
                 status="Sedang Ditangani",
                 is_grouped=False,
+                image_path=None,
                 created_at=now - timedelta(days=1)
             ),
             CitizenReport(
@@ -218,6 +221,7 @@ def seed_data():
                 zone_id=zone2.id,
                 status="Selesai",
                 is_grouped=False,
+                image_path="uploads/placeholder.avif",
                 created_at=now - timedelta(days=3)
             ),
             CitizenReport(
@@ -226,6 +230,7 @@ def seed_data():
                 zone_id=zone3.id,
                 status="Baru",
                 is_grouped=True,
+                image_path=None,
                 created_at=now - timedelta(hours=5)
             ),
             CitizenReport(
@@ -234,6 +239,7 @@ def seed_data():
                 zone_id=zone3.id,
                 status="Baru",
                 is_grouped=True,
+                image_path="uploads/placeholder.avif",
                 created_at=now - timedelta(hours=3)
             ),
             CitizenReport(
@@ -242,6 +248,7 @@ def seed_data():
                 zone_id=zone3.id,
                 status="Baru",
                 is_grouped=False,
+                image_path=None,
                 created_at=now - timedelta(hours=8)
             ),
             CitizenReport(
@@ -250,6 +257,7 @@ def seed_data():
                 zone_id=zone4.id,
                 status="Baru",
                 is_grouped=False,
+                image_path="uploads/placeholder.avif",
                 created_at=now - timedelta(hours=6)
             ),
             CitizenReport(
@@ -258,6 +266,7 @@ def seed_data():
                 zone_id=zone5.id,
                 status="Sedang Ditangani",
                 is_grouped=False,
+                image_path=None,
                 created_at=now - timedelta(hours=14)
             ),
             CitizenReport(
@@ -266,6 +275,7 @@ def seed_data():
                 zone_id=zone5.id,
                 status="Selesai",
                 is_grouped=False,
+                image_path="uploads/placeholder.avif",
                 created_at=now - timedelta(days=2)
             ),
         ]

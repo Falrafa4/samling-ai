@@ -12,6 +12,7 @@ class CitizenReport(Base):
     zone_id = Column(Integer, ForeignKey("zones.id"), nullable=False)
     status = Column(String, default="Baru", index=True)  # Pilihan: Baru, Sedang Ditangani, Selesai
     is_grouped = Column(Boolean, default=False)
+    image_path = Column(String, nullable=True)
     created_at = Column(DateTime, default=func.now())
 
     zone = relationship("Zone")

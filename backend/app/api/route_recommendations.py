@@ -131,33 +131,7 @@ def dispatch_route_recommendation(driver_id: int, db: Session = Depends(get_db))
     zone_map = {z.id: z for z in zones}
     ordered_zones = [zone_map[zid] for zid in zone_ids if zid in zone_map]
 
-    # 4. Susun pesan manifes WhatsApp
-    tps_lines = []
-    coords_list = []
-    for idx, z in enumerate(ordered_zones, start=1):
-        tps_lines.append(f"{idx}. {z.name} (Status: {z.risk_status})")
-        coords_list.append(f"{z.latitude},{z.longitude}")
-
-    # Membuat URL arah/navigasi multi-stop Google Maps
-    gmaps_direction_url = f"https://www.google.com/maps/dir/{'/'.join(coords_list)}"
-
-    message_body = (
-        f"Halo *{driver.name}*,\n\n"
-        f"Berikut adalah manifes rute tugas pengangkutan sampah optimal Anda hari ini:\n\n"
-        f"📍 *Daftar Rute TPS Terurut*:\n"
-        f"{chr(10).join(tps_lines)}\n\n"
-        f"🗺️ *Navigasi Google Maps*:\n"
-        f"{gmaps_direction_url}\n\n"
-        f"Tetap utamakan keselamatan dalam berkendara! 🚚💨"
-    )
-
-    # 5. Simulasikan pengiriman ke gerbang WA Gateway
-    print(f"\n📲 [WA GATEWAY SIMULATION] Mengirim pesan ke {driver.whatsapp_number}...")
-    print("=========================================================================")
-    print(message_body)
-    print("=========================================================================\n")
-
-    # 6. Perbarui status rute dan status ketersediaan driver
+    # 4. Perbarui status rute dan status ketersediaan driver di database
     latest_route.status = "In Progress"
     driver.status = "On Duty"
     db.commit()
@@ -167,16 +141,13 @@ def dispatch_route_recommendation(driver_id: int, db: Session = Depends(get_db))
     dispatch_data = {
         "driver_id": driver.id,
         "driver_name": driver.name,
-        "whatsapp_number": driver.whatsapp_number,
-        "message_body": message_body,
-        "gmaps_url": gmaps_direction_url,
         "route_status": latest_route.status,
         "driver_status": driver.status
     }
 
     return response_success(
         data=dispatch_data,
-        message=f"Manifes rute berhasil dikirim ke WhatsApp Supir {driver.name}."
+        message=f"Rute rekomendasi berhasil ditugaskan ke Driver {driver.name} secara digital."
     )
 
 @router.get("/route-recommendations/driver/{driver_id}")

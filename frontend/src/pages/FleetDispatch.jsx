@@ -441,15 +441,15 @@ export default function FleetDispatch() {
                   </div>
                 ) : selectedDriver.status === 'Offline' ? (
                   <p className="text-xs text-slate-400 bg-slate-100 p-2.5 rounded-lg border border-slate-200/80 leading-relaxed">
-                    ⚠️ Supir sedang offline. Harap minta supir menyalakan status di aplikasi/chatbot agar dapat dihubungi.
+                    ⚠️ Supir sedang offline. Harap minta supir menyalakan status di aplikasi driver agar dapat ditugaskan.
                   </p>
                 ) : (
                   <p className="text-xs text-slate-500">
-                    Kirim link rute Google Maps dan manifest jalan optimal ke WhatsApp driver.
+                    Tugaskan rekomendasi rute optimal terpilih langsung ke dasbor aplikasi driver.
                   </p>
                 )}
 
-                {/* Dispatch WhatsApp Button */}
+                {/* Dispatch Button */}
                 {selectedDriver.status === 'Available' && (
                   <button
                     onClick={handleDispatch}
@@ -459,9 +459,9 @@ export default function FleetDispatch() {
                     {dispatching ? (
                       <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
                     ) : (
-                      <FontAwesomeIcon icon={faPaperPlane} />
+                      <FontAwesomeIcon icon={faRoute} />
                     )}
-                    <span>Kirim Manifes via WhatsApp</span>
+                    <span>Tugaskan Rute ke Driver</span>
                   </button>
                 )}
               </div>
