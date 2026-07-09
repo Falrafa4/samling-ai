@@ -11,6 +11,7 @@ import FleetDispatch from './pages/FleetDispatch';
 import CitizenReports from './pages/CitizenReports';
 import Zones from './pages/Zones';
 import Monitoring from './pages/Monitoring';
+import MasterData from './pages/MasterData';
 
 // Layout
 import AdminLayout from './components/layout/AdminLayout';
@@ -82,6 +83,7 @@ export default function App() {
             <Route path="fleet" element={<FleetDispatch />} />
             <Route path="reports" element={<CitizenReports />} />
             <Route path="monitoring" element={<Zones />} />
+            <Route path="data" element={<MasterData />} />
           </Route>
 
           {/* Fallback Redirect */}

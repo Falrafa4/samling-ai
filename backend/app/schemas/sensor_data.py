@@ -41,3 +41,9 @@ class SensorDataBulkResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class SensorDataUpdate(BaseModel):
+    zone_id: Optional[int] = None
+    sensor_type: Optional[VALID_SENSOR_TYPES] = None
+    fill_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
+    value: Optional[float] = None

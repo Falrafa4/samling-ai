@@ -24,7 +24,7 @@ import { api } from '../services/api';
 const getImageUrl = (path) => {
   if (!path) return '';
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  const baseUrl = import.meta.env.VITE_BASE_API_URL.replace('/api/v1', '');
+  const baseUrl = import.meta.env.VITE_BASE_API_URL;
   return `${baseUrl}/${path.replace(/^\/+/, '')}`;
 };
 

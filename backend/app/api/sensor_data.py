@@ -7,7 +7,8 @@ from datetime import datetime, timedelta, timezone
 from app.database.database import get_db
 from app.models.sensor_data import SensorData
 from app.models.zones import Zone
-from app.schemas.sensor_data import SensorDataCreate, SensorDataResponse, SensorDataBulkResponse
+from app.models.users import User
+from app.schemas.sensor_data import SensorDataCreate, SensorDataResponse, SensorDataBulkResponse, SensorDataUpdate
 from app.api.deps import get_current_user
 from app.utils.response import response_success
 
@@ -153,3 +154,210 @@ def get_sensor_data_history(zone_id: int, days: int = 7, db: Session = Depends(g
 
     data = [SensorDataResponse.model_validate(record) for record in history]
     return response_success(data=data, message="Data historis sensor berhasil diambil.")
+
+@router.get("/sensor-data", response_model=None)
+def get_all_sensor_data(
+    zone_id: Optional[int] = Query(None),
+    sensor_type: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Mengambil semua data pembacaan sensor (Master Data).
+    """
+    query = db.query(SensorData).options(joinedload(SensorData.zone))
+    if zone_id is not None:
+        query = query.filter(SensorData.zone_id == zone_id)
+    if sensor_type is not None:
+        query = query.filter(SensorData.sensor_type == sensor_type)
+    
+    records = query.order_by(SensorData.created_at.desc()).all()
+    data = [SensorDataResponse.model_validate(record) for record in records]
+    return response_success(data=data, message="Semua data sensor berhasil diambil.")
+
+@router.get("/sensor-data/{id}", response_model=None)
+def get_sensor_data_by_id(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Mengambil detail data sensor berdasarkan ID.
+    """
+    record = db.query(SensorData).options(joinedload(SensorData.zone)).filter(SensorData.id == id).first()
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Data sensor tidak ditemukan."
+        )
+    data = SensorDataResponse.model_validate(record)
+    return response_success(data=data, message="Detail data sensor berhasil diambil.")
+
+@router.post("/sensor-data/manual", status_code=status.HTTP_201_CREATED)
+def create_sensor_data_manually(
+    sensor_in: SensorDataCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Menambahkan data sensor secara manual.
+    """
+    zone = db.query(Zone).filter(Zone.id == sensor_in.zone_id).first()
+    if not zone:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Zone dengan ID {sensor_in.zone_id} tidak terdaftar di sistem."
+        )
+    
+    existing = db.query(SensorData).filter(
+        SensorData.zone_id == sensor_in.zone_id,
+        SensorData.sensor_type == sensor_in.sensor_type
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Sensor tipe '{sensor_in.sensor_type}' sudah terpasang di wilayah {zone.name}."
+        )
+
+    now = datetime.now()
+    new_record = SensorData(
+        zone_id=sensor_in.zone_id,
+        sensor_type=sensor_in.sensor_type,
+        fill_percentage=sensor_in.fill_percentage,
+        value=sensor_in.value,
+        created_at=now,
+        updated_at=now
+    )
+    db.add(new_record)
+    db.commit()
+    db.refresh(new_record)
+
+    if sensor_in.sensor_type.startswith("Ultrasonic"):
+        all_ultrasonic = db.query(SensorData).filter(
+            SensorData.zone_id == sensor_in.zone_id,
+            SensorData.sensor_type.like("Ultrasonic%")
+        ).all()
+        max_fill = max([s.fill_percentage for s in all_ultrasonic])
+        if max_fill > 80.0:
+            zone.risk_status = "High Priority"
+        elif max_fill >= 50.0:
+            zone.risk_status = "Warning"
+        else:
+            zone.risk_status = "Normal"
+        db.commit()
+
+    new_record_loaded = db.query(SensorData).options(joinedload(SensorData.zone)).filter(SensorData.id == new_record.id).first()
+    data = SensorDataResponse.model_validate(new_record_loaded)
+    return response_success(data=data, message="Data sensor baru berhasil ditambahkan.")
+
+@router.put("/sensor-data/{id}", response_model=None)
+def update_sensor_data_manually(
+    id: int,
+    sensor_in: SensorDataUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Memperbarui data sensor secara manual.
+    """
+    record = db.query(SensorData).filter(SensorData.id == id).first()
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Data sensor tidak ditemukan."
+        )
+
+    if sensor_in.zone_id is not None:
+        zone = db.query(Zone).filter(Zone.id == sensor_in.zone_id).first()
+        if not zone:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Zone dengan ID {sensor_in.zone_id} tidak ditemukan."
+            )
+        record.zone_id = sensor_in.zone_id
+
+    target_zone_id = sensor_in.zone_id or record.zone_id
+    target_type = sensor_in.sensor_type or record.sensor_type
+    if sensor_in.zone_id is not None or sensor_in.sensor_type is not None:
+        existing = db.query(SensorData).filter(
+            SensorData.zone_id == target_zone_id,
+            SensorData.sensor_type == target_type,
+            SensorData.id != id
+        ).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Sensor tipe '{target_type}' sudah terpasang di wilayah tersebut."
+            )
+
+    if sensor_in.sensor_type is not None:
+        record.sensor_type = sensor_in.sensor_type
+    if sensor_in.fill_percentage is not None:
+        record.fill_percentage = sensor_in.fill_percentage
+    if sensor_in.value is not None:
+        record.value = sensor_in.value
+    
+    record.updated_at = datetime.now()
+    db.commit()
+
+    zone = db.query(Zone).filter(Zone.id == target_zone_id).first()
+    if zone and target_type.startswith("Ultrasonic"):
+        all_ultrasonic = db.query(SensorData).filter(
+            SensorData.zone_id == target_zone_id,
+            SensorData.sensor_type.like("Ultrasonic%")
+        ).all()
+        max_fill = max([s.fill_percentage for s in all_ultrasonic])
+        if max_fill > 80.0:
+            zone.risk_status = "High Priority"
+        elif max_fill >= 50.0:
+            zone.risk_status = "Warning"
+        else:
+            zone.risk_status = "Normal"
+        db.commit()
+
+    db.refresh(record)
+    record_loaded = db.query(SensorData).options(joinedload(SensorData.zone)).filter(SensorData.id == record.id).first()
+    data = SensorDataResponse.model_validate(record_loaded)
+    return response_success(data=data, message="Data sensor berhasil diperbarui.")
+
+@router.delete("/sensor-data/{id}", response_model=None)
+def delete_sensor_data(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Menghapus data sensor.
+    """
+    record = db.query(SensorData).filter(SensorData.id == id).first()
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Data sensor tidak ditemukan."
+        )
+
+    zone_id = record.zone_id
+    sensor_type = record.sensor_type
+
+    db.delete(record)
+    db.commit()
+
+    zone = db.query(Zone).filter(Zone.id == zone_id).first()
+    if zone and sensor_type.startswith("Ultrasonic"):
+        all_ultrasonic = db.query(SensorData).filter(
+            SensorData.zone_id == zone_id,
+            SensorData.sensor_type.like("Ultrasonic%")
+        ).all()
+        if all_ultrasonic:
+            max_fill = max([s.fill_percentage for s in all_ultrasonic])
+            if max_fill > 80.0:
+                zone.risk_status = "High Priority"
+            elif max_fill >= 50.0:
+                zone.risk_status = "Warning"
+            else:
+                zone.risk_status = "Normal"
+        else:
+            zone.risk_status = "Normal"
+        db.commit()
+
+    return response_success(message="Data sensor berhasil dihapus dari sistem.")

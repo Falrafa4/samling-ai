@@ -6,7 +6,7 @@ class DriverCreate(BaseModel):
     name: str = Field(..., min_length=2)
     whatsapp_number: str = Field(..., pattern=r"^62\d{9,13}$")  # Format standar WhatsApp Indonesia
     zone_id: int
-    username: Optional[str] = None  # Bisa diisi manual, atau default ke whatsapp_number jika kosong
+    username: str = Field(..., min_length=3)
     password: Optional[str] = None  # Bisa diisi manual, atau default ke 'driver123' jika kosong
 
 class DriverUpdate(BaseModel):

@@ -168,6 +168,44 @@ export const api = {
   },
 
   /**
+   * Mendaftarkan supir armada baru.
+   * Endpoint: POST /drivers
+   */
+  async createDriver(data) {
+    return fetchWithAuth('/drivers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Memperbarui data supir armada.
+   * Endpoint: PUT /drivers/{id}
+   */
+  async updateDriver(id, data) {
+    return fetchWithAuth(`/drivers/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Menghapus driver berdasarkan ID.
+   * Endpoint: DELETE /drivers/{id}
+   */
+  async deleteDriver(id) {
+    return fetchWithAuth(`/drivers/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /**
    * Mengambil pembacaan data sensor terakhir per wilayah TPS.
    * Endpoint: GET /sensor-data/latest
    */
@@ -181,6 +219,60 @@ export const api = {
     const query = new URLSearchParams(cleanParams).toString();
     const url = query ? `/sensor-data/latest?${query}` : '/sensor-data/latest';
     return fetchWithAuth(url);
+  },
+
+  /**
+   * Mengambil semua data pembacaan sensor (Master Data).
+   * Endpoint: GET /sensor-data
+   */
+  async getSensorData(params = {}) {
+    const cleanParams = {};
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        cleanParams[key] = params[key];
+      }
+    });
+    const query = new URLSearchParams(cleanParams).toString();
+    const url = query ? `/sensor-data?${query}` : '/sensor-data';
+    return fetchWithAuth(url);
+  },
+
+  /**
+   * Menambahkan data sensor baru secara manual.
+   * Endpoint: POST /sensor-data/manual
+   */
+  async createSensorDataManual(data) {
+    return fetchWithAuth('/sensor-data/manual', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Memperbarui data sensor secara manual.
+   * Endpoint: PUT /sensor-data/{id}
+   */
+  async updateSensorDataManual(id, data) {
+    return fetchWithAuth(`/sensor-data/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Menghapus data sensor.
+   * Endpoint: DELETE /sensor-data/{id}
+   */
+  async deleteSensorData(id) {
+    return fetchWithAuth(`/sensor-data/${id}`, {
+      method: 'DELETE',
+    });
   },
 
   /**
@@ -222,7 +314,7 @@ export const api = {
   },
 
   /**
-   * Mengirim manifes rute ke WhatsApp supir dan mengaktifkan penugasan.
+   * Menugaskan manifes rute ke supir secara digital di database.
    * Endpoint: POST /route-recommendations/dispatch/{driver_id}
    */
   async dispatchRoute(driverId) {

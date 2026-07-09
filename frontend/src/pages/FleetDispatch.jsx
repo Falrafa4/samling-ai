@@ -205,7 +205,7 @@ export default function FleetDispatch() {
     }
   }, [activeRoute, zones]);
 
-  // Handle WhatsApp Dispatch
+  // Handle Route Assignment / Dispatch
   const handleDispatch = async () => {
     if (!selectedDriverId) return;
     try {
@@ -214,7 +214,7 @@ export default function FleetDispatch() {
       setSuccessMessage('');
       const res = await api.dispatchRoute(selectedDriverId);
       if (res.success) {
-        setSuccessMessage(res.message || 'Manifes rute dikirim ke WhatsApp Driver!');
+        setSuccessMessage(res.message || 'Manifes rute berhasil ditugaskan ke Driver!');
         // Refresh driver lists & active route to sync status
         const [driversRes, routeRes] = await Promise.all([
           api.getDrivers(),
@@ -226,7 +226,7 @@ export default function FleetDispatch() {
         }
       }
     } catch (err) {
-      setErrorMessage(err.message || 'Gagal mengirim manifest rute supir.');
+      setErrorMessage(err.message || 'Gagal mengirim penugasan rute supir.');
     } finally {
       setDispatching(false);
     }
@@ -301,7 +301,7 @@ export default function FleetDispatch() {
       <header className="px-8 py-6 bg-white border-b border-slate-200 shrink-0">
         <h2 className="text-2xl font-bold text-slate-800">Manajemen Rute &amp; Armada</h2>
         <p className="text-sm text-slate-500">
-          Kirim manifes rute prioritas hasil prediksi AI ke driver supir via WhatsApp Gateway.
+          Tugaskan manifes rute prioritas hasil prediksi AI langsung ke dasbor aplikasi driver.
         </p>
       </header>
 
@@ -376,7 +376,7 @@ export default function FleetDispatch() {
 
           {/* Driver Readiness Tracker Panel */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col flex-1 min-h-[250px]">
-            <h3 className="text-md font-bold text-slate-800 mb-4">Kesiapan Driver (WhatsApp Chatbot)</h3>
+            <h3 className="text-md font-bold text-slate-800 mb-4">Kesiapan Driver</h3>
             <div className="space-y-3 flex-1 overflow-y-auto pr-1">
               {drivers.map((driver) => {
                 const assignedZone = zones.find((z) => z.id === driver.zone_id);
@@ -477,7 +477,7 @@ export default function FleetDispatch() {
               <FontAwesomeIcon icon={faImages} className="text-slate-400 text-sm" />
             </div>
             <p className="text-[10px] text-slate-500 mb-4">
-              Review foto bukti TPS bersih yang dikirim driver via camera WhatsApp.
+              Review foto bukti TPS bersih yang dikirim driver melalui aplikasi.
             </p>
             
             {activeRoute && activeRoute.status === 'Completed' ? (

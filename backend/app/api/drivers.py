@@ -56,8 +56,8 @@ def create_driver(driver_data: DriverCreate, db: Session = Depends(get_db)):
             detail="Nomor WhatsApp tersebut sudah terdaftar untuk pengguna/driver lain."
         )
 
-    # 3. Tentukan username dan password default jika tidak dikirim
-    username = driver_data.username or driver_data.whatsapp_number
+    # 3. Tentukan password default jika tidak dikirim
+    username = driver_data.username
     password = driver_data.password or "driver123"
 
     # Validasi username unik

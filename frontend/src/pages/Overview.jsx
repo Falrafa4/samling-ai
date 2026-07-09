@@ -361,7 +361,7 @@ export default function Overview() {
                 </div>
                 <div className="overflow-hidden">
                   <p className="text-xs font-bold text-slate-700">Driver Budi Utomo - Siap Bertugas</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Konfirmasi manifes rute TPS 01 dikirim via WhatsApp.</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Konfirmasi manifes rute TPS 01 berhasil ditugaskan ke driver.</p>
                   <span className="text-[9px] font-semibold text-slate-400 block mt-1">2 menit yang lalu</span>
                 </div>
               </div>

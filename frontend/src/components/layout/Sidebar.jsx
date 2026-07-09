@@ -11,7 +11,8 @@ import {
   faMicrochip,
   faRightFromBracket,
   faChevronLeft,
-  faChevronRight
+  faChevronRight,
+  faDatabase
 } from '@fortawesome/free-solid-svg-icons';
 import ConfirmModal from '../fragments/ConfirmModal';
 
@@ -34,6 +35,7 @@ export default function Sidebar() {
     { path: '/admin/overview', label: 'Overview', icon: faGauge },
     { path: '/admin/map', label: 'Peta Pemantauan', icon: faMap },
     { path: '/admin/monitoring', label: 'Wilayah dan Monitoring', icon: faMicrochip },
+    { path: '/admin/data', label: 'Kelola Data', icon: faDatabase },
     { path: '/admin/fleet', label: 'Manajemen Rute', icon: faTruck },
     { path: '/admin/reports', label: 'Laporan Warga', icon: faCommentDots },
   ];
