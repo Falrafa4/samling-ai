@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPen, faTrash, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
-export default function DriverTable({ drivers, fleets = [], onEdit, onDelete, getZoneName, loading }) {
+export default function DriverTable({ drivers, fleets = [], onEdit, onDelete, loading }) {
   const getFleetName = (id) => {
     if (!id) return <span className="text-slate-400 font-normal">Tanpa Kendaraan</span>;
     const found = fleets.find(f => f.id === id);
@@ -29,7 +29,6 @@ export default function DriverTable({ drivers, fleets = [], onEdit, onDelete, ge
             <th className="px-6 py-3.5">Nama Lengkap</th>
             <th className="px-6 py-3.5">Username</th>
             <th className="px-6 py-3.5">No WhatsApp</th>
-            <th className="px-6 py-3.5">TPS Wilayah Tugas</th>
             <th className="px-6 py-3.5">Armada Tugas</th>
             <th className="px-6 py-3.5">Status Kerja</th>
             <th className="px-6 py-3.5 text-right">Aksi</th>
@@ -42,7 +41,6 @@ export default function DriverTable({ drivers, fleets = [], onEdit, onDelete, ge
                 <td className="px-6 py-4 font-bold text-slate-800">{driver.name}</td>
                 <td className="px-6 py-4 font-mono text-slate-600">{driver.username}</td>
                 <td className="px-6 py-4 text-slate-600">{driver.whatsapp_number}</td>
-                <td className="px-6 py-4 text-slate-700">{getZoneName(driver.zone_id)}</td>
                 <td className="px-6 py-4">{getFleetName(driver.fleet_id)}</td>
                 <td className="px-6 py-4">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${

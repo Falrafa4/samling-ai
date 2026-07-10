@@ -28,6 +28,7 @@ L.Icon.Default.mergeOptions({
 export default function FleetDispatch() {
   const [drivers, setDrivers] = useState([]);
   const [zones, setZones] = useState([]);
+  const [fleets, setFleets] = useState([]);
   const [selectedDriverId, setSelectedDriverId] = useState(null);
   
   // Route details
@@ -50,9 +51,10 @@ export default function FleetDispatch() {
     async function initData() {
       try {
         setLoading(true);
-        const [driversRes, zonesRes] = await Promise.all([
+        const [driversRes, zonesRes, fleetsRes] = await Promise.all([
           api.getDrivers(),
-          api.getZones()
+          api.getZones(),
+          api.getFleets()
         ]);
 
         if (driversRes.success) {
@@ -65,8 +67,11 @@ export default function FleetDispatch() {
         if (zonesRes.success) {
           setZones(zonesRes.data || []);
         }
+        if (fleetsRes.success) {
+          setFleets(fleetsRes.data || []);
+        }
       } catch (err) {
-        setErrorMessage(err.message || 'Gagal memuat data driver & wilayah.');
+        setErrorMessage(err.message || 'Gagal memuat data driver, wilayah & armada.');
       } finally {
         setLoading(false);
       }
@@ -88,7 +93,13 @@ export default function FleetDispatch() {
           // get the first active route (Pending/In Progress)
           setActiveRoute(res.data[0]);
         } else {
-          setActiveRoute(null);
+          // Jika driver tidak punya rute aktif, ambil rekomendasi rute terbaru yang belum ditugaskan
+          const latestRes = await api.getLatestRouteRecommendation();
+          if (latestRes.success && latestRes.data && !latestRes.data.driver_id && latestRes.data.status === 'Pending') {
+            setActiveRoute(latestRes.data);
+          } else {
+            setActiveRoute(null);
+          }
         }
       } catch (err) {
         console.error('Gagal mengambil rute aktif driver:', err);
@@ -379,7 +390,7 @@ export default function FleetDispatch() {
             <h3 className="text-md font-bold text-slate-800 mb-4">Kesiapan Driver</h3>
             <div className="space-y-3 flex-1 overflow-y-auto pr-1">
               {drivers.map((driver) => {
-                const assignedZone = zones.find((z) => z.id === driver.zone_id);
+                const assignedFleet = fleets.find((f) => f.id === driver.fleet_id);
                 return (
                   <div
                     key={driver.id}
@@ -393,7 +404,7 @@ export default function FleetDispatch() {
                     <div>
                       <h4 className="text-xs font-bold text-slate-800">{driver.name}</h4>
                       <p className="text-[10px] text-slate-500 mt-0.5">
-                        Wilayah: {assignedZone ? assignedZone.name : '-'}
+                        Armada: {assignedFleet ? assignedFleet.name : 'Tanpa Kendaraan'}
                       </p>
                     </div>
                     <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold border ${getStatusClasses(driver.status)}`}>
@@ -453,8 +464,12 @@ export default function FleetDispatch() {
                 {selectedDriver.status === 'Available' && (
                   <button
                     onClick={handleDispatch}
-                    disabled={dispatching}
-                    className="w-full py-3 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-950/20 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                    disabled={dispatching || !activeRoute}
+                    className={`w-full py-3 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+                      !activeRoute
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                        : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-950/20'
+                    }`}
                   >
                     {dispatching ? (
                       <FontAwesomeIcon icon={faSpinner} className="animate-spin" />

@@ -253,7 +253,6 @@ export default function MasterData() {
                 setIsDriverModalOpen(true);
               }}
               onDelete={(id) => setConfirmDeleteId(id)}
-              getZoneName={getZoneName}
               loading={loading}
             />
           ) : activeTab === 'fleet' ? (
@@ -284,7 +283,6 @@ export default function MasterData() {
         isOpen={isDriverModalOpen}
         onClose={() => setIsDriverModalOpen(false)}
         driver={selectedDriver}
-        zones={zones}
         fleets={fleets}
         onSave={handleSaveDriver}
       />

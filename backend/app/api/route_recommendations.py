@@ -18,13 +18,14 @@ def create_route_recommendation(route_in: RouteRecommendationCreate, db: Session
     Simpan Rekomendasi Rute Baru (Memerlukan Autentikasi).
     Memvalidasi format route_json, keabsahan driver_id, dan keabsahan zone_id.
     """
-    # 1. Validasi driver_id terdaftar sebagai supir
-    driver = db.query(User).filter(User.id == route_in.driver_id, User.role == "driver").first()
-    if not driver:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Driver dengan ID {route_in.driver_id} tidak terdaftar di sistem."
-        )
+    # 1. Validasi driver_id terdaftar sebagai supir jika dikirim
+    if route_in.driver_id is not None:
+        driver = db.query(User).filter(User.id == route_in.driver_id, User.role == "driver").first()
+        if not driver:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Driver dengan ID {route_in.driver_id} tidak terdaftar di sistem."
+            )
 
     # 2. Validasi format JSON dan tipe data array/list
     try:
@@ -105,7 +106,7 @@ def dispatch_route_recommendation(driver_id: int, db: Session = Depends(get_db))
             detail="Driver tidak ditemukan."
         )
 
-    # 2. Ambil rute optimal terbaru khusus driver ini
+    # 2. Ambil rute optimal terbaru khusus driver ini, atau cari rute Pending yang belum ditugaskan
     latest_route = (
         db.query(RouteRecommendation)
         .filter(RouteRecommendation.driver_id == driver_id)
@@ -113,10 +114,21 @@ def dispatch_route_recommendation(driver_id: int, db: Session = Depends(get_db))
         .first()
     )
     if not latest_route:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Belum ada rekomendasi rute optimal yang ditugaskan ke driver {driver.name}."
+        # Cari rute Pending terbaru yang belum ditugaskan (driver_id IS NULL)
+        latest_route = (
+            db.query(RouteRecommendation)
+            .filter(RouteRecommendation.driver_id == None, RouteRecommendation.status == "Pending")
+            .order_by(RouteRecommendation.created_at.desc())
+            .first()
         )
+        if latest_route:
+            # Kaitkan rute ke driver ini
+            latest_route.driver_id = driver_id
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Tidak ada rekomendasi rute optimal yang tersedia untuk ditugaskan ke driver {driver.name}."
+            )
 
     # 3. Ekstrak dan urutkan wilayah tugas
     zone_ids = json.loads(latest_route.route_json)

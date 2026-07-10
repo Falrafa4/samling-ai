@@ -86,7 +86,6 @@ def login_driver(username: str = Form(...), password: str = Form(...), db: Sessi
                 "username": user.username,
                 "name": user.name,
                 "whatsapp_number": user.whatsapp_number,
-                "zone_id": user.zone_id,
                 "status": user.status,
                 "role": user.role
             }

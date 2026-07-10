@@ -41,14 +41,6 @@ def create_driver(driver_data: DriverCreate, db: Session = Depends(get_db)):
     """
     Mendaftarkan supir armada baru (membuat User baru dengan role='driver'). (Memerlukan Autentikasi)
     """
-    # 1. Validasi zone_id ada di database
-    zone = db.query(Zone).filter(Zone.id == driver_data.zone_id).first()
-    if not zone:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Zone dengan ID {driver_data.zone_id} tidak terdaftar di sistem."
-        )
-
     # 1.1 Validasi fleet_id jika dikirim
     if driver_data.fleet_id is not None:
         fleet = db.query(Fleet).filter(Fleet.id == driver_data.fleet_id).first()
@@ -84,7 +76,6 @@ def create_driver(driver_data: DriverCreate, db: Session = Depends(get_db)):
         password=get_password_hash(password),
         role="driver",
         whatsapp_number=driver_data.whatsapp_number,
-        zone_id=driver_data.zone_id,
         fleet_id=driver_data.fleet_id,
         status="Offline"
     )
@@ -106,15 +97,6 @@ def update_driver(id: int, driver_data: DriverUpdate, db: Session = Depends(get_
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Driver tidak ditemukan."
         )
-
-    # 1. Validasi zone_id jika di-update
-    if driver_data.zone_id is not None:
-        zone = db.query(Zone).filter(Zone.id == driver_data.zone_id).first()
-        if not zone:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Zone dengan ID {driver_data.zone_id} tidak terdaftar di sistem."
-            )
 
     # 1.1 Validasi fleet_id jika di-update
     if driver_data.fleet_id is not None:

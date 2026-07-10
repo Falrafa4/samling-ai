@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faSpinner, faUser, faPhone, faMapPin, faLock, faTruck } from '@fortawesome/free-solid-svg-icons';
 
-export default function DriverModal({ isOpen, onClose, driver = null, zones = [], fleets = [], onSave }) {
+export default function DriverModal({ isOpen, onClose, driver = null, fleets = [], onSave }) {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
-  const [zoneId, setZoneId] = useState('');
   const [fleetId, setFleetId] = useState('');
   const [status, setStatus] = useState('Offline');
   
@@ -21,7 +20,6 @@ export default function DriverModal({ isOpen, onClose, driver = null, zones = []
         setUsername(driver.username || '');
         setPassword(''); // Kosongkan password saat edit
         setWhatsappNumber(driver.whatsapp_number || '');
-        setZoneId(driver.zone_id || '');
         setFleetId(driver.fleet_id || '');
         setStatus(driver.status || 'Offline');
       } else {
@@ -29,19 +27,18 @@ export default function DriverModal({ isOpen, onClose, driver = null, zones = []
         setUsername('');
         setPassword('');
         setWhatsappNumber('628');
-        setZoneId(zones.length > 0 ? zones[0].id : '');
         setFleetId('');
         setStatus('Offline');
       }
       setError('');
     }
-  }, [isOpen, driver, zones, fleets]);
+  }, [isOpen, driver, fleets]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !username || !whatsappNumber || !zoneId) {
+    if (!name || !username || !whatsappNumber) {
       setError('Harap isi semua bidang wajib.');
       return;
     }
@@ -55,7 +52,6 @@ export default function DriverModal({ isOpen, onClose, driver = null, zones = []
       name,
       username,
       whatsapp_number: whatsappNumber,
-      zone_id: Number(zoneId),
       fleet_id: fleetId ? Number(fleetId) : null,
     };
 
@@ -175,28 +171,6 @@ export default function DriverModal({ isOpen, onClose, driver = null, zones = []
                 className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                 required
               />
-            </div>
-          </div>
-
-          {/* Zone ID Selection */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Wilayah Tugas TPS</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
-                <FontAwesomeIcon icon={faMapPin} className="text-xs" />
-              </span>
-              <select
-                value={zoneId}
-                onChange={(e) => setZoneId(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 cursor-pointer"
-                required
-              >
-                {zones.map((z) => (
-                  <option key={z.id} value={z.id}>
-                    {z.name} ({z.kecamatan})
-                  </option>
-                ))}
-              </select>
             </div>
           </div>
 

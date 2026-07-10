@@ -7,7 +7,7 @@ class RouteRecommendation(Base):
     __tablename__ = "route_recommendations"
 
     id = Column(Integer, primary_key=True, index=True)
-    driver_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    driver_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     route_json = Column(Text, nullable=False)
     status = Column(String, default="Pending", nullable=False)  # 'Pending', 'In Progress', 'Completed'
     created_at = Column(DateTime, default=func.now())

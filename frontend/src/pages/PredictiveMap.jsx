@@ -196,12 +196,29 @@ export default function PredictiveMap() {
         offset: [0, -8]
       });
 
-      // Event click untuk memuat data detail ke overlay bawah
-      marker.on('click', () => {
-        const assignedDriver = drivers.find((d) => d.zone_id === zone.id);
+      marker.on('click', async () => {
         setSelectedZone(zone);
         setSelectedSensor(sensor);
-        setSelectedDriver(assignedDriver);
+        setSelectedDriver(null); // Reset sementara loading
+
+        try {
+          const onDutyDrivers = drivers.filter(d => d.status === 'On Duty');
+          let foundDriver = null;
+          for (const d of onDutyDrivers) {
+            const res = await api.getDriverActiveRoute(d.id);
+            if (res.success && res.data && res.data.length > 0) {
+              const activeRoute = res.data[0];
+              const zoneIds = JSON.parse(activeRoute.route_json || '[]');
+              if (zoneIds.includes(zone.id)) {
+                foundDriver = d;
+                break;
+              }
+            }
+          }
+          setSelectedDriver(foundDriver);
+        } catch (err) {
+          console.error("Gagal mencocokkan driver aktif untuk wilayah ini:", err);
+        }
       });
 
       markersRef.current.push(marker);

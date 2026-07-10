@@ -143,11 +143,11 @@ def seed_data():
 
         # 4. Seed Drivers (Linked to Fleets)
         drivers_data = [
-            User(name="Budi Utomo", username="driver_budi", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281234567890", zone_id=zone_sample[0].id, fleet_id=f_dump.id if f_dump else None, status="Offline"),
-            User(name="Joko Susilo", username="driver_joko", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281298765432", zone_id=zone_sample[1].id, fleet_id=f_ar_besar.id if f_ar_besar else None, status="Offline"),
-            User(name="Agus Saputra", username="driver_agus", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281311223344", zone_id=zone_sample[2].id, fleet_id=f_compactor.id if f_compactor else None, status="Offline"),
-            User(name="Herman Wijaya", username="driver_herman", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281355667788", zone_id=zone_sample[3].id, fleet_id=f_ar_kecil.id if f_ar_kecil else None, status="Offline"),
-            User(name="Rudy Hermawan", username="driver_rudy", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281288990011", zone_id=zone_sample[4].id, fleet_id=f_tronton.id if f_tronton else None, status="Offline"),
+            User(name="Budi Utomo", username="driver_budi", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281234567890", fleet_id=f_dump.id if f_dump else None, status="Offline"),
+            User(name="Joko Susilo", username="driver_joko", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281298765432", fleet_id=f_ar_besar.id if f_ar_besar else None, status="Offline"),
+            User(name="Agus Saputra", username="driver_agus", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281311223344", fleet_id=f_compactor.id if f_compactor else None, status="Offline"),
+            User(name="Herman Wijaya", username="driver_herman", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281355667788", fleet_id=f_ar_kecil.id if f_ar_kecil else None, status="Offline"),
+            User(name="Rudy Hermawan", username="driver_rudy", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281288990011", fleet_id=f_tronton.id if f_tronton else None, status="Offline"),
         ]
         db.add_all(drivers_data)
         db.commit()
@@ -317,15 +317,14 @@ def seed_data():
         # 7. Seed RouteRecommendations
         tps_ids_ordered = [zone_sample[0].id, zone_sample[2].id, zone_sample[4].id, zone_sample[1].id, zone_sample[3].id]
         all_drivers = db.query(User).filter(User.role == "driver").all()
-        if all_drivers:
-            route_recommendation = RouteRecommendation(
-                driver_id=all_drivers[0].id,
-                route_json=json.dumps(tps_ids_ordered),
-                status="Pending",
-                created_at=now - timedelta(hours=1)
-            )
-            db.add(route_recommendation)
-            print("Tabel route_recommendations (1 rute) berhasil di-seed.")
+        route_recommendation = RouteRecommendation(
+            driver_id=None,
+            route_json=json.dumps(tps_ids_ordered),
+            status="Pending",
+            created_at=now - timedelta(hours=1)
+        )
+        db.add(route_recommendation)
+        print("Tabel route_recommendations (1 rute) berhasil di-seed.")
 
         db.commit()
         print("Seeding selesai dengan sukses!")

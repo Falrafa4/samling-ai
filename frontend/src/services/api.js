@@ -352,6 +352,14 @@ export const api = {
   },
 
   /**
+   * Mengambil rute rekomendasi terbaru.
+   * Endpoint: GET /route-recommendations/latest
+   */
+  async getLatestRouteRecommendation() {
+    return fetchWithAuth('/route-recommendations/latest');
+  },
+
+  /**
    * Mengambil rute pengangkutan sampah aktif milik driver tertentu.
    * Endpoint: GET /route-recommendations/driver/{driver_id}
    */

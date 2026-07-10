@@ -8,7 +8,6 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=6)
     role: Optional[str] = "admin"  # 'admin' atau 'driver'
     whatsapp_number: Optional[str] = None
-    zone_id: Optional[int] = None
     status: Optional[str] = None  # 'Available', 'On Duty', 'Offline'
 
 class UserResponse(BaseModel):
@@ -17,7 +16,6 @@ class UserResponse(BaseModel):
     username: str
     role: str
     whatsapp_number: Optional[str] = None
-    zone_id: Optional[int] = None
     status: Optional[str] = None
     created_at: datetime
 
