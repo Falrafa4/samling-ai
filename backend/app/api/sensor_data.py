@@ -17,11 +17,10 @@ router = APIRouter(tags=["sensor-data"])
 @router.put("/sensor-data", status_code=status.HTTP_200_OK)
 def update_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(get_db)):
     """
-    Perbarui Data Sensor (Endpoint Publik untuk IoT Device).
-    Jika data sensor dengan zone_id dan sensor_type tersebut sudah ada, perbarui nilainya.
-    Jika belum ada, buat baru (Upsert).
+    Membuat Data Sensor (Endpoint Publik untuk IoT Device).
+    
     Secara dinamis memperbarui risk_status dari wilayah terkait berdasarkan fill_percentage:
-    - > 80% -> High Priority
+    - _>80% -> High Priority
     - 50% - 80% -> Warning
     - < 50% -> Normal
     """
@@ -33,33 +32,17 @@ def update_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(g
             detail=f"Zone dengan ID {sensor_data_in.zone_id} tidak terdaftar di sistem."
         )
 
-    # 2. Cari data sensor lama untuk diperbarui (Upsert)
-    sensor_record = (
-        db.query(SensorData)
-        .filter(
-            SensorData.zone_id == sensor_data_in.zone_id,
-            SensorData.sensor_type == sensor_data_in.sensor_type
-        )
-        .first()
-    )
-
+    # 2. Selalu simpan sebagai baris baru untuk membangun data deret waktu (time-series log)
     now = datetime.now()
-    if sensor_record:
-        # Update existing record
-        sensor_record.fill_percentage = sensor_data_in.fill_percentage
-        sensor_record.value = sensor_data_in.value
-        sensor_record.updated_at = now # Atur waktu terupdate
-    else:
-        # Create new record
-        sensor_record = SensorData(
-            zone_id=sensor_data_in.zone_id,
-            sensor_type=sensor_data_in.sensor_type,
-            fill_percentage=sensor_data_in.fill_percentage,
-            value=sensor_data_in.value,
-            created_at=now,
-            updated_at=now
-        )
-        db.add(sensor_record)
+    sensor_record = SensorData(
+        zone_id=sensor_data_in.zone_id,
+        sensor_type=sensor_data_in.sensor_type,
+        fill_percentage=sensor_data_in.fill_percentage,
+        value=sensor_data_in.value,
+        created_at=now,
+        updated_at=now
+    )
+    db.add(sensor_record)
 
     # 3. Logika Pembaruan Status Wilayah (Dinamis Penuh)
     if sensor_data_in.sensor_type.startswith("Ultrasonic"):

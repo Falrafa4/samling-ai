@@ -5,6 +5,7 @@ from typing import List
 from app.database.database import get_db
 from app.models.users import User
 from app.models.zones import Zone
+from app.models.fleets import Fleet
 from app.schemas.drivers import DriverCreate, DriverUpdate, DriverResponse
 from app.api.deps import get_current_user
 from app.utils.response import response_success
@@ -47,6 +48,15 @@ def create_driver(driver_data: DriverCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Zone dengan ID {driver_data.zone_id} tidak terdaftar di sistem."
         )
+
+    # 1.1 Validasi fleet_id jika dikirim
+    if driver_data.fleet_id is not None:
+        fleet = db.query(Fleet).filter(Fleet.id == driver_data.fleet_id).first()
+        if not fleet:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Armada dengan ID {driver_data.fleet_id} tidak terdaftar di sistem."
+            )
     
     # 2. Validasi nomor WA sudah dipakai driver/user lain
     existing_phone = db.query(User).filter(User.whatsapp_number == driver_data.whatsapp_number).first()
@@ -75,6 +85,7 @@ def create_driver(driver_data: DriverCreate, db: Session = Depends(get_db)):
         role="driver",
         whatsapp_number=driver_data.whatsapp_number,
         zone_id=driver_data.zone_id,
+        fleet_id=driver_data.fleet_id,
         status="Offline"
     )
     db.add(new_driver)
@@ -103,6 +114,15 @@ def update_driver(id: int, driver_data: DriverUpdate, db: Session = Depends(get_
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Zone dengan ID {driver_data.zone_id} tidak terdaftar di sistem."
+            )
+
+    # 1.1 Validasi fleet_id jika di-update
+    if driver_data.fleet_id is not None:
+        fleet = db.query(Fleet).filter(Fleet.id == driver_data.fleet_id).first()
+        if not fleet:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Armada dengan ID {driver_data.fleet_id} tidak terdaftar di sistem."
             )
 
     # 2. Validasi whatsapp_number jika di-update

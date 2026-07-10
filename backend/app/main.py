@@ -13,6 +13,7 @@ from app.api.volume_predictions import router as volume_predictions_router
 from app.api.citizen_reports import router as citizen_reports_router
 from app.api.route_recommendations import router as route_recommendations_router
 from app.api.dashboard import router as dashboard_router
+from app.api.fleets import router as fleets_router
 
 app = FastAPI(title="Samling API", version="1.0.0")
 
@@ -74,4 +75,5 @@ app.include_router(sensor_data_router, prefix="/api/v1")
 app.include_router(volume_predictions_router, prefix="/api/v1")
 app.include_router(citizen_reports_router, prefix="/api/v1")
 app.include_router(route_recommendations_router, prefix="/api/v1")
+app.include_router(fleets_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")

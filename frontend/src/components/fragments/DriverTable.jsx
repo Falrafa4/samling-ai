@@ -1,7 +1,17 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPen, faTrash, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
-export default function DriverTable({ drivers, onEdit, onDelete, getZoneName, loading }) {
+export default function DriverTable({ drivers, fleets = [], onEdit, onDelete, getZoneName, loading }) {
+  const getFleetName = (id) => {
+    if (!id) return <span className="text-slate-400 font-normal">Tanpa Kendaraan</span>;
+    const found = fleets.find(f => f.id === id);
+    return found ? (
+      <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-[10px]">
+        {found.name}
+      </span>
+    ) : `Armada #${id}`;
+  };
+
   if (loading) {
     return (
       <div className="py-24 flex flex-col items-center justify-center text-slate-400 gap-2">
@@ -20,6 +30,7 @@ export default function DriverTable({ drivers, onEdit, onDelete, getZoneName, lo
             <th className="px-6 py-3.5">Username</th>
             <th className="px-6 py-3.5">No WhatsApp</th>
             <th className="px-6 py-3.5">TPS Wilayah Tugas</th>
+            <th className="px-6 py-3.5">Armada Tugas</th>
             <th className="px-6 py-3.5">Status Kerja</th>
             <th className="px-6 py-3.5 text-right">Aksi</th>
           </tr>
@@ -32,6 +43,7 @@ export default function DriverTable({ drivers, onEdit, onDelete, getZoneName, lo
                 <td className="px-6 py-4 font-mono text-slate-600">{driver.username}</td>
                 <td className="px-6 py-4 text-slate-600">{driver.whatsapp_number}</td>
                 <td className="px-6 py-4 text-slate-700">{getZoneName(driver.zone_id)}</td>
+                <td className="px-6 py-4">{getFleetName(driver.fleet_id)}</td>
                 <td className="px-6 py-4">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                     driver.status === 'Available'
@@ -65,7 +77,7 @@ export default function DriverTable({ drivers, onEdit, onDelete, getZoneName, lo
             ))
           ) : (
             <tr>
-              <td colSpan="6" className="text-center py-16 text-slate-400 font-semibold">
+              <td colSpan="7" className="text-center py-16 text-slate-400 font-semibold">
                 Tidak ada data driver ditemukan.
               </td>
             </tr>

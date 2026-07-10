@@ -12,6 +12,7 @@ from app.models.sensor_data import SensorData
 from app.models.volume_predictions import VolumePrediction
 from app.models.citizen_reports import CitizenReport
 from app.models.route_recommendations import RouteRecommendation
+from app.models.fleets import Fleet
 from app.utils.security import get_password_hash
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "../../data")
@@ -30,6 +31,7 @@ def seed_data():
         db.query(RouteRecommendation).delete()
         db.query(User).delete()
         db.query(Zone).delete()
+        db.query(Fleet).delete()
         db.commit()
         print("Data lama berhasil dibersihkan.")
 
@@ -109,17 +111,47 @@ def seed_data():
             print(f"WARNING: Hanya {len(zone_sample)} TPS tersedia, sample data disesuaikan.")
             zone_sample = (zone_sample * 5)[:5]
 
-        # 3. Seed Drivers
+        # 3. Seed Fleets (Data Peremajaan & Statistik Operasional DLH DKI Jakarta 2024/2025)
+        fleets_data = [
+            # Hulu (Kolektor Lingkungan)
+            Fleet(name="Motor Gerobak (Mobet)", category="Hulu", type="Motor Gerobak", capacity="2 m3", total_units=200),
+            Fleet(name="Gerobak Manual", category="Hulu", type="Gerobak", capacity="1 m3", total_units=100),
+            Fleet(name="Mini Dump Truck", category="Hulu", type="Mini Dump Truck", capacity="3 m3", total_units=190),
+            # Tengah (Transpor Makro)
+            Fleet(name="Arm Roll Kecil", category="Tengah", type="Arm Roll", capacity="3 Ton", total_units=200),
+            Fleet(name="Arm Roll Besar", category="Tengah", type="Arm Roll", capacity="5 Ton", total_units=143),
+            Fleet(name="Dump Truck Besar", category="Tengah", type="Dump Truck", capacity="8 Ton", total_units=557),
+            Fleet(name="Truk Compactor RDF", category="Tengah", type="Compactor", capacity="5 Ton", total_units=148),
+            Fleet(name="Truk Tronton", category="Tengah", type="Truk Tronton", capacity="10 Ton", total_units=25),
+            Fleet(name="Road Sweeper", category="Tengah", type="Sweeper", capacity="Penyapu Jalan", total_units=48),
+            # Hilir (Alat Berat TPST)
+            Fleet(name="Excavator Standard", category="Hilir", type="Excavator", capacity="Alat Berat", total_units=33),
+            Fleet(name="Excavator Long Arm", category="Hilir", type="Excavator", capacity="Alat Berat", total_units=2),
+            Fleet(name="Bulldozer", category="Hilir", type="Bulldozer", capacity="Alat Berat", total_units=14),
+            Fleet(name="Wheel Loader", category="Hilir", type="Loader", capacity="Alat Berat", total_units=11),
+        ]
+        db.add_all(fleets_data)
+        db.commit()
+        print("Tabel fleets (Armada DLH DKI Jakarta) berhasil di-seed.")
+
+        # Ambil referensi fleet untuk dihubungkan ke driver
+        f_dump = db.query(Fleet).filter(Fleet.name == "Dump Truck Besar").first()
+        f_ar_besar = db.query(Fleet).filter(Fleet.name == "Arm Roll Besar").first()
+        f_compactor = db.query(Fleet).filter(Fleet.name == "Truk Compactor RDF").first()
+        f_ar_kecil = db.query(Fleet).filter(Fleet.name == "Arm Roll Kecil").first()
+        f_tronton = db.query(Fleet).filter(Fleet.name == "Truk Tronton").first()
+
+        # 4. Seed Drivers (Linked to Fleets)
         drivers_data = [
-            User(name="Budi Utomo", username="driver_budi", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281234567890", zone_id=zone_sample[0].id, status="Offline"),
-            User(name="Joko Susilo", username="driver_joko", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281298765432", zone_id=zone_sample[1].id, status="Offline"),
-            User(name="Agus Saputra", username="driver_agus", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281311223344", zone_id=zone_sample[2].id, status="Offline"),
-            User(name="Herman Wijaya", username="driver_herman", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281355667788", zone_id=zone_sample[3].id, status="Offline"),
-            User(name="Rudy Hermawan", username="driver_rudy", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281288990011", zone_id=zone_sample[4].id, status="Offline"),
+            User(name="Budi Utomo", username="driver_budi", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281234567890", zone_id=zone_sample[0].id, fleet_id=f_dump.id if f_dump else None, status="Offline"),
+            User(name="Joko Susilo", username="driver_joko", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281298765432", zone_id=zone_sample[1].id, fleet_id=f_ar_besar.id if f_ar_besar else None, status="Offline"),
+            User(name="Agus Saputra", username="driver_agus", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281311223344", zone_id=zone_sample[2].id, fleet_id=f_compactor.id if f_compactor else None, status="Offline"),
+            User(name="Herman Wijaya", username="driver_herman", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281355667788", zone_id=zone_sample[3].id, fleet_id=f_ar_kecil.id if f_ar_kecil else None, status="Offline"),
+            User(name="Rudy Hermawan", username="driver_rudy", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281288990011", zone_id=zone_sample[4].id, fleet_id=f_tronton.id if f_tronton else None, status="Offline"),
         ]
         db.add_all(drivers_data)
         db.commit()
-        print("Tabel users (5 driver) berhasil di-seed.")
+        print("Tabel users (5 driver ber-armada) berhasil di-seed.")
 
         # 4. Seed SensorData
         now = datetime.now(timezone.utc).replace(tzinfo=None)

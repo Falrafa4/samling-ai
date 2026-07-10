@@ -27,6 +27,7 @@ from app.models.route_recommendations import RouteRecommendation
 from app.models.sensor_data import SensorData
 from app.models.volume_predictions import VolumePrediction
 from app.models.users import User
+from app.models.fleets import Fleet
 
 target_metadata = Base.metadata
 

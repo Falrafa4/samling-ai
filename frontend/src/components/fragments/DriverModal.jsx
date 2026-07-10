@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faSpinner, faUser, faPhone, faMapPin, faLock } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faSpinner, faUser, faPhone, faMapPin, faLock, faTruck } from '@fortawesome/free-solid-svg-icons';
 
-export default function DriverModal({ isOpen, onClose, driver = null, zones = [], onSave }) {
+export default function DriverModal({ isOpen, onClose, driver = null, zones = [], fleets = [], onSave }) {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [zoneId, setZoneId] = useState('');
+  const [fleetId, setFleetId] = useState('');
   const [status, setStatus] = useState('Offline');
   
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,7 @@ export default function DriverModal({ isOpen, onClose, driver = null, zones = []
         setPassword(''); // Kosongkan password saat edit
         setWhatsappNumber(driver.whatsapp_number || '');
         setZoneId(driver.zone_id || '');
+        setFleetId(driver.fleet_id || '');
         setStatus(driver.status || 'Offline');
       } else {
         setName('');
@@ -28,11 +30,12 @@ export default function DriverModal({ isOpen, onClose, driver = null, zones = []
         setPassword('');
         setWhatsappNumber('628');
         setZoneId(zones.length > 0 ? zones[0].id : '');
+        setFleetId('');
         setStatus('Offline');
       }
       setError('');
     }
-  }, [isOpen, driver, zones]);
+  }, [isOpen, driver, zones, fleets]);
 
   if (!isOpen) return null;
 
@@ -53,6 +56,7 @@ export default function DriverModal({ isOpen, onClose, driver = null, zones = []
       username,
       whatsapp_number: whatsappNumber,
       zone_id: Number(zoneId),
+      fleet_id: fleetId ? Number(fleetId) : null,
     };
 
     if (password) {
@@ -190,6 +194,28 @@ export default function DriverModal({ isOpen, onClose, driver = null, zones = []
                 {zones.map((z) => (
                   <option key={z.id} value={z.id}>
                     {z.name} ({z.kecamatan})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Fleet ID Selection */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Armada Kendaraan Tugas</label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                <FontAwesomeIcon icon={faTruck} className="text-xs" />
+              </span>
+              <select
+                value={fleetId}
+                onChange={(e) => setFleetId(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 cursor-pointer"
+              >
+                <option value="">-- Belum Ditugaskan / Tanpa Kendaraan --</option>
+                {fleets.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    [{f.category}] {f.name} ({f.capacity || 'Tanpa Kapasitas'})
                   </option>
                 ))}
               </select>

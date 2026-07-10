@@ -160,6 +160,52 @@ export const api = {
   },
 
   /**
+   * Mengambil seluruh daftar tipe armada kendaraan.
+   * Endpoint: GET /fleets
+   */
+  async getFleets() {
+    return fetchWithAuth('/fleets');
+  },
+
+  /**
+   * Menambahkan tipe armada baru.
+   * Endpoint: POST /fleets
+   */
+  async createFleet(data) {
+    return fetchWithAuth('/fleets', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Memperbarui detail tipe armada.
+   * Endpoint: PUT /fleets/{id}
+   */
+  async updateFleet(id, data) {
+    return fetchWithAuth(`/fleets/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Menghapus tipe armada dari sistem.
+   * Endpoint: DELETE /fleets/{id}
+   */
+  async deleteFleet(id) {
+    return fetchWithAuth(`/fleets/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  /**
    * Mengambil seluruh daftar driver aktif.
    * Endpoint: GET /drivers
    */

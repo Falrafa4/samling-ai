@@ -62,9 +62,9 @@ export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange })
     if (!zoneId) return;
     try {
       setSensorLoading(true);
-      const res = await api.getLatestSensorData();
+      const res = await api.getLatestSensorData({ zone_id: zoneId });
       if (res.success && res.data) {
-        const zoneSensors = res.data.filter(s => s.zone_id === zoneId);
+        const zoneSensors = res.data;
         
         if (zoneSensors.length > 0) {
           const ultrasonicOrg = zoneSensors.find(s => s.sensor_type === 'Ultrasonic-Organic');
