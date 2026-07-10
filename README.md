@@ -92,6 +92,7 @@ cd samling-ai
 6. Jalankan script seeder untuk memasukkan data awal (wilayah TPS, supir, admin, sensor, volume, dll.):
    ```bash
    python app/database/seed.py
+   python app/database/seed_historical_waste_data.py
    ```
 7. Jalankan server FastAPI secara lokal:
    ```bash
