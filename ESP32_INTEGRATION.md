@@ -6,10 +6,10 @@ Dokumen ini berisi spesifikasi teknis dan panduan implementasi firmware **ESP32*
 
 ## 🌐 1. Spesifikasi API Endpoint (IoT Telemetry)
 
-Sistem menggunakan metode **HTTP PUT** (Upsert) untuk memperbarui status telemetri sensor secara berkala berdasarkan `zone_id` (ID TPS) dan `sensor_type` (jenis sensor).
+Sistem menggunakan metode **HTTP POST** (Log-Based) untuk mengirimkan data telemetri sensor secara berkala berdasarkan `zone_id` (ID TPS) dan `sensor_type` (jenis sensor) sebagai log histori.
 
 *   **URL Endpoint:** `https://api-samling.naufalrafa.my.id/api/v1/sensor-data`
-*   **Method:** `PUT`
+*   **Method:** `POST`
 *   **Headers:**
     *   `Content-Type: application/json`
 *   **Valid Pydantic Schema (`SensorDataCreate`):**
@@ -150,7 +150,7 @@ void loop() {
     // 4. Kadar Gas (Simulasi MQ-135)
     float gasPPM = readGasPPM();
 
-    // C. PENGIRIMAN DATA VIA HTTP PUT (UPSERT)
+    // C. PENGIRIMAN DATA VIA HTTP POST (APPEND LOG)
     // Mengirim ke 5 metrik wajib sesuai API Spec
     
     // 1. Ultrasonic Organic
@@ -239,7 +239,7 @@ float readGasPPM() {
   return ppm;
 }
 
-// 4. Fungsi Utama Pengiriman Payload JSON ke API via HTTP PUT
+// 4. Fungsi Utama Pengiriman Payload JSON ke API via HTTP POST
 void sendTelemetry(const char* sensorType, float fillPercentage, float value) {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
@@ -258,8 +258,8 @@ void sendTelemetry(const char* sensorType, float fillPercentage, float value) {
     String requestBody;
     serializeJson(doc, requestBody);
     
-    // Kirim HTTP PUT request
-    int httpResponseCode = http.PUT(requestBody);
+    // Kirim HTTP POST request
+    int httpResponseCode = http.POST(requestBody);
     
     // Tampilkan log ke Serial Monitor
     Serial.printf("[%s] -> Status: %d | Payload: %s\n", sensorType, httpResponseCode, requestBody.c_str());
@@ -283,4 +283,4 @@ Untuk melanjutkan pengembangan bagian firmware, ikuti langkah-langkah berikut:
 1.  **Impor Berkas:** Salin kode C++ di atas ke dalam berkas proyek `src/main.cpp` pada IDE PlatformIO atau direktori utama Arduino IDE.
 2.  **Konfigurasi Jaringan:** Sesuaikan konstanta `ssid`, `password`, dan `serverUrl` dengan jaringan router lokal serta alamat IP host komputer backend FastAPI Anda.
 3.  **Sesuaikan ID TPS:** Atur `ZONE_ID` sesuai dengan ID wilayah TPS yang ingin Anda simulasikan/uji (lihat ID wilayah di menu dashboard "Kelola Wilayah").
-4.  **Uji Coba:** Jalankan Serial Monitor pada baud rate `115200` untuk meninjau log pengiriman HTTP PUT dan memverifikasi sinkronisasi status kepenuhan TPS di peta admin.
+4.  **Uji Coba:** Jalankan Serial Monitor pada baud rate `115200` untuk meninjau log pengiriman HTTP POST dan memverifikasi sinkronisasi status kepenuhan TPS di peta admin.

@@ -14,8 +14,8 @@ from app.utils.response import response_success
 
 router = APIRouter(tags=["sensor-data"])
 
-@router.put("/sensor-data", status_code=status.HTTP_200_OK)
-def update_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(get_db)):
+@router.post("/sensor-data", status_code=status.HTTP_201_CREATED)
+def create_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(get_db)):
     """
     Membuat Data Sensor (Endpoint Publik untuk IoT Device).
     
