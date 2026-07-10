@@ -16,7 +16,7 @@ from app.models.fleets import Fleet
 from app.utils.security import get_password_hash
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "../../data")
-JSON_PATH = os.path.join(DATA_DIR, "tps_priority_dki_enriched.json")
+JSON_PATH = os.path.join(DATA_DIR, "tps_dki_filtered_enriched.json")
 
 
 def seed_data():
