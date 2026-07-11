@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router';
+import { NavLink } from 'react-router';
 import { useLocalStorage } from 'react-use';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -7,30 +7,14 @@ import {
   faMap,
   faTruck,
   faCommentDots,
-  faLocationDot,
   faMicrochip,
-  faRightFromBracket,
   faChevronLeft,
-  faChevronRight,
   faDatabase
 } from '@fortawesome/free-solid-svg-icons';
-import ConfirmModal from '../fragments/ConfirmModal';
 
-export default function Sidebar({ isOpen, onClose }) {
-  const [, setAdminToken] = useLocalStorage('admin_token', null);
+export default function Sidebar() {
   const [adminUser] = useLocalStorage('admin_user', null);
-  const navigate = useNavigate();
-  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-
-  const handleLogout = () => {
-    setAdminToken(null);
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    setLogoutConfirmOpen(false);
-    navigate('/login');
-    if (onClose) onClose();
-  };
 
   const navItems = [
     { path: '/admin/overview', label: 'Overview', icon: faGauge },
@@ -43,10 +27,8 @@ export default function Sidebar({ isOpen, onClose }) {
 
   return (
     <aside
-      className={`fixed md:relative inset-y-0 left-0 z-50 md:z-auto h-screen bg-white text-gray-700 flex flex-col border-r border-gray-200 transition-all duration-300 ease-in-out ${
-        isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-      } ${
-        collapsed ? 'md:w-[72px] w-[260px]' : 'w-[260px]'
+      className={`hidden md:flex md:relative h-screen bg-white text-gray-700 flex-col border-r border-gray-200 transition-all duration-300 ease-in-out ${
+        collapsed ? 'md:w-[72px]' : 'md:w-[260px]'
       }`}
     >
       {/* Header / Brand */}
@@ -66,7 +48,6 @@ export default function Sidebar({ isOpen, onClose }) {
           <NavLink
             key={item.path}
             to={item.path}
-            onClick={onClose}
             className={({ isActive }) =>
               `flex items-center rounded-lg text-sm font-medium transition-all duration-200 ${
                 collapsed
@@ -87,9 +68,9 @@ export default function Sidebar({ isOpen, onClose }) {
         ))}
       </nav>
 
-      {/* User Profile & Logout Section */}
+      {/* User Profile Section (desktop only — no logout here, logout is in AdminLayout) */}
       <div className={`border-t border-gray-200 bg-gray-50/80 transition-all duration-300 ${collapsed ? 'p-3' : 'p-4'}`}>
-        <div className={`flex items-center ${collapsed ? 'justify-center mb-3' : 'gap-3 px-2 py-2 mb-3'}`}>
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-2 py-2'}`}>
           <div className="w-8 h-8 rounded-full bg-primary-100 border border-primary-200 flex items-center justify-center font-bold text-primary-600 shrink-0">
             {adminUser?.name?.[0]?.toUpperCase() || "A"}
           </div>
@@ -102,30 +83,7 @@ export default function Sidebar({ isOpen, onClose }) {
             </span>
           </div>
         </div>
-        <button
-          onClick={() => setLogoutConfirmOpen(true)}
-          className={`w-full flex items-center rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors duration-200 cursor-pointer ${
-            collapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'
-          }`}
-        >
-          <FontAwesomeIcon icon={faRightFromBracket} className="w-4 text-center shrink-0" />
-          <span className={`overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-            Keluar Aplikasi
-          </span>
-        </button>
       </div>
-
-      {/* Logout Confirmation Modal */}
-      <ConfirmModal
-        isOpen={logoutConfirmOpen}
-        onClose={() => setLogoutConfirmOpen(false)}
-        onConfirm={handleLogout}
-        title="Keluar Aplikasi?"
-        message="Apakah Anda yakin ingin keluar dari Dashboard Admin Samling AI? Anda perlu masuk kembali untuk mengakses data pemantauan sampah."
-        confirmText="Keluar Sekarang"
-        confirmBgColorClass="bg-red-600 hover:bg-red-500"
-        icon={faRightFromBracket}
-      />
     </aside>
   );
 }
