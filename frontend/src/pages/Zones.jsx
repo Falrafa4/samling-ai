@@ -271,16 +271,16 @@ export default function Zones() {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden">
       {/* Header */}
-      <header className="px-8 py-6 bg-white border-b border-slate-200 flex justify-between items-center shrink-0">
+      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Kelola Wilayah dan Monitoring TPS</h2>
-          <p className="text-sm text-slate-500">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Kelola Wilayah dan Monitoring TPS</h2>
+          <p className="text-xs sm:text-sm text-slate-500">
             Daftarkan, perbarui, dan hapus area cakupan TPS, koordinat geospasial GPS, serta tingkat urgensi sampah.
           </p>
         </div>
         <button
           onClick={handleOpenCreate}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-950/20"
+          className="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-950/20"
         >
           <FontAwesomeIcon icon={faPlus} />
           <span>Tambah Wilayah</span>
@@ -288,7 +288,7 @@ export default function Zones() {
       </header>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-8 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
         
         {/* Alerts */}
         {successMessage && (
@@ -305,10 +305,10 @@ export default function Zones() {
         )}
 
         {/* Search & Filter & Stats Card */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto">
             <div className="relative flex-1 md:w-72">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none text-xs">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none text-xs">
                 <FontAwesomeIcon icon={faMagnifyingGlass} />
               </span>
               <input
@@ -316,19 +316,19 @@ export default function Zones() {
                 placeholder="Cari nama wilayah TPS..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
               />
             </div>
             <button
               onClick={() => setFilterModalOpen(true)}
-              className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer border ${
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer border shrink-0 ${
                 activeFilterCount > 0
                   ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
                   : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
               }`}
             >
               <FontAwesomeIcon icon={activeFilterCount > 0 ? faFilterCircleXmark : faFilter} />
-              <span>Filter</span>
+              <span className="hidden sm:inline">Filter</span>
               {activeFilterCount > 0 && (
                 <span className="w-4.5 h-4.5 rounded-full bg-emerald-600 text-white text-[9px] font-bold flex items-center justify-center">
                   {activeFilterCount}
@@ -337,7 +337,7 @@ export default function Zones() {
             </button>
           </div>
           
-          <div className="flex gap-4 text-xs font-semibold text-slate-500">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-slate-500">
             <div>
               {activeFilterCount > 0 ? 'Hasil' : 'Total Wilayah'}:{' '}
               <span className="text-slate-800 font-bold">
@@ -349,7 +349,7 @@ export default function Zones() {
                 </span>
               )}
             </div>
-            <div className="w-px h-4 bg-slate-200" />
+            <div className="hidden sm:block w-px h-4 bg-slate-200" />
             <div>
               Kritis (High Priority):{' '}
               <span className="text-red-600 font-bold">
@@ -417,7 +417,7 @@ export default function Zones() {
                         )}
                       </div>
 
-                      <div className="flex md:flex-col items-center md:items-end gap-3 md:gap-2 shrink-0">
+                      <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-3 md:gap-2 shrink-0 pt-3 md:pt-0 border-t border-slate-100 md:border-none">
                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap ${getRiskBadgeClasses(zone.risk_status)}`}>
                           {zone.risk_status}
                         </span>

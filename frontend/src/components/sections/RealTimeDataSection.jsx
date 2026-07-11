@@ -63,16 +63,16 @@ function CountUp({ target, duration = 1200, formatter = (v) => Math.floor(v).toL
 // Sub-component to animate digits as they change
 function AnimatedDigit({ value, label }) {
   return (
-    <div className="flex flex-col items-center bg-white/10 px-4 py-3 rounded-xl min-w-[70px] backdrop-blur-sm border border-white/10 relative overflow-hidden group hover:bg-white/15 transition-colors">
-      <div className="overflow-hidden h-8 md:h-10 flex items-center justify-center">
+    <div className="flex flex-col items-center bg-white/10 px-2 sm:px-4 py-2 sm:py-3 rounded-xl min-w-[55px] sm:min-w-[70px] backdrop-blur-sm border border-white/10 relative overflow-hidden group hover:bg-white/15 transition-colors">
+      <div className="overflow-hidden h-6 sm:h-8 md:h-10 flex items-center justify-center">
         <span
           key={value}
-          className="inline-block text-2xl md:text-3xl font-extrabold text-white select-none animate-[slideDown_0.25s_cubic-bezier(0.16,1,0.3,1)_forwards]"
+          className="inline-block text-lg sm:text-2xl md:text-3xl font-extrabold text-white select-none animate-[slideDown_0.25s_cubic-bezier(0.16,1,0.3,1)_forwards]"
         >
           {String(value).padStart(2, '0')}
         </span>
       </div>
-      <span className="text-[10px] md:text-xs font-semibold text-white/80 mt-1 uppercase tracking-wider">{label}</span>
+      <span className="text-[8px] sm:text-[10px] md:text-xs font-semibold text-white/80 mt-1 uppercase tracking-wider">{label}</span>
     </div>
   );
 }
@@ -146,9 +146,9 @@ export default function RealTimeDataSection() {
               <p className="text-white/90">Estimasi kenaikan <span className="font-bold text-amber-200 bg-amber-400/15 border border-amber-400/20 px-2 py-0.5 rounded shadow-sm backdrop-blur-sm">+15% Volume Sampah</span>. Armada tambahan disiagakan.</p>
             </div>
             
-            <div className="relative z-10 bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-6 text-center min-w-[320px]">
+            <div className="relative z-10 bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 sm:p-6 text-center min-w-0 w-full sm:min-w-[320px] sm:w-auto">
               <div className="text-sm font-medium mb-3 text-white/95">Waktu menuju Event:</div>
-              <div className="flex justify-center items-center gap-2 md:gap-3">
+              <div className="flex justify-center items-center gap-1 sm:gap-2 md:gap-3">
                 <AnimatedDigit value={countdown.days} label="Hari" />
                 <span className="text-xl md:text-2xl font-bold text-white/70 select-none">:</span>
                 <AnimatedDigit value={countdown.hours} label="Jam" />

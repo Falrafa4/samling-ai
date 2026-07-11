@@ -278,7 +278,7 @@ export default function PredictiveMap() {
 
         {/* Floating Filter Panel — animated glass card */}
         <div
-          className={`absolute top-4 left-18 z-[1010] w-72 max-h-[calc(100%-6rem)] overflow-y-auto transition-all duration-200 ease-out origin-top-left rounded-2xl ${
+          className={`absolute top-16 left-4 right-4 sm:top-4 sm:left-18 sm:right-auto z-[1010] sm:w-72 max-h-[calc(100%-6rem)] overflow-y-auto transition-all duration-200 ease-out origin-top-left rounded-2xl ${
             filterOpen
               ? 'opacity-100 scale-100 pointer-events-auto'
               : 'opacity-0 scale-95 pointer-events-none'

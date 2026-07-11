@@ -309,18 +309,18 @@ export default function FleetDispatch() {
       )}
 
       {/* Header */}
-      <header className="px-8 py-6 bg-white border-b border-slate-200 shrink-0">
-        <h2 className="text-2xl font-bold text-slate-800">Manajemen Rute &amp; Armada</h2>
-        <p className="text-sm text-slate-500">
+      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200 shrink-0">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Manajemen Rute & Armada</h2>
+        <p className="text-xs sm:text-sm text-slate-500">
           Tugaskan manifes rute prioritas hasil prediksi AI langsung ke dasbor aplikasi driver.
         </p>
       </header>
 
       {/* Main Grid Content */}
-      <div className="flex-1 overflow-y-auto px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         
         {/* Left Column (7 Columns): Rute Rekomendasi AI & Mini Map */}
-        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col justify-between min-h-[420px]">
+        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm flex flex-col justify-between min-h-[350px] sm:min-h-[420px]">
           <div>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-md font-bold text-slate-800">Rute Pengangkutan Optimal</h3>
@@ -386,8 +386,8 @@ export default function FleetDispatch() {
           )}
 
           {/* Driver Readiness Tracker Panel */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col flex-1 min-h-[250px]">
-            <h3 className="text-md font-bold text-slate-800 mb-4">Kesiapan Driver</h3>
+          <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm flex flex-col flex-1 min-h-[250px]">
+            <h3 className="text-sm sm:text-md font-bold text-slate-800 mb-4">Kesiapan Driver</h3>
             <div className="space-y-3 flex-1 overflow-y-auto pr-1">
               {drivers.map((driver) => {
                 const assignedFleet = fleets.find((f) => f.id === driver.fleet_id);
@@ -417,8 +417,8 @@ export default function FleetDispatch() {
           </div>
 
           {/* Dispatch Execution Module */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-4">
-            <h3 className="text-md font-bold text-slate-800">Eksekusi Penugasan Rute</h3>
+          <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm space-y-4">
+            <h3 className="text-sm sm:text-md font-bold text-slate-800">Eksekusi Penugasan Rute</h3>
             
             {loadingRoute ? (
               <div className="py-2 flex items-center justify-center text-xs text-slate-500">
@@ -486,7 +486,7 @@ export default function FleetDispatch() {
           </div>
 
           {/* Proof Viewer Card */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+          <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm">
             <div className="flex justify-between items-center mb-3">
               <h4 className="text-xs font-bold text-slate-800">Bukti Pengangkutan Driver</h4>
               <FontAwesomeIcon icon={faImages} className="text-slate-400 text-sm" />

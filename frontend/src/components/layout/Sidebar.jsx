@@ -16,7 +16,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import ConfirmModal from '../fragments/ConfirmModal';
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const [, setAdminToken] = useLocalStorage('admin_token', null);
   const [adminUser] = useLocalStorage('admin_user', null);
   const navigate = useNavigate();
@@ -29,6 +29,7 @@ export default function Sidebar() {
     localStorage.removeItem('admin_user');
     setLogoutConfirmOpen(false);
     navigate('/login');
+    if (onClose) onClose();
   };
 
   const navItems = [
@@ -41,13 +42,19 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className={`h-screen bg-white text-gray-700 flex flex-col border-r border-gray-200 transition-all duration-300 ease-in-out ${collapsed ? 'w-[72px]' : 'w-[260px]'}`}>
+    <aside
+      className={`fixed md:relative inset-y-0 left-0 z-50 md:z-auto h-screen bg-white text-gray-700 flex flex-col border-r border-gray-200 transition-all duration-300 ease-in-out ${
+        isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      } ${
+        collapsed ? 'md:w-[72px] w-[260px]' : 'w-[260px]'
+      }`}
+    >
       {/* Header / Brand */}
       <div className={`relative flex items-center border-b border-gray-200 transition-all duration-300 ${collapsed ? 'justify-center p-4' : 'p-5'}`}>
         <img src="/img/SAMLING%20AI%20-%20WEB.png" alt="Samling AI" className="h-9 w-auto" />
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className={`absolute -right-3 top-1/2 z-30 -translate-y-1/2 w-6 h-6 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-all shadow-xs cursor-pointer ${collapsed ? 'rotate-180' : ''}`}
+          className={`hidden md:flex absolute -right-3 top-1/2 z-30 -translate-y-1/2 w-6 h-6 rounded-full border border-gray-200 bg-white items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-all shadow-xs cursor-pointer ${collapsed ? 'rotate-180' : ''}`}
         >
           <FontAwesomeIcon icon={faChevronLeft} className="text-[10px]" />
         </button>
@@ -59,10 +66,11 @@ export default function Sidebar() {
           <NavLink
             key={item.path}
             to={item.path}
+            onClick={onClose}
             className={({ isActive }) =>
               `flex items-center rounded-lg text-sm font-medium transition-all duration-200 ${
                 collapsed
-                  ? 'justify-center w-full px-0 py-3'
+                  ? 'md:justify-center w-full px-0 py-3 md:py-3'
                   : 'gap-3 px-3.5 py-2.5'
               } ${
                 isActive

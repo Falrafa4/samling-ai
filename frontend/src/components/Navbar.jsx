@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,12 +48,37 @@ export default function Navbar() {
         </div>
 
         {/* Mobile menu button (Simplified for now) */}
-        <button className="md:hidden text-heading p-2">
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden text-heading p-2 focus:outline-none"
+          aria-label="Toggle menu"
+        >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+            {mobileMenuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+            )}
           </svg>
         </button>
       </div>
+
+      {/* Mobile Menu Panel */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-white/95 backdrop-blur-md border-b border-gray-200 py-4 px-6 flex flex-col gap-4 font-medium shadow-lg absolute top-full left-0 right-0 z-40">
+          <Link to="/#fitur" onClick={() => setMobileMenuOpen(false)} className="hover:text-primary-600 transition-colors py-2 border-b border-gray-100">Fitur</Link>
+          <Link to="/#data" onClick={() => setMobileMenuOpen(false)} className="hover:text-primary-600 transition-colors py-2 border-b border-gray-100">Data Realtime</Link>
+          <Link to="/#layanan" onClick={() => setMobileMenuOpen(false)} className="hover:text-primary-600 transition-colors py-2 border-b border-gray-100">Layanan</Link>
+          <Link to="/#kontak" onClick={() => setMobileMenuOpen(false)} className="hover:text-primary-600 transition-colors py-2 border-b border-gray-100">Kontak</Link>
+          <Link
+            to="/login"
+            onClick={() => setMobileMenuOpen(false)}
+            className="w-full text-center px-6 py-2.5 rounded-full bg-primary-600 text-white font-medium hover:bg-primary-700 transition-colors mt-2"
+          >
+            Masuk Dashboard
+          </Link>
+        </div>
+      )}
     </nav>
   );
 }

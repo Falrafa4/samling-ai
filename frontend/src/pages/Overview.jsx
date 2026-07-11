@@ -215,23 +215,23 @@ export default function Overview() {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-50">
       {/* Top Header / Action Bar */}
-      <header className="px-8 py-6 bg-white border-b border-slate-200 flex justify-between items-center shrink-0">
+      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
             Selamat Datang, {adminUser?.name || 'Admin'}
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs sm:text-sm text-slate-500">
             Berikut ringkasan situasi darurat sampah kota hari ini.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Global Date Filter */}
-          <div className="bg-slate-100 p-1 rounded-lg flex items-center gap-1 border border-slate-200">
+          <div className="bg-slate-100 p-1 rounded-lg flex items-center gap-1 border border-slate-200 w-full sm:w-auto overflow-x-auto">
             {dateFilters.map((filter) => (
               <button
                 key={filter.id}
                 onClick={() => setActiveDateFilter(filter.id)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 ${
+                className={`flex-1 sm:flex-initial text-center px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 whitespace-nowrap ${
                   activeDateFilter === filter.id
                     ? 'bg-emerald-500 text-white shadow-sm'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
@@ -242,7 +242,7 @@ export default function Overview() {
             ))}
           </div>
           {/* Export Report Button */}
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors shadow-sm cursor-pointer">
+          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors shadow-sm cursor-pointer w-full sm:w-auto">
             <FontAwesomeIcon icon={faFileExport} />
             <span>Ekspor PDF</span>
           </button>
@@ -250,7 +250,7 @@ export default function Overview() {
       </header>
 
       {/* Main Grid Content */}
-      <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {errorMessage && (
           <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl">
             ⚠️ {errorMessage}
@@ -303,20 +303,20 @@ export default function Overview() {
         {/* 2-Column Split: Grafik Proyeksi & Aktivitas Terbaru */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* AI Projections (Line Chart) */}
-          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 flex flex-col justify-between shadow-sm min-h-[380px]">
-            <div className="flex justify-between items-center mb-6 shrink-0">
+          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col justify-between shadow-sm min-h-[380px]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 shrink-0">
               <div>
-                <h3 className="text-md font-bold text-slate-800">Proyeksi Estimasi Volume Sampah (7 Hari Ke Depan)</h3>
+                <h3 className="text-sm sm:text-md font-bold text-slate-800">Proyeksi Estimasi Volume Sampah (7 Hari Ke Depan)</h3>
                 <p className="text-xs text-slate-500">Hasil prediksi algoritma AI Amadeus berdasarkan kalender event</p>
               </div>
               
               {/* Dropdown Pemilihan Wilayah TPS */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-400">Pilih TPS:</span>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <span className="text-xs font-semibold text-slate-400 whitespace-nowrap">Pilih TPS:</span>
                 <select
                   value={selectedZoneId}
                   onChange={(e) => setSelectedZoneId(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                  className="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer w-full sm:w-auto"
                 >
                   {zones.map((z) => (
                     <option key={z.id} value={z.id}>

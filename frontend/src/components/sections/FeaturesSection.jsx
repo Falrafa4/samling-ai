@@ -272,11 +272,11 @@ export default function FeaturesSection() {
                     className="w-1/6 bg-green-200 hover:bg-green-300 rounded-t-md cursor-pointer"
                   />
                 </div>
-                <div className="flex justify-between text-xs text-gray-500 mt-3 font-medium">
+                <div className="flex justify-between text-[10px] sm:text-xs text-gray-500 mt-3 font-medium">
                   <span>Senin</span>
                   <span>Selasa</span>
                   <span>Rabu</span>
-                  <span className="text-red-500 font-bold">Kamis (Event)</span>
+                  <span className="text-red-500 font-bold">Kamis <span className="hidden sm:inline">(Event)</span></span>
                   <span>Jumat</span>
                   <span>Sabtu</span>
                 </div>

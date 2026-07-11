@@ -1,19 +1,19 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 /**
  * Custom React Hook to establish a persistent real-time WebSocket connection
- * with auto-reconnection and automated component unmount cleanup.
- * 
- * Uses a ref-based callback pattern to prevent reconnection loops when parent
- * components re-render or pass anonymous callback functions.
- * 
- * @param {Function} onMessage Callback function triggered upon receiving a valid JSON WebSocket message.
+ * with automatic reconnection and cleanup.
+ *
+ * WebSocket protocol (ws/wss) is derived from the backend API URL,
+ * allowing a local frontend (http://localhost:5173) to connect to a
+ * production backend (https://api-samling.naufalrafa.my.id) correctly.
+ *
+ * @param {Function} onMessage Callback invoked when a JSON message is received.
  */
 export function useSensorWebSocket(onMessage) {
   const socketRef = useRef(null);
   const onMessageRef = useRef(onMessage);
 
-  // Keep callback reference updated without triggering effect reconnection
   useEffect(() => {
     onMessageRef.current = onMessage;
   }, [onMessage]);
@@ -25,53 +25,73 @@ export function useSensorWebSocket(onMessage) {
     function connect() {
       if (!active) return;
 
-      // Dynamically resolve WebSocket connection protocol and URL host
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      
-      // Fallback base URL resolution
-      const baseApiUrl = import.meta.env.VITE_BASE_API_URL || 'http://localhost:8000/api/v1';
-      let wsHost = baseApiUrl.replace(/^https?:\/\//, '').replace('/api/v1', '');
-      const wsUrl = `${protocol}//${wsHost}/api/v1/ws/sensor`;
+      const baseApiUrl =
+        import.meta.env.VITE_BASE_API_URL || "http://127.0.0.1:8000/api/v1";
 
-      console.log('[WebSocket] Connecting to:', wsUrl);
+      // Convert HTTP(S) API URL into WS(S)
+      const wsUrl = baseApiUrl
+        .replace(/^https:\/\//, "wss://")
+        .replace(/^http:\/\//, "ws://")
+        .replace(/\/api\/v1\/?$/, "/api/v1/ws/sensor");
+
+      console.log("[WebSocket] Connecting to:", wsUrl);
+
       const ws = new WebSocket(wsUrl);
       socketRef.current = ws;
 
+      ws.onopen = () => {
+        console.log("[WebSocket] Connected.");
+      };
+
       ws.onmessage = (event) => {
         if (!active) return;
+
         try {
           const payload = JSON.parse(event.data);
-          if (onMessageRef.current) {
-            onMessageRef.current(payload);
-          }
+          onMessageRef.current?.(payload);
         } catch (err) {
-          console.error('[WebSocket] Error parsing JSON payload:', err);
+          console.error("[WebSocket] Failed to parse message:", err);
         }
+      };
+
+      ws.onerror = (err) => {
+        if (!active) return;
+
+        console.error("[WebSocket] Error:", err);
+
+        // Let onclose handle the reconnection
+        ws.close();
       };
 
       ws.onclose = (event) => {
         if (!active) return;
-        console.log('[WebSocket] Connection closed. Code:', event.code, 'Reason:', event.reason);
-        console.log('[WebSocket] Reconnecting in 3 seconds...');
-        reconnectTimeout = setTimeout(connect, 3000);
-      };
 
-      ws.onerror = (err) => {
-        console.error('[WebSocket] Error encountered:', err);
-        ws.close(); // Triggers onclose reconnection path
+        console.warn(
+          `[WebSocket] Disconnected. Code=${event.code}, Reason="${event.reason}"`,
+        );
+
+        reconnectTimeout = setTimeout(() => {
+          console.log("[WebSocket] Reconnecting...");
+          connect();
+        }, 3000);
       };
     }
 
     connect();
 
-    // Cleanup hook on unmount
     return () => {
       active = false;
-      clearTimeout(reconnectTimeout);
+
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+
       if (socketRef.current) {
-        console.log('[WebSocket] Component unmounting, closing connection.');
+        console.log("[WebSocket] Closing connection...");
         socketRef.current.close();
       }
     };
   }, []);
+
+  return socketRef;
 }
