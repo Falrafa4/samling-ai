@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { useSensorWebSocket } from '../hooks/useSensorWebSocket';
 
 function SensorDashboard() {
   const [sensorData, setSensorData] = useState(null);
@@ -28,10 +29,20 @@ function SensorDashboard() {
 
   useEffect(() => {
     fetchLatestData();
-
-    const interval = setInterval(fetchLatestData, 5000);
-    return () => clearInterval(interval);
   }, []);
+
+  const handleWebSocketMessage = React.useCallback((payload) => {
+    if (payload.event === 'sensor_update') {
+      const updatedSensor = payload.data;
+      // SensorDashboard hanya menampilkan data zona 1 tipe DHT-22-Temp
+      if (updatedSensor.zone_id === 1 && updatedSensor.sensor_type === 'DHT-22-Temp') {
+        setSensorData(updatedSensor);
+        console.log('Real-time update sensor DHT-22-Temp zona 1:', updatedSensor);
+      }
+    }
+  }, []);
+
+  useSensorWebSocket(handleWebSocketMessage);
 
   return (
     <div style={{ padding: '20px', background: '#f5f5f5', borderRadius: '8px' }}>

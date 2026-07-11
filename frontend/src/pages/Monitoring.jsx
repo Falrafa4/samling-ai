@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faLocationDot,
@@ -14,6 +14,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../services/api';
 import CircularProgress from '../components/CircularProgress';
+import { useSensorWebSocket } from '../hooks/useSensorWebSocket';
 
 export default function Monitoring() {
   const [zones, setZones] = useState([]);
@@ -107,19 +108,61 @@ export default function Monitoring() {
     }
   };
 
-  // Set up polling when selected zone changes
+  // Initial fetch when selected zone changes
   useEffect(() => {
     if (loading || !selectedZoneId) return;
-
     fetchSensorDetail(selectedZoneId);
-
-    const interval = setInterval(() => {
-      fetchSensorDetail(selectedZoneId);
-      console.log(`Polling sensor data for zone ${selectedZoneId}...`);
-    }, 5000);
-
-    return () => clearInterval(interval);
   }, [selectedZoneId, loading]);
+
+  // Handle real-time WebSocket sensor updates
+  const handleWebSocketMessage = useCallback((payload) => {
+    if (payload.event === 'sensor_update') {
+      const updatedSensor = payload.data;
+
+      // 1. Update status risiko wilayah di list zones
+      setZones((prevZones) =>
+        prevZones.map((z) =>
+          z.id === updatedSensor.zone_id
+            ? { ...z, risk_status: updatedSensor.zone_risk_status }
+            : z
+        )
+      );
+
+      // 2. Jika sensor data ini milik wilayah yang sedang terpilih, update state detailnya
+      if (updatedSensor.zone_id === selectedZoneId) {
+        setSensors((prevSensors) => {
+          const nextSensors = { ...prevSensors };
+          let matched = false;
+
+          if (updatedSensor.sensor_type === 'Ultrasonic-Organic') {
+            nextSensors.ultrasonicOrg = updatedSensor;
+            matched = true;
+          } else if (updatedSensor.sensor_type === 'Ultrasonic-Anorganic') {
+            nextSensors.ultrasonicAnorg = updatedSensor;
+            matched = true;
+          } else if (updatedSensor.sensor_type === 'MQ-135') {
+            nextSensors.gas = updatedSensor;
+            matched = true;
+          } else if (updatedSensor.sensor_type === 'DHT-22-Temp') {
+            nextSensors.temp = updatedSensor;
+            matched = true;
+          } else if (updatedSensor.sensor_type === 'DHT-22-Humid') {
+            nextSensors.humid = updatedSensor;
+            matched = true;
+          }
+
+          if (matched) {
+            nextSensors.hasAny = true;
+            nextSensors.updatedAt = new Date(updatedSensor.updated_at || updatedSensor.created_at);
+          }
+
+          return nextSensors;
+        });
+      }
+    }
+  }, [selectedZoneId]);
+
+  useSensorWebSocket(handleWebSocketMessage);
 
   const getRiskBadgeClasses = (status) => {
     switch (status) {

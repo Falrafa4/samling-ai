@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faXmark,
@@ -18,6 +18,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../../services/api';
 import CircularProgress from '../CircularProgress';
+import { useSensorWebSocket } from '../../hooks/useSensorWebSocket';
 
 export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange }) {
   const [loading, setLoading] = useState(true);
@@ -124,13 +125,45 @@ export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange })
     }
 
     initFetch();
-
-    const interval = setInterval(() => {
-      fetchSensorDetail(zone.id);
-    }, 5000);
-
-    return () => clearInterval(interval);
   }, [isOpen, zone?.id]);
+
+  const handleWebSocketMessage = useCallback((payload) => {
+    if (payload.event === 'sensor_update' && isOpen && zone) {
+      const updatedSensor = payload.data;
+      if (updatedSensor.zone_id === zone.id) {
+        setSensors((prevSensors) => {
+          const nextSensors = { ...prevSensors };
+          let matched = false;
+
+          if (updatedSensor.sensor_type === 'Ultrasonic-Organic') {
+            nextSensors.ultrasonicOrg = updatedSensor;
+            matched = true;
+          } else if (updatedSensor.sensor_type === 'Ultrasonic-Anorganic') {
+            nextSensors.ultrasonicAnorg = updatedSensor;
+            matched = true;
+          } else if (updatedSensor.sensor_type === 'MQ-135') {
+            nextSensors.gas = updatedSensor;
+            matched = true;
+          } else if (updatedSensor.sensor_type === 'DHT-22-Temp') {
+            nextSensors.temp = updatedSensor;
+            matched = true;
+          } else if (updatedSensor.sensor_type === 'DHT-22-Humid') {
+            nextSensors.humid = updatedSensor;
+            matched = true;
+          }
+
+          if (matched) {
+            nextSensors.hasAny = true;
+            nextSensors.updatedAt = new Date(updatedSensor.updated_at || updatedSensor.created_at);
+          }
+
+          return nextSensors;
+        });
+      }
+    }
+  }, [isOpen, zone?.id]);
+
+  useSensorWebSocket(handleWebSocketMessage);
 
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) onClose();

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from typing import List, Optional
@@ -11,11 +11,12 @@ from app.models.users import User
 from app.schemas.sensor_data import SensorDataCreate, SensorDataResponse, SensorDataBulkResponse, SensorDataUpdate
 from app.api.deps import get_current_user
 from app.utils.response import response_success
+from app.api.websocket_manager import manager
 
 router = APIRouter(tags=["sensor-data"])
 
 @router.post("/sensor-data", status_code=status.HTTP_201_CREATED)
-def create_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(get_db)):
+async def create_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(get_db)):
     """
     Membuat Data Sensor (Endpoint Publik untuk IoT Device).
     
@@ -66,6 +67,25 @@ def create_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Depends(g
 
     db.commit()
     db.refresh(sensor_record)
+
+    # 4. Broadcast data terbaru melalui WebSocket
+    try:
+        await manager.broadcast({
+            "event": "sensor_update",
+            "data": {
+                "id": sensor_record.id,
+                "zone_id": sensor_record.zone_id,
+                "sensor_type": sensor_record.sensor_type,
+                "fill_percentage": float(sensor_record.fill_percentage),
+                "value": float(sensor_record.value),
+                "created_at": sensor_record.created_at.isoformat() if sensor_record.created_at else None,
+                "updated_at": sensor_record.updated_at.isoformat() if sensor_record.updated_at else None,
+                "zone_risk_status": zone.risk_status if zone else "Normal"
+            }
+        })
+    except Exception as ws_err:
+        # Jangan memblokir atau menggagalkan HTTP response jika penyiaran WS bermasalah
+        pass
 
     data = SensorDataResponse.model_validate(sensor_record)
     return response_success(data=data, message="Data sensor berhasil diperbarui dan status wilayah berhasil disinkronkan.")
@@ -344,3 +364,19 @@ def delete_sensor_data(
         db.commit()
 
     return response_success(message="Data sensor berhasil dihapus dari sistem.")
+
+@router.websocket("/ws/sensor")
+async def websocket_sensor_endpoint(websocket: WebSocket):
+    """
+    WebSocket Endpoint untuk pemantauan data sensor real-time.
+    Klien mendaftar di sini untuk mendapatkan pembaruan otomatis.
+    """
+    await manager.connect(websocket)
+    try:
+        while True:
+            # Jaga koneksi persisten tetap terbuka dengan menerima pesan heartbeat/ping dari client
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception:
+        manager.disconnect(websocket)
