@@ -1,0 +1,2861 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Samling API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Login",
+        "description": "Mengautentikasi user (secara umum) dan mengembalikan token JWT akses.",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login/admin": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Login Admin",
+        "description": "Mengautentikasi admin dan mengembalikan token JWT akses. (Input Form Data)",
+        "operationId": "login_admin_api_v1_auth_login_admin_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_admin_api_v1_auth_login_admin_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login/driver": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Login Driver",
+        "description": "Mengautentikasi driver dan mengembalikan token JWT akses. (Input Form Data)",
+        "operationId": "login_driver_api_v1_auth_login_driver_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_driver_api_v1_auth_login_driver_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Create Admin",
+        "description": "Mendaftarkan admin baru (hanya dapat dipanggil jika admin lama terautentikasi).",
+        "operationId": "create_admin_api_v1_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/zones": {
+      "get": {
+        "tags": [
+          "zones"
+        ],
+        "summary": "Get Zones",
+        "description": "Mengambil daftar wilayah TPS (Mendukung paginasi dan penyaringan).",
+        "operationId": "get_zones_api_v1_zones_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Nomor Halaman (1-indexed)",
+              "title": "Page"
+            },
+            "description": "Nomor Halaman (1-indexed)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Jumlah item per halaman",
+              "title": "Limit"
+            },
+            "description": "Jumlah item per halaman"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Cari berdasarkan nama TPS",
+              "title": "Search"
+            },
+            "description": "Cari berdasarkan nama TPS"
+          },
+          {
+            "name": "wilayah",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter wilayah",
+              "title": "Wilayah"
+            },
+            "description": "Filter wilayah"
+          },
+          {
+            "name": "kecamatan",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter kecamatan",
+              "title": "Kecamatan"
+            },
+            "description": "Filter kecamatan"
+          },
+          {
+            "name": "kelurahan",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter kelurahan",
+              "title": "Kelurahan"
+            },
+            "description": "Filter kelurahan"
+          },
+          {
+            "name": "jenis_tps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter jenis TPS",
+              "title": "Jenis Tps"
+            },
+            "description": "Filter jenis TPS"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "zones"
+        ],
+        "summary": "Create Zone",
+        "description": "Membuat wilayah TPS baru.",
+        "operationId": "create_zone_api_v1_zones_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZoneCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/zones/filter-options": {
+      "get": {
+        "tags": [
+          "zones"
+        ],
+        "summary": "Get Zones Filter Options",
+        "description": "Mengambil daftar opsi wilayah, kecamatan, kelurahan, dan jenis TPS yang unik langsung dari database.",
+        "operationId": "get_zones_filter_options_api_v1_zones_filter_options_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/zones/{zone_id}": {
+      "get": {
+        "tags": [
+          "zones"
+        ],
+        "summary": "Get Zone",
+        "description": "Mengambil detail wilayah TPS berdasarkan ID.",
+        "operationId": "get_zone_api_v1_zones__zone_id__get",
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Zone Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "zones"
+        ],
+        "summary": "Update Zone",
+        "description": "Memperbarui informasi wilayah TPS secara dinamis.",
+        "operationId": "update_zone_api_v1_zones__zone_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Zone Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZoneUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "zones"
+        ],
+        "summary": "Delete Zone",
+        "description": "Menghapus wilayah TPS berdasarkan ID.",
+        "operationId": "delete_zone_api_v1_zones__zone_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Zone Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/zones/kecamatan/{kecamatan}": {
+      "get": {
+        "tags": [
+          "zones"
+        ],
+        "summary": "Get Zones By Kecamatan",
+        "description": "Mengambil seluruh daftar TPS berdasarkan nama kecamatan (Case-Insensitive).",
+        "operationId": "get_zones_by_kecamatan_api_v1_zones_kecamatan__kecamatan__get",
+        "parameters": [
+          {
+            "name": "kecamatan",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Kecamatan"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Zones By Kecamatan Api V1 Zones Kecamatan  Kecamatan  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/drivers": {
+      "get": {
+        "tags": [
+          "drivers"
+        ],
+        "summary": "Get Drivers",
+        "description": "Mengambil seluruh daftar supir armada (User dengan role='driver'). (Memerlukan Autentikasi)",
+        "operationId": "get_drivers_api_v1_drivers_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "drivers"
+        ],
+        "summary": "Create Driver",
+        "description": "Mendaftarkan supir armada baru (membuat User baru dengan role='driver'). (Memerlukan Autentikasi)",
+        "operationId": "create_driver_api_v1_drivers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DriverCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/drivers/{id}": {
+      "get": {
+        "tags": [
+          "drivers"
+        ],
+        "summary": "Get Driver",
+        "description": "Mengambil informasi detail supir berdasarkan ID. (Memerlukan Autentikasi)",
+        "operationId": "get_driver_api_v1_drivers__id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "drivers"
+        ],
+        "summary": "Update Driver",
+        "description": "Memperbarui informasi supir secara dinamis. (Memerlukan Autentikasi)",
+        "operationId": "update_driver_api_v1_drivers__id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DriverUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "drivers"
+        ],
+        "summary": "Delete Driver",
+        "description": "Menghapus driver berdasarkan ID. (Memerlukan Autentikasi)",
+        "operationId": "delete_driver_api_v1_drivers__id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sensor-data": {
+      "post": {
+        "tags": [
+          "sensor-data"
+        ],
+        "summary": "Create Sensor Data",
+        "description": "Membuat Data Sensor (Endpoint Publik untuk IoT Device).\n\nSecara dinamis memperbarui risk_status dari wilayah terkait berdasarkan fill_percentage:\n- _>80% -> High Priority\n- 50% - 80% -> Warning\n- < 50% -> Normal",
+        "operationId": "create_sensor_data_api_v1_sensor_data_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SensorDataCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "sensor-data"
+        ],
+        "summary": "Get All Sensor Data",
+        "description": "Mengambil semua data pembacaan sensor (Master Data).",
+        "operationId": "get_all_sensor_data_api_v1_sensor_data_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Zone Id"
+            }
+          },
+          {
+            "name": "sensor_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sensor Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sensor-data/latest": {
+      "get": {
+        "tags": [
+          "sensor-data"
+        ],
+        "summary": "Get Latest Sensor Data",
+        "description": "Mengambil pembacaan data sensor terakhir untuk semua wilayah TPS (Mendukung filter zone_id).\nMenghasilkan maksimal 1 data sensor terbaru untuk setiap zone_id dan sensor_type.",
+        "operationId": "get_latest_sensor_data_api_v1_sensor_data_latest_get",
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter berdasarkan ID wilayah TPS",
+              "title": "Zone Id"
+            },
+            "description": "Filter berdasarkan ID wilayah TPS"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sensor-data/history": {
+      "get": {
+        "tags": [
+          "sensor-data"
+        ],
+        "summary": "Get Sensor Data History",
+        "description": "Mengambil data sensor historis untuk wilayah tertentu (AI Forecasting).",
+        "operationId": "get_sensor_data_history_api_v1_sensor_data_history_get",
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Zone Id"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 7,
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sensor-data/{id}": {
+      "get": {
+        "tags": [
+          "sensor-data"
+        ],
+        "summary": "Get Sensor Data By Id",
+        "description": "Mengambil detail data sensor berdasarkan ID.",
+        "operationId": "get_sensor_data_by_id_api_v1_sensor_data__id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "sensor-data"
+        ],
+        "summary": "Update Sensor Data Manually",
+        "description": "Memperbarui data sensor secara manual.",
+        "operationId": "update_sensor_data_manually_api_v1_sensor_data__id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SensorDataUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "sensor-data"
+        ],
+        "summary": "Delete Sensor Data",
+        "description": "Menghapus data sensor.",
+        "operationId": "delete_sensor_data_api_v1_sensor_data__id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sensor-data/manual": {
+      "post": {
+        "tags": [
+          "sensor-data"
+        ],
+        "summary": "Create Sensor Data Manually",
+        "description": "Menambahkan data sensor secara manual.",
+        "operationId": "create_sensor_data_manually_api_v1_sensor_data_manual_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SensorDataCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/volume-predictions": {
+      "post": {
+        "tags": [
+          "volume-predictions"
+        ],
+        "summary": "Create Volume Prediction",
+        "description": "Simpan Hasil Prediksi AI (Endpoint Publik untuk Internal Cron Job / AI Engine).\nMemvalidasi zone_id sebelum menyimpan data.",
+        "operationId": "create_volume_prediction_api_v1_volume_predictions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VolumePredictionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/volume-predictions/{zone_id}/projections": {
+      "get": {
+        "tags": [
+          "volume-predictions"
+        ],
+        "summary": "Get Volume Projections",
+        "description": "Mengambil data proyeksi volume sampah 7 hari ke depan untuk wilayah tertentu (Memerlukan Autentikasi).\nMenyaring target_time dari sekarang s.d 7 hari ke depan, diurutkan ascending.",
+        "operationId": "get_volume_projections_api_v1_volume_predictions__zone_id__projections_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Zone Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/citizen-reports": {
+      "post": {
+        "tags": [
+          "citizen-reports"
+        ],
+        "summary": "Create Citizen Report",
+        "description": "Terima Laporan Pengaduan Warga Baru (Mendukung upload gambar opsional via form-data).\nMelakukan deteksi duplikasi dalam 12 jam terakhir di zona yang sama dengan threshold kemiripan teks > 60%.",
+        "operationId": "create_citizen_report_api_v1_citizen_reports_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_citizen_report_api_v1_citizen_reports_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "citizen-reports"
+        ],
+        "summary": "Get Citizen Reports",
+        "description": "Mengambil daftar laporan pengaduan warga (Memerlukan Autentikasi).\nMendukung pemfilteran berdasarkan zone_id dan status untuk visualisasi Kanban Board.\nMenerapkan Eager Loading pada relasi zone untuk performa kueri yang optimal.",
+        "operationId": "get_citizen_reports_api_v1_citizen_reports_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Zone Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/citizen-reports/{id}": {
+      "put": {
+        "tags": [
+          "citizen-reports"
+        ],
+        "summary": "Update Citizen Report",
+        "description": "Memperbarui status atau wilayah tugas laporan aduan (Memerlukan Autentikasi).\nDigunakan untuk memindahkan kartu aduan di Kanban Board (Baru -> Sedang Ditangani -> Selesai).",
+        "operationId": "update_citizen_report_api_v1_citizen_reports__id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CitizenReportUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "citizen-reports"
+        ],
+        "summary": "Delete Citizen Report",
+        "description": "Menghapus laporan pengaduan warga berdasarkan ID (Memerlukan Autentikasi).",
+        "operationId": "delete_citizen_report_api_v1_citizen_reports__id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webhook/whatsapp": {
+      "post": {
+        "tags": [
+          "citizen-reports"
+        ],
+        "summary": "Whatsapp Webhook",
+        "description": "WhatsApp Chatbot Webhook (Endpoint Publik untuk Twilio/Chatbot Gateway).\nMenyimpan pesan aduan warga langsung ke citizen_reports dengan zone_id dan deteksi duplikasi dalam 12 jam terakhir.",
+        "operationId": "whatsapp_webhook_api_v1_webhook_whatsapp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsAppWebhookInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/route-recommendations": {
+      "post": {
+        "tags": [
+          "route-recommendations"
+        ],
+        "summary": "Create Route Recommendation",
+        "description": "Simpan Rekomendasi Rute Baru (Memerlukan Autentikasi).\nMemvalidasi format route_json, keabsahan driver_id, dan keabsahan zone_id.",
+        "operationId": "create_route_recommendation_api_v1_route_recommendations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteRecommendationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/route-recommendations/latest": {
+      "get": {
+        "tags": [
+          "route-recommendations"
+        ],
+        "summary": "Get Latest Route Recommendation",
+        "description": "Mengambil Rute Optimal Terkini secara global (Memerlukan Autentikasi).",
+        "operationId": "get_latest_route_recommendation_api_v1_route_recommendations_latest_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/route-recommendations/dispatch/{driver_id}": {
+      "post": {
+        "tags": [
+          "route-recommendations"
+        ],
+        "summary": "Dispatch Route Recommendation",
+        "description": "Kirim Manifes Tugas ke Driver via WA (Memerlukan Autentikasi).\nMengambil rute terbaru untuk driver ini, merelasikan dengan koordinat wilayah tugas, menyusun manifes terurut,\nmenyimulasikan pengiriman navigasi, dan memperbarui status rute menjadi 'In Progress'.",
+        "operationId": "dispatch_route_recommendation_api_v1_route_recommendations_dispatch__driver_id__post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "driver_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Driver Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/route-recommendations/driver/{driver_id}": {
+      "get": {
+        "tags": [
+          "route-recommendations"
+        ],
+        "summary": "Get Driver Route Recommendations",
+        "description": "Mengambil rute rekomendasi milik supir tertentu (Aplikasi Driver).\nHanya rute dengan status 'Pending' atau 'In Progress'.",
+        "operationId": "get_driver_route_recommendations_api_v1_route_recommendations_driver__driver_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "driver_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Driver Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/route-recommendations/{id}/status": {
+      "put": {
+        "tags": [
+          "route-recommendations"
+        ],
+        "summary": "Update Route Status",
+        "description": "Memperbarui status rute rekomendasi (Aplikasi Driver).\nMenerima status baru (Pending, In Progress, Completed).",
+        "operationId": "update_route_status_api_v1_route_recommendations__id__status_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteStatusUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fleets": {
+      "get": {
+        "tags": [
+          "fleets"
+        ],
+        "summary": "Get All Fleets",
+        "description": "Mengambil semua daftar tipe armada kendaraan DLH Jakarta. (Memerlukan Autentikasi)",
+        "operationId": "get_all_fleets_api_v1_fleets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "fleets"
+        ],
+        "summary": "Create Fleet",
+        "description": "Menambahkan tipe armada baru di sistem. (Memerlukan Autentikasi)",
+        "operationId": "create_fleet_api_v1_fleets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FleetCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/fleets/{id}": {
+      "get": {
+        "tags": [
+          "fleets"
+        ],
+        "summary": "Get Fleet By Id",
+        "description": "Mengambil informasi detail tipe armada berdasarkan ID. (Memerlukan Autentikasi)",
+        "operationId": "get_fleet_by_id_api_v1_fleets__id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "fleets"
+        ],
+        "summary": "Update Fleet",
+        "description": "Memperbarui informasi tipe armada. (Memerlukan Autentikasi)",
+        "operationId": "update_fleet_api_v1_fleets__id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FleetUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "fleets"
+        ],
+        "summary": "Delete Fleet",
+        "description": "Menghapus tipe armada dari sistem. (Memerlukan Autentikasi)\nSupir yang terkait akan di-null-kan armada-nya secara otomatis.",
+        "operationId": "delete_fleet_api_v1_fleets__id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/summary": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Get Dashboard Summary",
+        "description": "Mengambil data ringkasan metrik dashboard admin (Macro Metrics).\nMengembalikan total wilayah berstatus Warning/High Priority, rata-rata isi bak sampah terbaru,\ndan total pengaduan warga.",
+        "operationId": "get_dashboard_summary_api_v1_dashboard_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_create_citizen_report_api_v1_citizen_reports_post": {
+        "properties": {
+          "whatsapp_number": {
+            "type": "string",
+            "title": "Whatsapp Number"
+          },
+          "report_content": {
+            "type": "string",
+            "title": "Report Content"
+          },
+          "zone_id": {
+            "type": "integer",
+            "title": "Zone Id"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image"
+          }
+        },
+        "type": "object",
+        "required": [
+          "whatsapp_number",
+          "report_content",
+          "zone_id"
+        ],
+        "title": "Body_create_citizen_report_api_v1_citizen_reports_post"
+      },
+      "Body_login_admin_api_v1_auth_login_admin_post": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Body_login_admin_api_v1_auth_login_admin_post"
+      },
+      "Body_login_driver_api_v1_auth_login_driver_post": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Body_login_driver_api_v1_auth_login_driver_post"
+      },
+      "CitizenReportUpdate": {
+        "properties": {
+          "zone_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zone Id"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status",
+            "description": "Pilihan: Baru, Sedang Ditangani, Selesai"
+          },
+          "image_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Path"
+          }
+        },
+        "type": "object",
+        "title": "CitizenReportUpdate"
+      },
+      "DriverCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "title": "Name"
+          },
+          "whatsapp_number": {
+            "type": "string",
+            "pattern": "^62\\d{9,13}$",
+            "title": "Whatsapp Number"
+          },
+          "fleet_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fleet Id"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "title": "Username"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "whatsapp_number",
+          "username"
+        ],
+        "title": "DriverCreate"
+      },
+      "DriverUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "whatsapp_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^62\\d{9,13}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp Number"
+          },
+          "fleet_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fleet Id"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "title": "DriverUpdate"
+      },
+      "FleetCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "title": "Name",
+            "description": "Nama tipe armada"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Kategori operasional (Hulu, Tengah, Hilir)"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "Jenis kendaraan (Dump Truck, Arm Roll, etc.)"
+          },
+          "capacity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capacity",
+            "description": "Kapasitas angkut / volume kendaraan"
+          },
+          "total_units": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Units",
+            "description": "Banyak unit total di dinas",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "category",
+          "type"
+        ],
+        "title": "FleetCreate"
+      },
+      "FleetUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "capacity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capacity"
+          },
+          "total_units": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Units"
+          }
+        },
+        "type": "object",
+        "title": "FleetUpdate"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "RouteRecommendationCreate": {
+        "properties": {
+          "driver_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Id"
+          },
+          "route_json": {
+            "type": "string",
+            "title": "Route Json",
+            "description": "Format JSON String berisi daftar ID zona terurut. Contoh: '[1, 3, 5]'"
+          }
+        },
+        "type": "object",
+        "required": [
+          "route_json"
+        ],
+        "title": "RouteRecommendationCreate"
+      },
+      "RouteStatusUpdate": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Pilihan: Pending, In Progress, Completed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "RouteStatusUpdate"
+      },
+      "SensorDataCreate": {
+        "properties": {
+          "zone_id": {
+            "type": "integer",
+            "title": "Zone Id"
+          },
+          "sensor_type": {
+            "type": "string",
+            "enum": [
+              "Ultrasonic-Organic",
+              "Ultrasonic-Anorganic",
+              "MQ-135",
+              "DHT-22-Temp",
+              "DHT-22-Humid"
+            ],
+            "title": "Sensor Type",
+            "description": "Jenis sensor IoT yang terpasang di lapangan"
+          },
+          "fill_percentage": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Fill Percentage"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "zone_id",
+          "sensor_type",
+          "fill_percentage",
+          "value"
+        ],
+        "title": "SensorDataCreate"
+      },
+      "SensorDataUpdate": {
+        "properties": {
+          "zone_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zone Id"
+          },
+          "sensor_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "Ultrasonic-Organic",
+                  "Ultrasonic-Anorganic",
+                  "MQ-135",
+                  "DHT-22-Temp",
+                  "DHT-22-Humid"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sensor Type"
+          },
+          "fill_percentage": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fill Percentage"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "title": "SensorDataUpdate"
+      },
+      "UserCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "title": "Name"
+          },
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "title": "Password"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role",
+            "default": "admin"
+          },
+          "whatsapp_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp Number"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "username",
+          "password"
+        ],
+        "title": "UserCreate"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VolumePredictionCreate": {
+        "properties": {
+          "zone_id": {
+            "type": "integer",
+            "title": "Zone Id"
+          },
+          "predicted_volume": {
+            "type": "number",
+            "title": "Predicted Volume"
+          },
+          "target_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Target Time"
+          },
+          "confidence_score": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "zone_id",
+          "predicted_volume",
+          "target_time",
+          "confidence_score"
+        ],
+        "title": "VolumePredictionCreate"
+      },
+      "WhatsAppWebhookInput": {
+        "properties": {
+          "whatsapp_number": {
+            "type": "string",
+            "pattern": "^62\\d{9,13}$",
+            "title": "Whatsapp Number"
+          },
+          "report_content": {
+            "type": "string",
+            "title": "Report Content"
+          },
+          "zone_id": {
+            "type": "integer",
+            "title": "Zone Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "whatsapp_number",
+          "report_content",
+          "zone_id"
+        ],
+        "title": "WhatsAppWebhookInput"
+      },
+      "ZoneCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "wilayah": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wilayah"
+          },
+          "kecamatan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kecamatan"
+          },
+          "kelurahan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kelurahan"
+          },
+          "jenis_tps": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jenis Tps"
+          },
+          "alamat": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alamat"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          },
+          "risk_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Status",
+            "default": "Normal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "latitude",
+          "longitude"
+        ],
+        "title": "ZoneCreate"
+      },
+      "ZoneUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "wilayah": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wilayah"
+          },
+          "kecamatan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kecamatan"
+          },
+          "kelurahan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kelurahan"
+          },
+          "jenis_tps": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jenis Tps"
+          },
+          "alamat": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alamat"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "risk_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Status"
+          }
+        },
+        "type": "object",
+        "title": "ZoneUpdate"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
