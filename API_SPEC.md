@@ -12,6 +12,8 @@ Dokumen ini menyediakan spesifikasi lengkap seluruh endpoint API yang tersedia p
 ### Public URL
 * Production: `https://api-samling.naufalrafa.my.id/api/v1`
 
+## Docs swagger interaktif: `https://api-samling.naufalrafa.my.id/docs`
+
 ### Autentikasi
 Sebagian besar endpoint memerlukan token JWT. Masukkan token pada Header HTTP dengan skema Bearer Token:
 ```http
