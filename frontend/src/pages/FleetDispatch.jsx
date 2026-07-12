@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faPaperPlane,
-  faCircleCheck,
-  faTriangleExclamation,
   faRoute,
   faSpinner,
   faCheckCircle,
@@ -13,6 +10,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { api } from '../services/api';
 import Header from '../components/Header';
+import ConfirmModal from '../components/fragments/ConfirmModal';
 
 // Fix Leaflet's default icon assets issue in bundlers (Vite)
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -31,6 +29,7 @@ export default function FleetDispatch() {
   const [zones, setZones] = useState([]);
   const [fleets, setFleets] = useState([]);
   const [selectedDriverId, setSelectedDriverId] = useState(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   
   // Route details
   const [activeRoute, setActiveRoute] = useState(null);
@@ -227,6 +226,7 @@ export default function FleetDispatch() {
       const res = await api.dispatchRoute(selectedDriverId);
       if (res.success) {
         setSuccessMessage(res.message || 'Manifes rute berhasil ditugaskan ke Driver!');
+        setIsConfirmOpen(false);
         // Refresh driver lists & active route to sync status
         const [driversRes, routeRes] = await Promise.all([
           api.getDrivers(),
@@ -239,6 +239,7 @@ export default function FleetDispatch() {
       }
     } catch (err) {
       setErrorMessage(err.message || 'Gagal mengirim penugasan rute supir.');
+      setIsConfirmOpen(false);
     } finally {
       setDispatching(false);
     }
@@ -301,6 +302,19 @@ export default function FleetDispatch() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-slate-50 relative">
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleDispatch}
+        title="Konfirmasi Penugasan"
+        message={`Apakah Anda yakin ingin menugaskan rute optimal ini kepada driver ${selectedDriver ? selectedDriver.name : ''}?`}
+        confirmText="Tugaskan"
+        confirmBgColorClass="bg-emerald-600 hover:bg-emerald-500"
+        icon={faRoute}
+        submitting={dispatching}
+      />
+
       {/* Loading Overlay */}
       {loading && (
         <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-xs flex flex-col items-center justify-center z-50 text-slate-500">
@@ -464,7 +478,7 @@ export default function FleetDispatch() {
                 {/* Dispatch Button */}
                 {selectedDriver.status === 'Available' && (
                   <button
-                    onClick={handleDispatch}
+                    onClick={() => setIsConfirmOpen(true)}
                     disabled={dispatching || !activeRoute}
                     className={`w-full py-3 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
                       !activeRoute
