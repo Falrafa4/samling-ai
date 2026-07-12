@@ -541,7 +541,6 @@ export default function Zones() {
       <FilterModal
         isOpen={filterModalOpen}
         onClose={() => setFilterModalOpen(false)}
-        zones={zones}
         onApply={handleApplyFilters}
         initialFilters={filters}
       />

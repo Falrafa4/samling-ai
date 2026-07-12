@@ -58,19 +58,31 @@ def get_zones(
         return response_success(data=data, message="Zones retrieved successfully")
 
 @router.get("/zones/filter-options")
-def get_zones_filter_options(db: Session = Depends(get_db)):
+def get_zones_filter_options(
+    wilayah: Optional[str] = Query(None, description="Filter opsi berdasarkan wilayah"),
+    kecamatan: Optional[str] = Query(None, description="Filter opsi berdasarkan kecamatan"),
+    db: Session = Depends(get_db)
+):
     """
-    Mengambil daftar opsi wilayah, kecamatan, kelurahan, dan jenis TPS yang unik langsung dari database.
+    Mengambil daftar opsi filter unik yang dapat dibatasi berdasarkan wilayah dan kecamatan.
     """
     wilayahs = [r[0] for r in db.query(Zone.wilayah).distinct().filter(Zone.wilayah != None).all()]
-    kecamatans = [r[0] for r in db.query(Zone.kecamatan).distinct().filter(Zone.kecamatan != None).all()]
-    kelurahans = [r[0] for r in db.query(Zone.kelurahan).distinct().filter(Zone.kelurahan != None).all()]
+
+    kecamatan_query = db.query(Zone.kecamatan).distinct().filter(Zone.kecamatan != None)
+    kelurahan_query = db.query(Zone.kelurahan).distinct().filter(Zone.kelurahan != None)
+
+    if wilayah:
+        kecamatan_query = kecamatan_query.filter(Zone.wilayah == wilayah)
+        kelurahan_query = kelurahan_query.filter(Zone.wilayah == wilayah)
+    if kecamatan:
+        kelurahan_query = kelurahan_query.filter(Zone.kecamatan == kecamatan)
+
     jenis_tps_list = [r[0] for r in db.query(Zone.jenis_tps).distinct().filter(Zone.jenis_tps != None).all()]
-    
+
     data = {
         "wilayah": sorted(wilayahs),
-        "kecamatan": sorted(kecamatans),
-        "kelurahan": sorted(kelurahans),
+        "kecamatan": sorted(r[0] for r in kecamatan_query.all()),
+        "kelurahan": sorted(r[0] for r in kelurahan_query.all()),
         "jenis_tps": sorted(jenis_tps_list)
     }
     return response_success(data=data, message="Zones filter options retrieved successfully")

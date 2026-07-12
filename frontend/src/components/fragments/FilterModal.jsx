@@ -1,58 +1,52 @@
 import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faRotateLeft, faFilter } from '@fortawesome/free-solid-svg-icons';
+import { api } from '../../services/api';
 
-export default function FilterModal({ isOpen, onClose, zones, onApply, initialFilters }) {
-  const [filters, setFilters] = useState({
-    wilayah: '',
-    kecamatan: '',
-    kelurahan: '',
-    jenis_tps: ''
+const emptyFilters = {
+  wilayah: '',
+  kecamatan: '',
+  kelurahan: '',
+  jenis_tps: ''
+};
+
+export default function FilterModal({ isOpen, onClose, onApply, initialFilters }) {
+  const [filters, setFilters] = useState(emptyFilters);
+  const [filterOptions, setFilterOptions] = useState({
+    wilayah: [],
+    kecamatan: [],
+    kelurahan: [],
+    jenis_tps: []
   });
-
-  const uniqueWilayah = [...new Set(zones.map(z => z.wilayah).filter(Boolean))].sort();
-  const uniqueJenisTps = [...new Set(zones.map(z => z.jenis_tps).filter(Boolean))].sort();
-
-  const filteredKecamatan = !filters.wilayah
-    ? [...new Set(zones.map(z => z.kecamatan).filter(Boolean))].sort()
-    : [...new Set(zones.filter(z => z.wilayah === filters.wilayah).map(z => z.kecamatan).filter(Boolean))].sort();
-
-  const filteredKelurahan = !filters.kecamatan
-    ? [...new Set(zones.filter(z => !filters.wilayah || z.wilayah === filters.wilayah).map(z => z.kelurahan).filter(Boolean))].sort()
-    : [...new Set(zones.filter(z => z.kecamatan === filters.kecamatan).map(z => z.kelurahan).filter(Boolean))].sort();
 
   useEffect(() => {
     if (isOpen) {
-      setFilters(initialFilters || { wilayah: '', kecamatan: '', kelurahan: '', jenis_tps: '' });
+      setFilters(initialFilters || emptyFilters);
     }
   }, [isOpen, initialFilters]);
 
   useEffect(() => {
-    if (filters.wilayah) {
-      setFilters(prev => {
-        const kecamatanInWilayah = [...new Set(zones.filter(z => z.wilayah === filters.wilayah).map(z => z.kecamatan).filter(Boolean))].sort();
-        if (!kecamatanInWilayah.includes(prev.kecamatan)) {
-          return { ...prev, kecamatan: '', kelurahan: '' };
-        }
-        return prev;
-      });
-    }
-  }, [filters.wilayah]);
+    if (!isOpen) return;
 
-  useEffect(() => {
-    if (filters.kecamatan) {
-      setFilters(prev => {
-        const kelurahanInKecamatan = [...new Set(zones.filter(z => z.kecamatan === filters.kecamatan).map(z => z.kelurahan).filter(Boolean))].sort();
-        if (!kelurahanInKecamatan.includes(prev.kelurahan)) {
-          return { ...prev, kelurahan: '' };
+    async function fetchFilterOptions() {
+      try {
+        const res = await api.getZonesFilterOptions({
+          wilayah: filters.wilayah,
+          kecamatan: filters.kecamatan
+        });
+        if (res.success) {
+          setFilterOptions(res.data);
         }
-        return prev;
-      });
+      } catch (err) {
+        console.error('Gagal memuat opsi filter:', err);
+      }
     }
-  }, [filters.kecamatan]);
+
+    fetchFilterOptions();
+  }, [isOpen, filters.wilayah, filters.kecamatan]);
 
   const handleReset = () => {
-    setFilters({ wilayah: '', kecamatan: '', kelurahan: '', jenis_tps: '' });
+    setFilters(emptyFilters);
   };
 
   const handleApply = () => {
@@ -92,11 +86,11 @@ export default function FilterModal({ isOpen, onClose, zones, onApply, initialFi
             <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Wilayah</label>
             <select
               value={filters.wilayah}
-              onChange={(e) => setFilters(prev => ({ ...prev, wilayah: e.target.value }))}
+              onChange={(e) => setFilters(prev => ({ ...prev, wilayah: e.target.value, kecamatan: '', kelurahan: '' }))}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 appearance-none cursor-pointer"
             >
               <option value="">Semua Wilayah</option>
-              {uniqueWilayah.map(w => <option key={w} value={w}>{w}</option>)}
+              {filterOptions.wilayah.map(w => <option key={w} value={w}>{w}</option>)}
             </select>
           </div>
 
@@ -104,11 +98,12 @@ export default function FilterModal({ isOpen, onClose, zones, onApply, initialFi
             <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Kecamatan</label>
             <select
               value={filters.kecamatan}
-              onChange={(e) => setFilters(prev => ({ ...prev, kecamatan: e.target.value }))}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 appearance-none cursor-pointer"
+              onChange={(e) => setFilters(prev => ({ ...prev, kecamatan: e.target.value, kelurahan: '' }))}
+              disabled={!filters.wilayah}
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 appearance-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="">Semua Kecamatan</option>
-              {filteredKecamatan.map(k => <option key={k} value={k}>{k}</option>)}
+              <option value="">{filters.wilayah ? 'Semua Kecamatan' : 'Pilih wilayah terlebih dahulu'}</option>
+              {filterOptions.kecamatan.map(k => <option key={k} value={k}>{k}</option>)}
             </select>
           </div>
 
@@ -117,10 +112,11 @@ export default function FilterModal({ isOpen, onClose, zones, onApply, initialFi
             <select
               value={filters.kelurahan}
               onChange={(e) => setFilters(prev => ({ ...prev, kelurahan: e.target.value }))}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 appearance-none cursor-pointer"
+              disabled={!filters.kecamatan}
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 appearance-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="">Semua Kelurahan</option>
-              {filteredKelurahan.map(k => <option key={k} value={k}>{k}</option>)}
+              <option value="">{filters.kecamatan ? 'Semua Kelurahan' : 'Pilih kecamatan terlebih dahulu'}</option>
+              {filterOptions.kelurahan.map(k => <option key={k} value={k}>{k}</option>)}
             </select>
           </div>
 
@@ -132,7 +128,7 @@ export default function FilterModal({ isOpen, onClose, zones, onApply, initialFi
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 appearance-none cursor-pointer"
             >
               <option value="">Semua Jenis TPS</option>
-              {uniqueJenisTps.map(j => <option key={j} value={j}>{j}</option>)}
+              {filterOptions.jenis_tps.map(j => <option key={j} value={j}>{j}</option>)}
             </select>
           </div>
         </div>

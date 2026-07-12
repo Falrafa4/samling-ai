@@ -109,8 +109,16 @@ export const api = {
    * Mengambil daftar opsi filter unik untuk wilayah TPS.
    * Endpoint: GET /zones/filter-options
    */
-  async getZonesFilterOptions() {
-    return fetchWithAuth('/zones/filter-options');
+  async getZonesFilterOptions(params = {}) {
+    const cleanParams = {};
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        cleanParams[key] = params[key];
+      }
+    });
+    const query = new URLSearchParams(cleanParams).toString();
+    const url = query ? `/zones/filter-options?${query}` : '/zones/filter-options';
+    return fetchWithAuth(url);
   },
 
   /**
