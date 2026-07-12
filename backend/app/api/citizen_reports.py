@@ -132,8 +132,7 @@ def create_citizen_report(
 def get_citizen_reports(
     zone_id: Optional[int] = None,
     status: Optional[str] = None,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     """
     Mengambil daftar laporan pengaduan warga (Memerlukan Autentikasi).
@@ -151,6 +150,31 @@ def get_citizen_reports(
     
     data = [CitizenReportResponse.model_validate(r) for r in reports]
     return response_success(data=data, message="Daftar laporan aduan warga berhasil diambil.")
+
+@router.get("/citizen-reports/{id}")
+def get_citizen_report(
+    id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Mengambil detail laporan pengaduan warga berdasarkan ID (Memerlukan Autentikasi).
+    Menerapkan Eager Loading pada relasi zone untuk performa kueri yang optimal.
+    """
+    report = (
+        db.query(CitizenReport)
+        .options(joinedload(CitizenReport.zone))
+        .filter(CitizenReport.id == id)
+        .first()
+    )
+    
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Laporan aduan tidak ditemukan."
+        )
+    
+    data = CitizenReportResponse.model_validate(report)
+    return response_success(data=data, message="Detail laporan aduan warga berhasil diambil.")
 
 @router.put("/citizen-reports/{id}")
 def update_citizen_report(
