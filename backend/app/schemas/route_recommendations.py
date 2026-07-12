@@ -4,7 +4,6 @@ from typing import Optional
 from app.schemas.drivers import DriverResponse
 
 class RouteRecommendationCreate(BaseModel):
-    driver_id: Optional[int] = None
     route_json: str = Field(..., description="Format JSON String berisi daftar ID zona terurut. Contoh: '[1, 3, 5]'")
 
 class RouteRecommendationResponse(BaseModel):

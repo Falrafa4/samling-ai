@@ -10,24 +10,16 @@ from app.schemas.route_recommendations import RouteRecommendationCreate, RouteRe
 from app.api.deps import get_current_user
 from app.utils.response import response_success
 
-router = APIRouter(tags=["route-recommendations"], dependencies=[Depends(get_current_user)])
+router = APIRouter(tags=["route-recommendations"])
 
 @router.post("/route-recommendations", status_code=status.HTTP_201_CREATED)
 def create_route_recommendation(route_in: RouteRecommendationCreate, db: Session = Depends(get_db)):
     """
-    Simpan Rekomendasi Rute Baru (Memerlukan Autentikasi).
-    Memvalidasi format route_json, keabsahan driver_id, dan keabsahan zone_id.
+    Simpan Rekomendasi Rute Baru (Endpoint Publik untuk AI Engine).
+    Menerima hanya route_json. driver_id selalu NULL (belum ditugaskan).
+    Memvalidasi format route_json dan keabsahan zone_id.
     """
-    # 1. Validasi driver_id terdaftar sebagai supir jika dikirim
-    if route_in.driver_id is not None:
-        driver = db.query(User).filter(User.id == route_in.driver_id, User.role == "driver").first()
-        if not driver:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Driver dengan ID {route_in.driver_id} tidak terdaftar di sistem."
-            )
-
-    # 2. Validasi format JSON dan tipe data array/list
+    # 1. Validasi format JSON dan tipe data array/list
     try:
         zone_ids = json.loads(route_in.route_json)
         if not isinstance(zone_ids, list):
@@ -41,7 +33,7 @@ def create_route_recommendation(route_in: RouteRecommendationCreate, db: Session
             detail="route_json harus berupa format string JSON list dari ID zona (contoh: '[1, 3, 5]')."
         )
 
-    # 3. Validasi keabsahan seluruh zone_id di database
+    # 2. Validasi keabsahan seluruh zone_id di database
     if zone_ids:
         existing_zones_count = db.query(Zone).filter(Zone.id.in_(zone_ids)).count()
         if existing_zones_count != len(set(zone_ids)):
@@ -50,9 +42,9 @@ def create_route_recommendation(route_in: RouteRecommendationCreate, db: Session
                 detail="Satu atau lebih zone_id di dalam rute tidak valid atau tidak terdaftar di sistem."
             )
 
-    # 4. Simpan rekomendasi rute baru dengan status default 'Pending'
+    # 3. Simpan rekomendasi rute baru dengan status default 'Pending', driver_id = NULL
     new_route = RouteRecommendation(
-        driver_id=route_in.driver_id,
+        driver_id=None,
         route_json=route_in.route_json,
         status="Pending"
     )
@@ -74,7 +66,7 @@ def create_route_recommendation(route_in: RouteRecommendationCreate, db: Session
 @router.get("/route-recommendations/latest")
 def get_latest_route_recommendation(db: Session = Depends(get_db)):
     """
-    Mengambil Rute Optimal Terkini secara global (Memerlukan Autentikasi).
+    Mengambil Rute Optimal Terkini secara global (Endpoint Publik).
     """
     route = (
         db.query(RouteRecommendation)
@@ -92,11 +84,15 @@ def get_latest_route_recommendation(db: Session = Depends(get_db)):
     return response_success(data=data, message="Rekomendasi rute terbaru berhasil diambil.")
 
 @router.post("/route-recommendations/dispatch/{driver_id}")
-def dispatch_route_recommendation(driver_id: int, db: Session = Depends(get_db)):
+def dispatch_route_recommendation(
+    driver_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
-    Kirim Manifes Tugas ke Driver via WA (Memerlukan Autentikasi).
-    Mengambil rute terbaru untuk driver ini, merelasikan dengan koordinat wilayah tugas, menyusun manifes terurut,
-    menyimulasikan pengiriman navigasi, dan memperbarui status rute menjadi 'In Progress'.
+    Tugaskan Rute ke Driver (Memerlukan Autentikasi).
+    Mengambil rute Pending terbaru yang belum ditugaskan (driver_id IS NULL),
+    mengaitkan ke driver, dan memperbarui status rute menjadi 'In Progress'.
     """
     # 1. Validasi driver terdaftar di sistem
     driver = db.query(User).filter(User.id == driver_id, User.role == "driver").first()
@@ -163,9 +159,13 @@ def dispatch_route_recommendation(driver_id: int, db: Session = Depends(get_db))
     )
 
 @router.get("/route-recommendations/driver/{driver_id}")
-def get_driver_route_recommendations(driver_id: int, db: Session = Depends(get_db)):
+def get_driver_route_recommendations(
+    driver_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
-    Mengambil rute rekomendasi milik supir tertentu (Aplikasi Driver).
+    Mengambil rute rekomendasi milik supir tertentu (Memerlukan Autentikasi).
     Hanya rute dengan status 'Pending' atau 'In Progress'.
     """
     # 1. Validasi driver terdaftar sebagai supir
@@ -192,9 +192,14 @@ def get_driver_route_recommendations(driver_id: int, db: Session = Depends(get_d
     return response_success(data=data, message="Daftar rute driver berhasil diambil.")
 
 @router.put("/route-recommendations/{id}/status")
-def update_route_status(id: int, status_in: RouteStatusUpdate, db: Session = Depends(get_db)):
+def update_route_status(
+    id: int,
+    status_in: RouteStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
-    Memperbarui status rute rekomendasi (Aplikasi Driver).
+    Memperbarui status rute rekomendasi (Memerlukan Autentikasi).
     Menerima status baru (Pending, In Progress, Completed).
     """
     route = db.query(RouteRecommendation).filter(RouteRecommendation.id == id).first()
