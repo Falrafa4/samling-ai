@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 
 from app.database.database import get_db
@@ -18,7 +18,7 @@ def get_drivers(db: Session = Depends(get_db)):
     """
     Mengambil seluruh daftar supir armada (User dengan role='driver'). (Memerlukan Autentikasi)
     """
-    drivers = db.query(User).filter(User.role == "driver").all()
+    drivers = db.query(User).options(joinedload(User.fleet)).filter(User.role == "driver").all()
     data = [DriverResponse.model_validate(d) for d in drivers]
     return response_success(data=data, message="Daftar driver berhasil diambil.")
 
@@ -27,7 +27,7 @@ def get_driver(id: int, db: Session = Depends(get_db)):
     """
     Mengambil informasi detail supir berdasarkan ID. (Memerlukan Autentikasi)
     """
-    driver = db.query(User).filter(User.id == id, User.role == "driver").first()
+    driver = db.query(User).options(joinedload(User.fleet)).filter(User.id == id, User.role == "driver").first()
     if not driver:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

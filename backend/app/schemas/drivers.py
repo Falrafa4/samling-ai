@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
+from app.schemas.fleets import FleetResponse
 
 class DriverCreate(BaseModel):
     name: str = Field(..., min_length=2)
@@ -23,6 +24,7 @@ class DriverResponse(BaseModel):
     username: str
     whatsapp_number: str
     fleet_id: Optional[int] = None
+    fleet: Optional[FleetResponse] = None
     status: Optional[str] = "Offline"
     role: str = "driver"
     created_at: datetime
