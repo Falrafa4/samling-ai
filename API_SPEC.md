@@ -438,6 +438,39 @@ Authorization: Bearer <jwt_access_token>
   }
   ```
 
+### GET `/citizen-reports/{id}`
+* **Deskripsi**: Mengambil detail satu data laporan pengaduan warga berdasarkan ID tiket.
+* **Auth**: Public / No Auth
+* **Success Response (`200 OK`)**:
+  ```json
+  {
+    "success": true,
+    "message": "Detail laporan aduan warga berhasil diambil.",
+    "data": {
+      "id": 12,
+      "whatsapp_number": "6281234567890",
+      "report_content": "Ada tumpukan sampah plastik di depan pasar.",
+      "zone_id": 1,
+      "status": "Sedang Ditangani",
+      "is_grouped": false,
+      "image_path": "uploads/a1b2c3d4.webp",
+      "created_at": "2026-07-12T19:53:22",
+      "zone": {
+        "id": 1,
+        "name": "TPS PIK 2",
+        "wilayah": "Jakarta Timur",
+        "kecamatan": "Cakung",
+        "kelurahan": "Penggilingan",
+        "jenis_tps": "Tps 3R",
+        "alamat": "PIK 2 pengiilingan",
+        "latitude": -6.2365936,
+        "longitude": 106.8985081,
+        "risk_status": "Normal"
+      }
+    }
+  }
+  ```
+
 ### PUT `/citizen-reports/{id}`
 * **Deskripsi**: Memperbarui status penanganan keluhan warga (`"Baru"`, `"Sedang Ditangani"`, `"Selesai"`).
 * **Auth**: Bearer Token

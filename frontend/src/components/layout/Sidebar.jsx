@@ -10,10 +10,11 @@ import {
   faMicrochip,
   faChevronLeft,
   faDatabase,
-  faBrain
+  faBrain,
+  faRightFromBracket
 } from '@fortawesome/free-solid-svg-icons';
 
-export default function Sidebar() {
+export default function Sidebar({ onLogout }) {
   const [adminUser] = useLocalStorage('admin_user', null);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -36,6 +37,7 @@ export default function Sidebar() {
       {/* Header / Brand */}
       <div className={`relative flex items-center border-b border-gray-200 transition-all duration-300 ${collapsed ? 'justify-center p-4' : 'p-5'}`}>
         <img src="/img/SAMLING%20AI%20-%20WEB.png" alt="Samling AI" className="h-9 w-auto" />
+        {/* Toggle Sidebar */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className={`hidden md:flex absolute -right-3 top-1/2 z-30 -translate-y-1/2 w-6 h-6 rounded-full border border-gray-200 bg-white items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-all shadow-xs cursor-pointer ${collapsed ? 'rotate-180' : ''}`}
@@ -70,9 +72,9 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* User Profile Section (desktop only — no logout here, logout is in AdminLayout) */}
+      {/* User Profile Section (desktop only) */}
       <div className={`border-t border-gray-200 bg-gray-50/80 transition-all duration-300 ${collapsed ? 'p-3' : 'p-4'}`}>
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-2 py-2'}`}>
+        <div className={`flex items-center ${collapsed ? 'justify-center mb-3' : 'gap-3 px-2 py-2 mb-3'}`}>
           <div className="w-8 h-8 rounded-full bg-primary-100 border border-primary-200 flex items-center justify-center font-bold text-primary-600 shrink-0">
             {adminUser?.name?.[0]?.toUpperCase() || "A"}
           </div>
@@ -85,6 +87,17 @@ export default function Sidebar() {
             </span>
           </div>
         </div>
+        <button
+          onClick={onLogout}
+          className={`w-full flex items-center rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors duration-200 cursor-pointer ${
+            collapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'
+          }`}
+        >
+          <FontAwesomeIcon icon={faRightFromBracket} className="w-4 text-center shrink-0" />
+          <span className={`overflow-hidden transition-all duration-300 ${collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+            Keluar Aplikasi
+          </span>
+        </button>
       </div>
     </aside>
   );

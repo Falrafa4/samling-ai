@@ -70,7 +70,7 @@ export default function AdminLayout() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 text-slate-800 font-sans relative">
       {/* Sidebar — desktop only (hidden on mobile via Sidebar component) */}
-      <Sidebar />
+      <Sidebar onLogout={() => setLogoutConfirmOpen(true)} />
 
       {/* Main Content Area */}
       <main className="flex-1 h-full overflow-y-auto flex flex-col min-w-0 pb-16 md:pb-0">
