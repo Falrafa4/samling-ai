@@ -87,6 +87,66 @@ def get_zones_filter_options(
     }
     return response_success(data=data, message="Zones filter options retrieved successfully")
 
+@router.get("/zones/hierarchy", response_model=dict)
+def get_zones_hierarchy(db: Session = Depends(get_db)):
+    """
+    Mengambil seluruh hirarki data TPS DKI Jakarta secara bertingkat:
+    Provinsi -> Wilayah (Kota) -> Kecamatan -> Kelurahan -> Daftar TPS.
+    Sangat cocok untuk chatbot agar pilihan opsi navigasi bisa langsung dipetakan tanpa input manual.
+    """
+    zones = db.query(Zone).all()
+    
+    # Kelompokkan data secara bersarang: wilayah -> kecamatan -> kelurahan -> tps_list
+    tree = {}
+    for z in zones:
+        w = z.wilayah.strip() if z.wilayah else "Lainnya"
+        kec = z.kecamatan.strip() if z.kecamatan else "Lainnya"
+        kel = z.kelurahan.strip() if z.kelurahan else "Lainnya"
+        
+        if w not in tree:
+            tree[w] = {}
+        if kec not in tree[w]:
+            tree[w][kec] = {}
+        if kel not in tree[w][kec]:
+            tree[w][kec][kel] = []
+            
+        tree[w][kec][kel].append({
+            "id": z.id,
+            "name": z.name,
+            "jenis_tps": z.jenis_tps,
+            "alamat": z.alamat,
+            "latitude": z.latitude,
+            "longitude": z.longitude,
+            "risk_status": z.risk_status
+        })
+        
+    # Format tree menjadi bentuk array bersarang untuk kemudahan iterasi di chatbot
+    wilayah_list = []
+    for w_name, kecs in sorted(tree.items()):
+        kec_list = []
+        for kec_name, kels in sorted(kecs.items()):
+            kel_list = []
+            for kel_name, tps_items in sorted(kels.items()):
+                kel_list.append({
+                    "name": kel_name,
+                    "tps": sorted(tps_items, key=lambda x: x["name"])
+                })
+            kec_list.append({
+                "name": kec_name,
+                "kelurahan": sorted(kel_list, key=lambda x: x["name"])
+            })
+        wilayah_list.append({
+            "name": w_name,
+            "kecamatan": sorted(kec_list, key=lambda x: x["name"])
+        })
+        
+    hierarchy_data = {
+        "provinsi": "DKI Jakarta",
+        "wilayah": wilayah_list
+    }
+    
+    return response_success(data=hierarchy_data, message="Zones hierarchy retrieved successfully")
+
 @router.get("/zones/{zone_id}")
 def get_zone(zone_id: int, db: Session = Depends(get_db)):
     """

@@ -163,6 +163,46 @@ Authorization: Bearer <jwt_access_token>
 * **Deskripsi**: Mengambil wilayah TPS berdasarkan nama kecamatan tertentu.
 * **Auth**: Bearer Token
 
+### GET `/zones/hierarchy` (API BARU BUAT CHATBOT)
+* **Deskripsi**: Mengambil seluruh hirarki data TPS DKI Jakarta secara bertingkat: Provinsi -> Wilayah (Kota) -> Kecamatan -> Kelurahan -> TPS. Memudahkan integrasi chatbot untuk navigasi opsi menu dinamis.
+* **Auth**: Public / No Auth
+* **Success Response (`200 OK`)**:
+  ```json
+  {
+    "success": true,
+    "message": "Zones hierarchy retrieved successfully",
+    "data": {
+      "provinsi": "DKI Jakarta",
+      "wilayah": [
+        {
+          "name": "Jakarta Timur",
+          "kecamatan": [
+            {
+              "name": "Cakung",
+              "kelurahan": [
+                {
+                  "name": "Penggilingan",
+                  "tps": [
+                    {
+                      "id": 1,
+                      "name": "TPS PIK 2",
+                      "jenis_tps": "Tps 3r",
+                      "alamat": "PIK 2 pengiilingan",
+                      "latitude": -6.25,
+                      "longitude": 106.89,
+                      "risk_status": "Normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+  ```
+
 ### GET `/zones/{zone_id}`
 * **Deskripsi**: Mengambil detail satu data wilayah TPS berdasarkan ID.
 * **Auth**: Bearer Token
