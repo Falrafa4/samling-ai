@@ -11,6 +11,7 @@ import {
   faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../services/api';
+import Header from '../components/Header';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -226,17 +227,10 @@ export default function Overview() {
       {/* Scrollable wrapper — header + content scroll together */}
       <div className="flex-1 overflow-y-auto">
       {/* Top Header / Action Bar */}
-      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
-            Selamat Datang, {adminUser?.name || 'Admin'}
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500">
-            Berikut ringkasan situasi darurat sampah kota hari ini.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {/* Global Date Filter */}
+      <Header
+        title={`Selamat Datang, ${adminUser?.name || 'Admin'}`}
+        subtitle="Berikut ringkasan situasi darurat sampah kota hari ini."
+        rightContent={
           <div className="bg-slate-100 p-1 rounded-lg flex items-center gap-1 border border-slate-200 w-full sm:w-auto overflow-x-auto">
             {dateFilters.map((filter) => (
               <button
@@ -252,13 +246,8 @@ export default function Overview() {
               </button>
             ))}
           </div>
-          {/* Export Report Button */}
-          {/* <button className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors shadow-sm cursor-pointer w-full sm:w-auto">
-            <FontAwesomeIcon icon={faFileExport} />
-            <span>Ekspor PDF</span>
-          </button> */}
-        </div>
-      </header>
+        }
+      />
 
       {/* Main Grid Content */}
       <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">

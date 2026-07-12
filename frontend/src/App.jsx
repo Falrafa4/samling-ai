@@ -12,6 +12,7 @@ import CitizenReports from './pages/CitizenReports';
 import Zones from './pages/Zones';
 import Monitoring from './pages/Monitoring';
 import MasterData from './pages/MasterData';
+import AIPredictions from './pages/AIPredictions';
 
 // Layout
 import AdminLayout from './components/layout/AdminLayout';
@@ -83,6 +84,7 @@ export default function App() {
             <Route path="fleet" element={<FleetDispatch />} />
             <Route path="reports" element={<CitizenReports />} />
             <Route path="monitoring" element={<Zones />} />
+            <Route path="predictions" element={<AIPredictions />} />
             <Route path="data" element={<MasterData />} />
           </Route>
 

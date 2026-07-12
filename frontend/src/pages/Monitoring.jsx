@@ -13,6 +13,7 @@ import {
   faMap
 } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../services/api';
+import Header from '../components/Header';
 import CircularProgress from '../components/CircularProgress';
 import { useSensorWebSocket } from '../hooks/useSensorWebSocket';
 
@@ -214,39 +215,36 @@ export default function Monitoring() {
     );
   }
 
+  const headerRightContent = (
+    <div className="flex items-center gap-3 shrink-0">
+      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider select-none">Pilih TPS:</label>
+      <select
+        value={selectedZoneId}
+        onChange={(e) => setSelectedZoneId(Number(e.target.value))}
+        className="px-3.5 py-2 bg-slate-50 border border-slate-200 hover:border-slate-350 hover:bg-white rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer min-w-56 shadow-2xs transition-all duration-200"
+      >
+        {zones.map((z) => (
+          <option key={z.id} value={z.id}>
+            {z.name} ({z.kecamatan})
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden">
+    <div className="flex-1 flex flex-col bg-slate-50 relative">
       {/* Header */}
-      <header className="px-8 py-6 bg-white border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2.5">
-            <FontAwesomeIcon icon={faMicrochip} className="text-emerald-600 text-xl" />
-            <span>Monitoring Sensor Real-Time</span>
-          </h2>
-          <p className="text-sm text-slate-500">
-            Pantau telemetri sensor IoT pada Tempat Pembuangan Sampah (TPS) secara langsung.
-          </p>
-        </div>
-        
-        {/* Dropdown Selector */}
-        <div className="flex items-center gap-3 shrink-0">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider select-none">Pilih TPS:</label>
-          <select
-            value={selectedZoneId}
-            onChange={(e) => setSelectedZoneId(Number(e.target.value))}
-            className="px-3.5 py-2 bg-slate-50 border border-slate-200 hover:border-slate-350 hover:bg-white rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer min-w-56 shadow-2xs transition-all duration-200"
-          >
-            {zones.map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.name} ({z.kecamatan})
-              </option>
-            ))}
-          </select>
-        </div>
-      </header>
+      <Header
+        title="Monitoring Sensor Real-Time"
+        subtitle="Pantau telemetri sensor IoT pada Tempat Pembuangan Sampah (TPS) secara langsung."
+        icon={faMicrochip}
+        iconColor="text-emerald-600"
+        rightContent={headerRightContent}
+      />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-8 space-y-6">
+      <div className="p-8 space-y-6">
         {activeZone ? (
           <>
             {/* Informasi TPS Card */}

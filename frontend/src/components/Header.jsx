@@ -1,46 +1,23 @@
-import { useNavigate } from 'react-router';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
-export default function Header({ title, subtitle, showBack = false, onBack, rightContent }) {
-  const navigate = useNavigate();
-
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
-    } else {
-      navigate(-1);
-    }
-  };
-
+export default function Header({ title, subtitle, icon, iconColor = 'text-primary-600', rightContent }) {
   return (
-    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 py-4 px-4 md:px-8 shadow-sm flex items-center justify-between transition-colors duration-200">
-      <div className="flex items-center gap-3">
-        {showBack && (
-          <button 
-            onClick={handleBack} 
-            className="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 flex items-center justify-center transition-all duration-200 focus:outline-none"
-            aria-label="Kembali"
-          >
-            <FontAwesomeIcon icon={faArrowLeft} className="text-lg" />
-          </button>
-        )}
-        <img src="/img/SAMLING%20AI%20-%20WEB.png" alt="Samling AI" className="h-8 w-auto" />
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white leading-tight">
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 font-medium">
-              {subtitle}
-            </p>
+    <header className="px-8 py-6 bg-white border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+      <div>
+        <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2.5">
+          {icon && (
+            <FontAwesomeIcon icon={icon} className={`${iconColor} text-xl`} />
           )}
-        </div>
+          <span>{title}</span>
+        </h2>
+        {subtitle && (
+          <p className="text-sm text-slate-500 mt-1">
+            {subtitle}
+          </p>
+        )}
       </div>
       {rightContent && (
-        <div className="flex items-center gap-2">
-          {rightContent}
-        </div>
+        <div className="flex items-center gap-2 shrink-0">{rightContent}</div>
       )}
     </header>
   );

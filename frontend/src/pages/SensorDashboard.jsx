@@ -12,6 +12,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../services/api';
 import { useSensorWebSocket } from '../hooks/useSensorWebSocket';
+import Header from '../components/Header';
 
 function SensorDashboard() {
   const [sensorData, setSensorData] = useState(null);
@@ -72,26 +73,20 @@ function SensorDashboard() {
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-50 relative">
       {/* Header */}
-      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200 shrink-0">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Monitoring Sensor TPS</h2>
-            <p className="text-xs sm:text-sm text-slate-500">
-              Pantau suhu tumpukan sampah zona prioritas IoT secara real-time.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border transition-colors ${
-              wsConnected 
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                : 'bg-slate-100 text-slate-500 border-slate-200'
-            }`}>
-              <FontAwesomeIcon icon={faWifi} className={wsConnected ? 'animate-pulse' : ''} />
-              <span>{wsConnected ? 'Live Connection' : 'Rest API Mode'}</span>
-            </span>
-          </div>
-        </div>
-      </header>
+      <Header
+        title="Monitoring Sensor TPS"
+        subtitle="Pantau suhu tumpukan sampah zona prioritas IoT secara real-time."
+        rightContent={
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border transition-colors ${
+            wsConnected 
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+              : 'bg-slate-100 text-slate-500 border-slate-200'
+          }`}>
+            <FontAwesomeIcon icon={faWifi} className={wsConnected ? 'animate-pulse' : ''} />
+            <span>{wsConnected ? 'Live Connection' : 'Rest API Mode'}</span>
+          </span>
+        }
+      />
 
       {/* Main Container */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 max-w-4xl">

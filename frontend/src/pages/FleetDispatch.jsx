@@ -12,6 +12,7 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { api } from '../services/api';
+import Header from '../components/Header';
 
 // Fix Leaflet's default icon assets issue in bundlers (Vite)
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -311,12 +312,10 @@ export default function FleetDispatch() {
       {/* Scrollable wrapper — header + content scroll together */}
       <div className="flex-1 overflow-y-auto">
       {/* Header */}
-      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Manajemen Rute & Armada</h2>
-        <p className="text-xs sm:text-sm text-slate-500">
-          Tugaskan manifes rute prioritas hasil prediksi AI langsung ke dasbor aplikasi driver.
-        </p>
-      </header>
+      <Header
+        title="Manajemen Rute & Armada"
+        subtitle="Tugaskan manifes rute prioritas hasil prediksi AI langsung ke dasbor aplikasi driver."
+      />
 
       {/* Main Grid Content */}
       <div className="px-4 sm:px-8 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">

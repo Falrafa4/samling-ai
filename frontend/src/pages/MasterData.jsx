@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import MasterHeader from '../components/fragments/MasterHeader';
+import Header from '../components/Header';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faRefresh } from '@fortawesome/free-solid-svg-icons';
 import AlertMessage from '../components/fragments/AlertMessage';
 import MasterTabs from '../components/fragments/MasterTabs';
 import MasterFilters from '../components/fragments/MasterFilters';
@@ -204,9 +206,21 @@ export default function MasterData() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
-      <MasterHeader onRefresh={fetchData} loading={loading} />
+      <Header
+        title="Manajemen Master Data"
+        subtitle="Kelola data operasional terpusat driver dan sensor perangkat IoT."
+        rightContent={
+          <button
+            onClick={fetchData}
+            className="w-9 h-9 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-500 rounded-lg flex items-center justify-center cursor-pointer transition-colors shadow-xs"
+            title="Segarkan Data"
+          >
+            <FontAwesomeIcon icon={faRefresh} className={loading ? "animate-spin" : ""} />
+          </button>
+        }
+      />
 
-      <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+      <div className="flex-1 px-8 py-6 space-y-6">
         <AlertMessage message={successMessage} />
         <AlertMessage type="error" message={errorMessage} />
 

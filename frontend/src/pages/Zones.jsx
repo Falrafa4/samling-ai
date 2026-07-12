@@ -20,6 +20,7 @@ import {
   faChevronRight
 } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../services/api';
+import Header from '../components/Header';
 import ZoneFormModal from '../components/fragments/ZoneFormModal';
 import ConfirmModal from '../components/fragments/ConfirmModal';
 import FilterModal from '../components/fragments/FilterModal';
@@ -273,21 +274,19 @@ export default function Zones() {
       {/* Scrollable wrapper — header + content scroll together */}
       <div className="flex-1 overflow-y-auto">
       {/* Header */}
-      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Kelola Wilayah dan Monitoring TPS</h2>
-          <p className="text-xs sm:text-sm text-slate-500">
-            Daftarkan, perbarui, dan hapus area cakupan TPS, koordinat geospasial GPS, serta tingkat urgensi sampah.
-          </p>
-        </div>
-        <button
-          onClick={handleOpenCreate}
-          className="hidden sm:flex px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all duration-200 items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-950/20"
-        >
-          <FontAwesomeIcon icon={faPlus} />
-          <span>Tambah Wilayah</span>
-        </button>
-      </header>
+      <Header
+        title="Kelola Wilayah dan Monitoring TPS"
+        subtitle="Daftarkan, perbarui, dan hapus area cakupan TPS, koordinat geospasial GPS, serta tingkat urgensi sampah."
+        rightContent={
+          <button
+            onClick={handleOpenCreate}
+            className="hidden sm:flex px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all duration-200 items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-950/20"
+          >
+            <FontAwesomeIcon icon={faPlus} />
+            <span>Tambah Wilayah</span>
+          </button>
+        }
+      />
 
       {/* Main Content Area */}
       <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">

@@ -26,6 +26,30 @@ export function timeAgo(date) {
 }
 
 /**
+ * Format date into Indonesian locale (e.g. 12 Jul 2026)
+ * @param {string|Date} iso 
+ * @returns {string}
+ */
+export function fmtDate(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '-';
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+/**
+ * Format datetime into Indonesian locale with hours and minutes (e.g. 12 Jul 2026, 12:23)
+ * @param {string|Date} iso 
+ * @returns {string}
+ */
+export function fmtDateTime(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '-';
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+/**
  * Format datetime into readable Indonesian text or time-ago
  * @param {string|Date} date 
  * @returns {string}

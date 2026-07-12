@@ -397,5 +397,42 @@ export const api = {
    */
   async getSensorDataHistory(zoneId, days = 7) {
     return fetchWithAuth(`/sensor-data/history?zone_id=${zoneId}&days=${days}`);
+  },
+
+  // ─── AI Predictions Page ───────────────────────────────────
+
+  /**
+   * Mengambil ringkasan statistik prediksi AI.
+   * Endpoint: GET /volume-predictions/summary
+   */
+  async getPredictionsSummary() {
+    return fetchWithAuth('/volume-predictions/summary');
+  },
+
+  /**
+   * Mengambil proyeksi multi-zona sekaligus.
+   * Endpoint: GET /volume-predictions/multi-zone?zone_ids=1,2,3&days=7
+   */
+  async getMultiZoneProjections(zoneIds, days = 7) {
+    const ids = Array.isArray(zoneIds) ? zoneIds.join(',') : zoneIds;
+    return fetchWithAuth(`/volume-predictions/multi-zone?zone_ids=${ids}&days=${days}`);
+  },
+
+  /**
+   * Mengambil riwayat prediksi AI dengan pagination.
+   * Endpoint: GET /volume-predictions/history?page=1&per_page=20&zone_id=1
+   */
+  async getPredictionsHistory(page = 1, perPage = 20, zoneId = null) {
+    let url = `/volume-predictions/history?page=${page}&per_page=${perPage}`;
+    if (zoneId) url += `&zone_id=${zoneId}`;
+    return fetchWithAuth(url);
+  },
+
+  /**
+   * Mengambil tren akurasi AI per hari.
+   * Endpoint: GET /volume-predictions/accuracy-trend?days=30
+   */
+  async getAccuracyTrend(days = 30) {
+    return fetchWithAuth(`/volume-predictions/accuracy-trend?days=${days}`);
   }
 };

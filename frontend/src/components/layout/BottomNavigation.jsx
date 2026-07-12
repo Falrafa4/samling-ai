@@ -9,6 +9,7 @@ import {
   faEllipsis,
   faDatabase,
   faTruck,
+  faBrain,
 } from '@fortawesome/free-solid-svg-icons';
 
 const primaryNavItems = [
@@ -19,6 +20,7 @@ const primaryNavItems = [
 ];
 
 const moreNavItems = [
+  { path: '/admin/predictions', label: 'Prediksi AI', icon: faBrain },
   { path: '/admin/data', label: 'Kelola Data', icon: faDatabase },
   { path: '/admin/fleet', label: 'Manajemen Rute', icon: faTruck },
 ];

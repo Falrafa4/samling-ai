@@ -20,6 +20,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { api } from '../services/api';
+import Header from '../components/Header';
 
 const getImageUrl = (path) => {
   if (!path) return '';
@@ -269,56 +270,49 @@ export default function CitizenReports() {
     <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
       {/* Scrollable wrapper — header + content scroll together */}
       <div className="flex-1 overflow-y-auto flex flex-col">
-      {/* Header */}
-      <header className="px-4 sm:px-6 lg:px-8 py-4 lg:py-6 bg-white border-b border-slate-200">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-lg lg:text-2xl font-bold text-slate-800 tracking-tight">
-              Laporan Pengaduan Warga
-            </h2>
-            <p className="text-xs lg:text-sm text-slate-500 mt-0.5 truncate">
-              Kelola pengaduan penumpukan sampah yang dikirim oleh masyarakat.
-            </p>
-          </div>
+        <Header
+          title="Laporan Pengaduan Warga"
+          subtitle="Kelola pengaduan penumpukan sampah yang dikirim oleh masyarakat."
+          rightContent={
+            <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
+              {successMessage && (
+                <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-lg animate-fade-in shadow-xs">
+                  <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-500 shrink-0" />
+                  <span className="truncate max-w-[240px]">{successMessage}</span>
+                </div>
+              )}
+              {errorMessage && (
+                <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-lg animate-shake shadow-xs">
+                  <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500 shrink-0" />
+                  <span className="truncate max-w-[240px]">{errorMessage}</span>
+                </div>
+              )}
 
-          <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
-            {successMessage && (
-              <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-lg animate-fade-in shadow-xs">
-                <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-500 shrink-0" />
-                <span className="truncate max-w-[240px]">{successMessage}</span>
+              <div className="flex items-center gap-1.5 lg:gap-2">
+                <span className="text-[10px] lg:text-xs font-semibold text-slate-400 flex items-center gap-1">
+                  <FontAwesomeIcon icon={faFilter} />
+                  <span className="hidden sm:inline">Filter:</span>
+                </span>
+                <select
+                  value={selectedZoneFilter}
+                  onChange={(e) => setSelectedZoneFilter(e.target.value)}
+                  className="bg-white border border-slate-200 px-2 lg:px-3 py-1.5 rounded-lg text-[10px] lg:text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-xs max-w-[140px] lg:max-w-none truncate"
+                >
+                  <option value="">Semua Wilayah</option>
+                  {zones.map((z) => (
+                    <option key={z.id} value={z.id}>
+                      {z.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
-            {errorMessage && (
-              <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-lg animate-shake shadow-xs">
-                <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500 shrink-0" />
-                <span className="truncate max-w-[240px]">{errorMessage}</span>
-              </div>
-            )}
-
-            <div className="flex items-center gap-1.5 lg:gap-2">
-              <span className="text-[10px] lg:text-xs font-semibold text-slate-400 flex items-center gap-1">
-                <FontAwesomeIcon icon={faFilter} />
-                <span className="hidden sm:inline">Filter:</span>
-              </span>
-              <select
-                value={selectedZoneFilter}
-                onChange={(e) => setSelectedZoneFilter(e.target.value)}
-                className="bg-white border border-slate-200 px-2 lg:px-3 py-1.5 rounded-lg text-[10px] lg:text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-xs max-w-[140px] lg:max-w-none truncate"
-              >
-                <option value="">Semua Wilayah</option>
-                {zones.map((z) => (
-                  <option key={z.id} value={z.id}>
-                    {z.name}
-                  </option>
-                ))}
-              </select>
             </div>
-          </div>
-        </div>
+          }
+        />
 
         {/* Mobile flash messages */}
         {(successMessage || errorMessage) && (
-          <div className="mt-3 lg:hidden">
+          <div className="mt-3 px-4 lg:hidden">
             {successMessage && (
               <div className="flex items-center gap-2 px-3 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-semibold rounded-lg animate-fade-in shadow-xs">
                 <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-500 shrink-0" />
@@ -333,7 +327,6 @@ export default function CitizenReports() {
             )}
           </div>
         )}
-      </header>
 
       {/* ─── DESKTOP / TABLET: KANBAN BOARD ─── */}
       <div className="hidden md:flex flex-1 overflow-x-auto px-4 lg:px-8 py-4 lg:py-8 gap-4 lg:gap-6 items-start min-h-0">

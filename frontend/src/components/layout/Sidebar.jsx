@@ -9,7 +9,8 @@ import {
   faCommentDots,
   faMicrochip,
   faChevronLeft,
-  faDatabase
+  faDatabase,
+  faBrain
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function Sidebar() {
@@ -20,6 +21,7 @@ export default function Sidebar() {
     { path: '/admin/overview', label: 'Overview', icon: faGauge },
     { path: '/admin/map', label: 'Peta Pemantauan', icon: faMap },
     { path: '/admin/monitoring', label: 'Wilayah dan Monitoring', icon: faMicrochip },
+    { path: '/admin/predictions', label: 'Prediksi AI', icon: faBrain },
     { path: '/admin/data', label: 'Kelola Data', icon: faDatabase },
     { path: '/admin/fleet', label: 'Manajemen Rute', icon: faTruck },
     { path: '/admin/reports', label: 'Laporan Warga', icon: faCommentDots },
