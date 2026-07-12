@@ -266,9 +266,11 @@ export default function CitizenReports() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
+      {/* Scrollable wrapper — header + content scroll together */}
+      <div className="flex-1 overflow-y-auto flex flex-col">
       {/* Header */}
-      <header className="px-4 sm:px-6 lg:px-8 py-4 lg:py-6 bg-white border-b border-slate-200 shrink-0">
+      <header className="px-4 sm:px-6 lg:px-8 py-4 lg:py-6 bg-white border-b border-slate-200">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-lg lg:text-2xl font-bold text-slate-800 tracking-tight">
@@ -334,7 +336,7 @@ export default function CitizenReports() {
       </header>
 
       {/* ─── DESKTOP / TABLET: KANBAN BOARD ─── */}
-      <div className="hidden md:flex flex-1 overflow-x-auto px-4 lg:px-8 py-4 lg:py-8 gap-4 lg:gap-6 items-start">
+      <div className="hidden md:flex flex-1 overflow-x-auto px-4 lg:px-8 py-4 lg:py-8 gap-4 lg:gap-6 items-start min-h-0">
         {COLUMNS.map((column) => {
           const columnReports = filteredReports.filter((r) => r.status === column.key);
           const isDragOver = draggingOverColumn === column.key;
@@ -459,6 +461,7 @@ export default function CitizenReports() {
             </div>
           )}
         </div>
+      </div>
       </div>
 
       {/* Lightbox Modal */}

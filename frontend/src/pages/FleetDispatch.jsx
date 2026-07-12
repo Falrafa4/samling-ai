@@ -299,7 +299,7 @@ export default function FleetDispatch() {
   const milestones = getRouteMilestones();
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50 relative">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-50 relative">
       {/* Loading Overlay */}
       {loading && (
         <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-xs flex flex-col items-center justify-center z-50 text-slate-500">
@@ -308,8 +308,10 @@ export default function FleetDispatch() {
         </div>
       )}
 
+      {/* Scrollable wrapper — header + content scroll together */}
+      <div className="flex-1 overflow-y-auto">
       {/* Header */}
-      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200 shrink-0">
+      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200">
         <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Manajemen Rute & Armada</h2>
         <p className="text-xs sm:text-sm text-slate-500">
           Tugaskan manifes rute prioritas hasil prediksi AI langsung ke dasbor aplikasi driver.
@@ -317,7 +319,7 @@ export default function FleetDispatch() {
       </header>
 
       {/* Main Grid Content */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+      <div className="px-4 sm:px-8 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         
         {/* Left Column (7 Columns): Rute Rekomendasi AI & Mini Map */}
         <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm flex flex-col justify-between min-h-[350px] sm:min-h-[420px]">
@@ -512,6 +514,7 @@ export default function FleetDispatch() {
           </div>
 
         </div>
+      </div>
       </div>
     </div>
   );

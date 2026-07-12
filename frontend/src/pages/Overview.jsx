@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router';
 import { useLocalStorage } from 'react-use';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -173,27 +174,35 @@ export default function Overview() {
     };
   }, [projections]);
 
+  const navigate = useNavigate();
+
   const metrics = [
     {
       title: 'Laporan Warga Aktif',
       value: summary?.total_citizen_reports ?? '0',
       change: 'Menunggu konfirmasi admin',
       status: 'Aduan Baru',
-      color: 'border-amber-400 bg-amber-50 text-amber-700'
+      color: 'border-amber-400 bg-amber-50 text-amber-700',
+      link: '/admin/reports',
+      linkLabel: 'Lihat Laporan'
     },
     {
       title: 'TPS Status Kritis',
       value: summary?.alert_zones_count ?? '0',
       change: `Total terdaftar ${zones.length} wilayah TPS`,
       status: 'Urgensi Tinggi',
-      color: 'border-red-400 bg-red-50 text-red-700'
+      color: 'border-red-400 bg-red-50 text-red-700',
+      link: '/admin/map',
+      linkLabel: 'Lihat Peta'
     },
     {
       title: 'Rata-rata Kapasitas TPS',
       value: `${Math.round(summary?.average_fill_percentage ?? 0)}%`,
       change: 'Akumulasi dari sensor IoT aktif',
       status: 'Real-time',
-      color: 'border-emerald-400 bg-emerald-50 text-emerald-700'
+      color: 'border-emerald-400 bg-emerald-50 text-emerald-700',
+      link: '/admin/monitoring',
+      linkLabel: 'Lihat Monitoring'
     }
   ];
 
@@ -213,9 +222,11 @@ export default function Overview() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
+      {/* Scrollable wrapper — header + content scroll together */}
+      <div className="flex-1 overflow-y-auto">
       {/* Top Header / Action Bar */}
-      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
             Selamat Datang, {adminUser?.name || 'Admin'}
@@ -242,15 +253,15 @@ export default function Overview() {
             ))}
           </div>
           {/* Export Report Button */}
-          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors shadow-sm cursor-pointer w-full sm:w-auto">
+          {/* <button className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors shadow-sm cursor-pointer w-full sm:w-auto">
             <FontAwesomeIcon icon={faFileExport} />
             <span>Ekspor PDF</span>
-          </button>
+          </button> */}
         </div>
       </header>
 
       {/* Main Grid Content */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {errorMessage && (
           <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl">
             ⚠️ {errorMessage}
@@ -290,11 +301,19 @@ export default function Overview() {
                 </p>
                 <h3 className="text-3xl font-extrabold text-slate-800">{card.value}</h3>
               </div>
-              <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-                <span className="text-slate-500">{card.change}</span>
-                <span className={`px-2 py-0.5 rounded font-bold uppercase text-[9px] border ${card.color}`}>
-                  {card.status}
-                </span>
+              <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500">{card.change}</span>
+                  <span className={`px-2 py-0.5 rounded font-bold uppercase text-[9px] border ${card.color}`}>
+                    {card.status}
+                  </span>
+                </div>
+                <button
+                  onClick={() => navigate(card.link)}
+                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  {card.linkLabel} <span>→</span>
+                </button>
               </div>
             </div>
           ))}
@@ -342,12 +361,27 @@ export default function Overview() {
                 <div className="w-full h-full bg-slate-50 border border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center p-6 text-slate-400">
                   <FontAwesomeIcon icon={faCalendarDays} className="text-4xl mb-3 text-slate-300" />
                   <p className="text-xs font-semibold">Tidak Ada Proyeksi AI Tersedia</p>
-                  <p className="text-[10px] mt-1 text-slate-500">
-                    Gagal menemukan data proyeksi model AI untuk TPS terpilih.
+                  <p className="text-[10px] mt-2 text-slate-500 text-center">
+                    TPS belum memiliki data historis yang cukup untuk menghasilkan prediksi. Pastikan sensor IoT aktif dan terkoneksi.
+                  </p>
+                  <p className="text-[10px] mt-2 text-slate-500 text-center">
+                    Jika masalah berlanjut, hubungi tim teknis untuk bantuan lebih lanjut.
                   </p>
                 </div>
               )}
             </div>
+
+            {/* Chart Legend */}
+            {projections.length > 0 && (
+              <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 bg-emerald-500 rounded-full"></span> Estimasi Volume Sampah
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 bg-slate-400 rounded-full"></span> Akurasi Prediksi AI
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Aktivitas Terbaru & Driver Response Tracker */}
@@ -380,6 +414,7 @@ export default function Overview() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

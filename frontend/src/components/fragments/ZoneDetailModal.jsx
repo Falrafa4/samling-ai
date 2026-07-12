@@ -186,12 +186,12 @@ export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange })
     <div
       className={isFullscreen
         ? "fixed inset-0 z-50 bg-slate-50 flex flex-col w-full h-full overflow-y-auto no-scrollbar animate-fade-in"
-        : "fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"}
+        : "fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-xs flex items-end md:items-center md:justify-center md:p-4 animate-fade-in"}
       onClick={isFullscreen ? undefined : handleOverlayClick}
     >
       <div className={isFullscreen
         ? "bg-slate-50 w-full h-full flex flex-col overflow-y-auto no-scrollbar shadow-none"
-        : "bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl animate-slide-in"}>
+        : "bg-white rounded-t-2xl md:rounded-2xl w-full max-w-2xl max-h-[85vh] md:max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl animate-slide-in"}>
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100 sticky top-0 bg-white z-10 select-none">
           <div className="flex items-center gap-3 min-w-0">
             <span className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">

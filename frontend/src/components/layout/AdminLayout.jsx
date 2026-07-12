@@ -73,7 +73,7 @@ export default function AdminLayout() {
       <Sidebar />
 
       {/* Main Content Area */}
-      <main className="flex-1 h-full overflow-y-auto flex flex-col min-w-0 pb-20 md:pb-0">
+      <main className="flex-1 h-full overflow-y-auto flex flex-col min-w-0 pb-16 md:pb-0">
         {/* Mobile Top Navigation */}
         <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shrink-0 z-30">
           <img src="/img/SAMLING%20AI%20-%20WEB.png" alt="Samling AI" className="h-7 w-auto" />

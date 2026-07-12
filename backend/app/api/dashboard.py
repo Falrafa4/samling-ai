@@ -25,10 +25,11 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         .count()
     )
 
-    # 2. Hitung rata-rata fill_percentage terbaru per zone_id
+    # 2. Hitung rata-rata fill_percentage terbaru per zone_id (hanya sensor Ultrasonic yang mengukur kapasitas bak)
     max_ids_query = (
         db.query(func.max(SensorData.id))
-        .group_by(SensorData.zone_id)
+        .filter(SensorData.sensor_type.in_(["Ultrasonic-Organic", "Ultrasonic-Anorganic"]))
+        .group_by(SensorData.zone_id, SensorData.sensor_type)
     )
     average_fill_percentage = (
         db.query(func.avg(SensorData.fill_percentage))

@@ -269,9 +269,11 @@ export default function Zones() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-50 relative">
+      {/* Scrollable wrapper — header + content scroll together */}
+      <div className="flex-1 overflow-y-auto">
       {/* Header */}
-      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
+      <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Kelola Wilayah dan Monitoring TPS</h2>
           <p className="text-xs sm:text-sm text-slate-500">
@@ -280,7 +282,7 @@ export default function Zones() {
         </div>
         <button
           onClick={handleOpenCreate}
-          className="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-950/20"
+          className="hidden sm:flex px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all duration-200 items-center justify-center gap-2 cursor-pointer shadow-md shadow-emerald-950/20"
         >
           <FontAwesomeIcon icon={faPlus} />
           <span>Tambah Wilayah</span>
@@ -288,7 +290,7 @@ export default function Zones() {
       </header>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
         
         {/* Alerts */}
         {successMessage && (
@@ -452,7 +454,7 @@ export default function Zones() {
             })}
 
               {totalPages > 1 && (
-                <div className="bg-white border border-slate-200 rounded-xl px-5 py-3 flex items-center justify-between">
+                <div className="bg-white border border-slate-200 rounded-xl px-5 py-3 flex flex-col gap-4 md:gap-0 md:flex-row md:items-center justify-between">
                   <span className="text-[11px] text-slate-500 font-medium">
                     Halaman {currentPage} dari {totalPages}
                     <span className="text-slate-300 mx-1">|</span>
@@ -510,6 +512,7 @@ export default function Zones() {
           )}
         </div>
       </div>
+      </div>
 
       {/* FORM MODAL (CREATE / EDIT) */}
       <ZoneFormModal
@@ -551,6 +554,15 @@ export default function Zones() {
         zone={detailZone}
         onZoneChange={setDetailZone}
       />
+
+      {/* Mobile FAB — Tambah Wilayah */}
+      <button
+        onClick={handleOpenCreate}
+        className="sm:hidden fixed bottom-20 right-4 z-20 w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30 flex items-center justify-center cursor-pointer transition-all duration-200 active:scale-95"
+        aria-label="Tambah Wilayah"
+      >
+        <FontAwesomeIcon icon={faPlus} className="text-xl" />
+      </button>
     </div>
   );
 }
