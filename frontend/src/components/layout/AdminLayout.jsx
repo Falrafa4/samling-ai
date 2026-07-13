@@ -1,11 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
-import { Navigate, Outlet, useNavigate } from 'react-router';
-import { useLocalStorage } from 'react-use';
-import Sidebar from './Sidebar';
-import BottomNavigation from './BottomNavigation';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRightFromBracket, faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import ConfirmModal from '../fragments/ConfirmModal';
+import { useState, useEffect, useRef } from "react";
+import { Navigate, Outlet, useNavigate } from "react-router";
+import { useLocalStorage } from "react-use";
+import Sidebar from "./Sidebar";
+import BottomNavigation from "./BottomNavigation";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faRightFromBracket,
+  faChevronDown,
+} from "@fortawesome/free-solid-svg-icons";
+import ConfirmModal from "../fragments/ConfirmModal";
 
 // Fungsi utilitas untuk memeriksa kedaluwarsa JWT secara lokal
 function isTokenExpired(token) {
@@ -16,7 +19,7 @@ function isTokenExpired(token) {
       cleanToken = JSON.parse(cleanToken);
     }
 
-    const parts = cleanToken.split('.');
+    const parts = cleanToken.split(".");
     if (parts.length !== 3) return true;
 
     const payload = JSON.parse(atob(parts[1]));
@@ -28,8 +31,8 @@ function isTokenExpired(token) {
 }
 
 export default function AdminLayout() {
-  const [adminToken, setAdminToken] = useLocalStorage('admin_token', null);
-  const [adminUser] = useLocalStorage('admin_user', null);
+  const [adminToken, setAdminToken] = useLocalStorage("admin_token", null);
+  const [adminUser] = useLocalStorage("admin_user", null);
   const navigate = useNavigate();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -38,10 +41,10 @@ export default function AdminLayout() {
 
   const handleLogout = () => {
     setAdminToken(null);
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_user");
     setLogoutConfirmOpen(false);
-    navigate('/login');
+    navigate("/login");
   };
 
   // Close profile dropdown on click outside
@@ -52,20 +55,21 @@ export default function AdminLayout() {
         setIsProfileOpen(false);
       }
     }
-    document.addEventListener('pointerdown', handleClickOutside);
-    return () => document.removeEventListener('pointerdown', handleClickOutside);
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () =>
+      document.removeEventListener("pointerdown", handleClickOutside);
   }, [isProfileOpen]);
 
   // Jika token admin tidak ada di localStorage atau telah kedaluwarsa, bersihkan dan redirect
   if (!adminToken || isTokenExpired(adminToken)) {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_user");
     return <Navigate to="/login" replace />;
   }
 
-  const userInitial = adminUser?.name?.[0]?.toUpperCase() || 'A';
-  const userName = adminUser?.name || 'Administrator';
-  const userRole = adminUser?.role || 'Admin';
+  const userInitial = adminUser?.name?.[0]?.toUpperCase() || "A";
+  const userName = adminUser?.name || "Administrator";
+  const userRole = adminUser?.role || "Admin";
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 text-slate-800 font-sans relative">
@@ -76,7 +80,11 @@ export default function AdminLayout() {
       <main className="flex-1 h-full overflow-y-auto flex flex-col min-w-0 pb-16 md:pb-0">
         {/* Mobile Top Navigation */}
         <div className="md:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shrink-0 z-30">
-          <img src="/img/SAMLING%20AI%20-%20WEB.png" alt="Samling AI" className="h-7 w-auto" />
+          <img
+            src="/img/samling-v1-transparent.webp"
+            alt="Samling AI"
+            className="h-7 w-auto"
+          />
 
           {/* Profile Avatar with Dropdown */}
           <div ref={profileRef} className="relative">
@@ -90,7 +98,7 @@ export default function AdminLayout() {
               </div>
               <FontAwesomeIcon
                 icon={faChevronDown}
-                className={`text-[10px] text-gray-400 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`}
+                className={`text-[10px] text-gray-400 transition-transform duration-200 ${isProfileOpen ? "rotate-180" : ""}`}
               />
             </button>
 
@@ -98,7 +106,9 @@ export default function AdminLayout() {
             {isProfileOpen && (
               <div className="absolute right-0 top-[calc(100%+8px)] w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
                 <div className="px-4 py-2.5">
-                  <p className="text-sm font-semibold text-gray-800 truncate">{userName}</p>
+                  <p className="text-sm font-semibold text-gray-800 truncate">
+                    {userName}
+                  </p>
                   <p className="text-xs text-gray-400 capitalize">{userRole}</p>
                 </div>
                 <div className="border-t border-gray-100 mx-2" />
@@ -109,7 +119,10 @@ export default function AdminLayout() {
                   }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                 >
-                  <FontAwesomeIcon icon={faRightFromBracket} className="w-4 text-center" />
+                  <FontAwesomeIcon
+                    icon={faRightFromBracket}
+                    className="w-4 text-center"
+                  />
                   <span>Keluar Aplikasi</span>
                 </button>
               </div>
