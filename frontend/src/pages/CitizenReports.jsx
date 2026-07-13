@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useEffect, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFilter,
   faLayerGroup,
@@ -16,112 +16,125 @@ import {
   faCheckDouble,
   faHourglassHalf,
   faClipboardList,
-  faPaperPlane
-} from '@fortawesome/free-solid-svg-icons';
-import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
-import { api } from '../services/api';
-import Header from '../components/Header';
+  faPaperPlane,
+} from "@fortawesome/free-solid-svg-icons";
+import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
+import { api } from "../services/api";
+import Header from "../components/Header";
+import SearchableSelect from "../components/fragments/SearchableSelect";
 
 const getImageUrl = (path) => {
-  if (!path) return '';
-  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
   const baseUrl = import.meta.env.VITE_BASE_API_URL;
-  return `${baseUrl}/${path.replace(/^\/+/, '')}`;
+  return `${baseUrl}/${path.replace(/^\/+/, "")}`;
 };
 
 const COLUMNS = [
   {
-    key: 'Baru',
+    key: "Baru",
     icon: faHourglassHalf,
-    headerBorderClass: 'border-amber-200',
-    headerIconClass: 'text-amber-500',
-    dotClass: 'bg-amber-400',
-    badgeClass: 'bg-amber-50 text-amber-700',
-    dragOverClass: 'bg-amber-50/80 border-2 border-amber-400 border-dashed shadow-md',
-    tabActiveBorder: 'border-amber-500',
-    tabActiveText: 'text-amber-600',
-    tabActiveBg: 'bg-amber-50',
+    headerBorderClass: "border-amber-200",
+    headerIconClass: "text-amber-500",
+    dotClass: "bg-amber-400",
+    badgeClass: "bg-amber-50 text-amber-700",
+    dragOverClass:
+      "bg-amber-50/80 border-2 border-amber-400 border-dashed shadow-md",
+    tabActiveBorder: "border-amber-500",
+    tabActiveText: "text-amber-600",
+    tabActiveBg: "bg-amber-50",
   },
   {
-    key: 'Sedang Ditangani',
+    key: "Sedang Ditangani",
     icon: faArrowRight,
-    headerBorderClass: 'border-blue-200',
-    headerIconClass: 'text-blue-500',
-    dotClass: 'bg-blue-400',
-    badgeClass: 'bg-blue-50 text-blue-700',
-    dragOverClass: 'bg-blue-50/80 border-2 border-blue-400 border-dashed shadow-md',
-    tabActiveBorder: 'border-blue-500',
-    tabActiveText: 'text-blue-600',
-    tabActiveBg: 'bg-blue-50',
+    headerBorderClass: "border-blue-200",
+    headerIconClass: "text-blue-500",
+    dotClass: "bg-blue-400",
+    badgeClass: "bg-blue-50 text-blue-700",
+    dragOverClass:
+      "bg-blue-50/80 border-2 border-blue-400 border-dashed shadow-md",
+    tabActiveBorder: "border-blue-500",
+    tabActiveText: "text-blue-600",
+    tabActiveBg: "bg-blue-50",
   },
   {
-    key: 'Selesai',
+    key: "Selesai",
     icon: faCheckDouble,
-    headerBorderClass: 'border-emerald-200',
-    headerIconClass: 'text-emerald-500',
-    dotClass: 'bg-emerald-400',
-    badgeClass: 'bg-emerald-50 text-emerald-700',
-    dragOverClass: 'bg-emerald-50/80 border-2 border-emerald-400 border-dashed shadow-md',
-    tabActiveBorder: 'border-emerald-500',
-    tabActiveText: 'text-emerald-600',
-    tabActiveBg: 'bg-emerald-50',
+    headerBorderClass: "border-emerald-200",
+    headerIconClass: "text-emerald-500",
+    dotClass: "bg-emerald-400",
+    badgeClass: "bg-emerald-50 text-emerald-700",
+    dragOverClass:
+      "bg-emerald-50/80 border-2 border-emerald-400 border-dashed shadow-md",
+    tabActiveBorder: "border-emerald-500",
+    tabActiveText: "text-emerald-600",
+    tabActiveBg: "bg-emerald-50",
   },
 ];
 
-const ZONE_COLORS = ['#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1'];
+const ZONE_COLORS = [
+  "#10b981",
+  "#f59e0b",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
+  "#f97316",
+  "#6366f1",
+];
 
 function timeAgo(dateStr) {
   const now = Date.now();
   const then = new Date(dateStr).getTime();
   const diff = now - then;
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Baru saja';
+  if (mins < 1) return "Baru saja";
   if (mins < 60) return `${mins} menit lalu`;
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs} jam lalu`;
   const days = Math.floor(hrs / 24);
   if (days < 30) return `${days} hari lalu`;
-  return new Date(dateStr).toLocaleDateString('id-ID');
+  return new Date(dateStr).toLocaleDateString("id-ID");
 }
 
 function getNextStatus(current) {
-  if (current === 'Baru') return 'Sedang Ditangani';
-  if (current === 'Sedang Ditangani') return 'Selesai';
+  if (current === "Baru") return "Sedang Ditangani";
+  if (current === "Sedang Ditangani") return "Selesai";
   return null;
 }
 
 function getPrevStatus(current) {
-  if (current === 'Sedang Ditangani') return 'Baru';
-  if (current === 'Selesai') return 'Sedang Ditangani';
+  if (current === "Sedang Ditangani") return "Baru";
+  if (current === "Selesai") return "Sedang Ditangani";
   return null;
 }
 
 export default function CitizenReports() {
   const [reports, setReports] = useState([]);
   const [zones, setZones] = useState([]);
-  const [selectedZoneFilter, setSelectedZoneFilter] = useState('');
+  const [selectedZoneFilter, setSelectedZoneFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [draggingOverColumn, setDraggingOverColumn] = useState(null);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [lightboxImage, setLightboxImage] = useState(null);
   const [replyReport, setReplyReport] = useState(null);
-  const [replyText, setReplyText] = useState('');
+  const [replyText, setReplyText] = useState("");
   const [replySending, setReplySending] = useState(false);
-  const [activeTab, setActiveTab] = useState('Baru');
+  const [activeTab, setActiveTab] = useState("Baru");
 
   async function fetchReportsAndZones() {
     try {
       setLoading(true);
       const [reportsRes, zonesRes] = await Promise.all([
         api.getCitizenReports(),
-        api.getZones()
+        api.getZones(),
       ]);
       if (reportsRes.success) setReports(reportsRes.data || []);
       if (zonesRes.success) setZones(zonesRes.data || []);
     } catch (err) {
-      setErrorMessage(err.message || 'Gagal mengambil data aduan warga.');
+      setErrorMessage(err.message || "Gagal mengambil data aduan warga.");
     } finally {
       setLoading(false);
     }
@@ -134,8 +147,8 @@ export default function CitizenReports() {
   useEffect(() => {
     if (!successMessage && !errorMessage) return;
     const timer = setTimeout(() => {
-      setSuccessMessage('');
-      setErrorMessage('');
+      setSuccessMessage("");
+      setErrorMessage("");
     }, 5000);
     return () => clearTimeout(timer);
   }, [successMessage, errorMessage]);
@@ -145,27 +158,29 @@ export default function CitizenReports() {
     if (!report || report.status === newStatus) return;
     try {
       setUpdatingId(reportId);
-      setErrorMessage('');
-      setSuccessMessage('');
+      setErrorMessage("");
+      setSuccessMessage("");
       const res = await api.updateCitizenReportStatus(reportId, newStatus);
       if (res.success) {
         setSuccessMessage(
-          `Status aduan #${reportId} berhasil diubah menjadi '${newStatus}'`
+          `Status aduan #${reportId} berhasil diubah menjadi '${newStatus}'`,
         );
         setReports((prev) =>
-          prev.map((r) => (r.id === reportId ? { ...r, status: newStatus } : r))
+          prev.map((r) =>
+            r.id === reportId ? { ...r, status: newStatus } : r,
+          ),
         );
       }
     } catch (err) {
-      setErrorMessage(err.message || 'Gagal memperbarui status aduan.');
+      setErrorMessage(err.message || "Gagal memperbarui status aduan.");
     } finally {
       setUpdatingId(null);
     }
   }
 
   function handleDragStart(e, reportId) {
-    e.dataTransfer.setData('text/plain', reportId.toString());
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData("text/plain", reportId.toString());
+    e.dataTransfer.effectAllowed = "move";
   }
 
   function handleDragEnd() {
@@ -174,7 +189,7 @@ export default function CitizenReports() {
 
   function handleDragOver(e, column) {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.dataTransfer.dropEffect = "move";
     setDraggingOverColumn(column);
   }
 
@@ -187,7 +202,7 @@ export default function CitizenReports() {
   function handleDrop(e, targetStatus) {
     e.preventDefault();
     setDraggingOverColumn(null);
-    const reportId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    const reportId = parseInt(e.dataTransfer.getData("text/plain"), 10);
     if (!reportId) return;
     changeReportStatus(reportId, targetStatus);
   }
@@ -202,22 +217,32 @@ export default function CitizenReports() {
       setReplySending(true);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setSuccessMessage(
-        `Balasan WhatsApp berhasil dikirim ke nomor warga ${replyReport.whatsapp_number}`
+        `Balasan WhatsApp berhasil dikirim ke nomor warga ${replyReport.whatsapp_number}`,
       );
       setReplyReport(null);
-      setReplyText('');
+      setReplyText("");
     } catch (err) {
-      setErrorMessage('Gagal mengirim pesan balasan WhatsApp.');
+      setErrorMessage("Gagal mengirim pesan balasan WhatsApp.");
     } finally {
       setReplySending(false);
     }
   }
 
+  const zoneFilterOptions = [
+    { value: "", label: "Semua Wilayah" },
+    ...zones.map((zone) => ({
+      value: zone.id,
+      label: zone.name,
+    })),
+  ];
+
   const filteredReports = selectedZoneFilter
     ? reports.filter((r) => r.zone_id === parseInt(selectedZoneFilter, 10))
     : reports;
 
-  const activeColumnReports = filteredReports.filter((r) => r.status === activeTab);
+  const activeColumnReports = filteredReports.filter(
+    (r) => r.status === activeTab,
+  );
 
   if (loading) {
     return (
@@ -228,10 +253,16 @@ export default function CitizenReports() {
         </header>
         <div className="hidden md:flex flex-1 overflow-x-auto px-4 lg:px-8 py-4 lg:py-8 gap-4 lg:gap-6 items-start">
           {[1, 2, 3].map((col) => (
-            <div key={col} className="w-[280px] lg:w-[340px] shrink-0 bg-slate-100/70 border border-slate-200 rounded-xl p-4 flex flex-col max-h-full">
+            <div
+              key={col}
+              className="w-[280px] lg:w-[340px] shrink-0 bg-slate-100/70 border border-slate-200 rounded-xl p-4 flex flex-col max-h-full"
+            >
               <div className="h-5 w-28 bg-slate-200 rounded animate-pulse mb-4" />
               {[1, 2].map((card) => (
-                <div key={card} className="p-4 bg-white border border-slate-200 rounded-xl mb-3 space-y-3">
+                <div
+                  key={card}
+                  className="p-4 bg-white border border-slate-200 rounded-xl mb-3 space-y-3"
+                >
                   <div className="h-3 w-20 bg-slate-100 rounded animate-pulse" />
                   <div className="h-3 w-full bg-slate-100 rounded animate-pulse" />
                   <div className="h-3 w-3/4 bg-slate-100 rounded animate-pulse" />
@@ -247,7 +278,10 @@ export default function CitizenReports() {
         </div>
         <div className="flex md:hidden flex-1 flex-col p-4 space-y-3">
           {[1, 2, 3].map((card) => (
-            <div key={card} className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2.5">
+            <div
+              key={card}
+              className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2.5"
+            >
               <div className="h-2.5 w-20 bg-slate-100 rounded animate-pulse" />
               <div className="h-2.5 w-full bg-slate-100 rounded animate-pulse" />
               <div className="h-2.5 w-2/3 bg-slate-100 rounded animate-pulse" />
@@ -277,13 +311,21 @@ export default function CitizenReports() {
             <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
               {successMessage && (
                 <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-lg animate-fade-in shadow-xs">
-                  <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-500 shrink-0" />
-                  <span className="truncate max-w-[240px]">{successMessage}</span>
+                  <FontAwesomeIcon
+                    icon={faCircleCheck}
+                    className="text-emerald-500 shrink-0"
+                  />
+                  <span className="truncate max-w-[240px]">
+                    {successMessage}
+                  </span>
                 </div>
               )}
               {errorMessage && (
                 <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-lg animate-shake shadow-xs">
-                  <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500 shrink-0" />
+                  <FontAwesomeIcon
+                    icon={faExclamationTriangle}
+                    className="text-red-500 shrink-0"
+                  />
                   <span className="truncate max-w-[240px]">{errorMessage}</span>
                 </div>
               )}
@@ -293,18 +335,15 @@ export default function CitizenReports() {
                   <FontAwesomeIcon icon={faFilter} />
                   <span className="hidden sm:inline">Filter:</span>
                 </span>
-                <select
-                  value={selectedZoneFilter}
-                  onChange={(e) => setSelectedZoneFilter(e.target.value)}
-                  className="bg-white border border-slate-200 px-2 lg:px-3 py-1.5 rounded-lg text-[10px] lg:text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer shadow-xs max-w-[140px] lg:max-w-none truncate"
-                >
-                  <option value="">Semua Wilayah</option>
-                  {zones.map((z) => (
-                    <option key={z.id} value={z.id}>
-                      {z.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="w-[160px] sm:w-[200px] lg:w-[240px]">
+                  <SearchableSelect
+                    options={zoneFilterOptions}
+                    value={selectedZoneFilter}
+                    onChange={(value) => setSelectedZoneFilter(value)}
+                    placeholder="Cari wilayah..."
+                    emptyMessage="Wilayah tidak ditemukan"
+                  />
+                </div>
               </div>
             </div>
           }
@@ -315,146 +354,182 @@ export default function CitizenReports() {
           <div className="mt-3 px-4 lg:hidden">
             {successMessage && (
               <div className="flex items-center gap-2 px-3 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-semibold rounded-lg animate-fade-in shadow-xs">
-                <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-500 shrink-0" />
+                <FontAwesomeIcon
+                  icon={faCircleCheck}
+                  className="text-emerald-500 shrink-0"
+                />
                 <span className="truncate">{successMessage}</span>
               </div>
             )}
             {errorMessage && (
               <div className="flex items-center gap-2 px-3 py-2.5 bg-red-50 border border-red-200 text-red-700 text-[11px] font-semibold rounded-lg animate-shake shadow-xs">
-                <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500 shrink-0" />
+                <FontAwesomeIcon
+                  icon={faExclamationTriangle}
+                  className="text-red-500 shrink-0"
+                />
                 <span className="truncate">{errorMessage}</span>
               </div>
             )}
           </div>
         )}
 
-      {/* ─── DESKTOP / TABLET: KANBAN BOARD ─── */}
-      <div className="hidden md:flex flex-1 overflow-x-auto px-4 lg:px-8 py-4 lg:py-8 gap-4 lg:gap-6 items-start min-h-0">
-        {COLUMNS.map((column) => {
-          const columnReports = filteredReports.filter((r) => r.status === column.key);
-          const isDragOver = draggingOverColumn === column.key;
-
-          return (
-            <div
-              key={column.key}
-              onDragOver={(e) => handleDragOver(e, column.key)}
-              onDragLeave={(e) => handleDragLeave(e, column.key)}
-              onDrop={(e) => handleDrop(e, column.key)}
-              className={`w-[280px] lg:w-[340px] shrink-0 rounded-xl p-4 flex flex-col max-h-full transition-all duration-200 ${
-                isDragOver
-                  ? column.dragOverClass
-                  : 'bg-slate-100/70 border border-slate-200'
-              }`}
-            >
-              {/* Column Header */}
-              <div className={`flex justify-between items-center mb-4 pb-2 border-b shrink-0 select-none ${
-                isDragOver ? column.headerBorderClass : 'border-slate-200/60'
-              }`}>
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${column.dotClass}`} />
-                  <FontAwesomeIcon
-                    icon={column.icon}
-                    className={`${column.headerIconClass} text-xs shrink-0`}
-                  />
-                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider truncate">
-                    {column.key}
-                  </h3>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                    isDragOver ? column.badgeClass : 'bg-slate-200 text-slate-600'
-                  }`}>
-                    {columnReports.length}
-                  </span>
-                </div>
-              </div>
-
-              {/* Cards */}
-              <div className="flex-1 overflow-y-auto space-y-3 pr-1 min-h-[200px]">
-                {columnReports.map((report) => (
-                  <DesktopCard
-                    key={report.id}
-                    report={report}
-                    updatingId={updatingId}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onReply={(r) => {
-                      setReplyReport(r);
-                      setReplyText(
-                        `Halo,\n\nPengaduan Anda tentang penumpukan sampah di ${r.zone?.name || 'wilayah Anda'} telah kami terima. Tim supir pengangkut sedang menjadwalkan armada.`
-                      );
-                    }}
-                    onLightbox={setLightboxImage}
-                  />
-                ))}
-
-                {columnReports.length === 0 && (
-                  <div className="py-14 bg-white/50 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 gap-2.5">
-                    <FontAwesomeIcon icon={faInbox} className="text-2xl text-slate-300" />
-                    <span className="text-xs font-medium">Belum ada pengaduan</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ─── MOBILE: TAB VIEW ─── */}
-      <div className="flex md:hidden flex-1 flex-col overflow-hidden">
-        {/* Tab Bar */}
-        <div className="flex border-b border-slate-200 bg-white">
+        {/* ─── DESKTOP / TABLET: KANBAN BOARD ─── */}
+        <div className="hidden md:flex overflow-x-auto px-4 lg:px-8 py-4 lg:py-8 gap-4 lg:gap-6 items-start min-h-0">
           {COLUMNS.map((column) => {
-            const count = filteredReports.filter((r) => r.status === column.key).length;
-            const isActive = activeTab === column.key;
+            const columnReports = filteredReports.filter(
+              (r) => r.status === column.key,
+            );
+            const isDragOver = draggingOverColumn === column.key;
 
             return (
-              <button
+              <div
                 key={column.key}
-                onClick={() => setActiveTab(column.key)}
-                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-[11px] font-bold whitespace-nowrap border-b-2 transition-all duration-150 ${
-                  isActive
-                    ? `${column.tabActiveBorder} ${column.tabActiveText} ${column.tabActiveBg}`
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                onDragOver={(e) => handleDragOver(e, column.key)}
+                onDragLeave={(e) => handleDragLeave(e, column.key)}
+                onDrop={(e) => handleDrop(e, column.key)}
+                className={`w-[280px] lg:w-full rounded-xl p-4 flex flex-col max-h-full transition-all duration-200 ${
+                  isDragOver
+                    ? column.dragOverClass
+                    : "bg-slate-100/70 border border-slate-200"
                 }`}
               >
-                <FontAwesomeIcon icon={column.icon} className="text-[10px]" />
-                <span className="truncate hidden xs:inline">{column.key}</span>
-                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                  isActive ? 'bg-white shadow-xs' : 'bg-slate-100 text-slate-500'
-                }`}>
-                  {count}
-                </span>
-              </button>
+                {/* Column Header */}
+                <div
+                  className={`flex justify-between items-center mb-4 pb-2 border-b shrink-0 select-none ${
+                    isDragOver
+                      ? column.headerBorderClass
+                      : "border-slate-200/60"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span
+                      className={`w-2 h-2 rounded-full shrink-0 ${column.dotClass}`}
+                    />
+                    <FontAwesomeIcon
+                      icon={column.icon}
+                      className={`${column.headerIconClass} text-xs shrink-0`}
+                    />
+                    <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider truncate">
+                      {column.key}
+                    </h3>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                        isDragOver
+                          ? column.badgeClass
+                          : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {columnReports.length}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Cards */}
+                <div className="flex-1 overflow-y-auto space-y-3 pr-1 min-h-[200px]">
+                  {columnReports.map((report) => (
+                    <DesktopCard
+                      key={report.id}
+                      report={report}
+                      updatingId={updatingId}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onReply={(r) => {
+                        setReplyReport(r);
+                        setReplyText(
+                          `Halo,\n\nPengaduan Anda tentang penumpukan sampah di ${r.zone?.name || "wilayah Anda"} telah kami terima. Tim supir pengangkut sedang menjadwalkan armada.`,
+                        );
+                      }}
+                      onLightbox={setLightboxImage}
+                    />
+                  ))}
+
+                  {columnReports.length === 0 && (
+                    <div className="py-14 bg-white/50 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 gap-2.5">
+                      <FontAwesomeIcon
+                        icon={faInbox}
+                        className="text-2xl text-slate-300"
+                      />
+                      <span className="text-xs font-medium">
+                        Belum ada pengaduan
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>
 
-        {/* Mobile Cards */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-          {activeColumnReports.map((report) => (
-            <MobileCard
-              key={report.id}
-              report={report}
-              updatingId={updatingId}
-              onStatusChange={changeReportStatus}
-              onReply={(r) => {
-                setReplyReport(r);
-                setReplyText(
-                  `Halo,\n\nPengaduan Anda tentang penumpukan sampah di ${r.zone?.name || 'wilayah Anda'} telah kami terima. Tim supir pengangkut sedang menjadwalkan armada.`
-                );
-              }}
-              onLightbox={setLightboxImage}
-            />
-          ))}
+        {/* ─── MOBILE: TAB VIEW ─── */}
+        <div className="flex md:hidden flex-1 flex-col overflow-hidden">
+          {/* Tab Bar */}
+          <div className="flex border-b border-slate-200 bg-white">
+            {COLUMNS.map((column) => {
+              const count = filteredReports.filter(
+                (r) => r.status === column.key,
+              ).length;
+              const isActive = activeTab === column.key;
 
-          {activeColumnReports.length === 0 && (
-            <div className="py-16 bg-white/50 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 gap-2.5">
-              <FontAwesomeIcon icon={faInbox} className="text-3xl text-slate-300" />
-              <span className="text-xs font-medium">Belum ada pengaduan</span>
-              <span className="text-[10px] text-slate-300">di kolom {activeTab.toLowerCase()}</span>
-            </div>
-          )}
+              return (
+                <button
+                  key={column.key}
+                  onClick={() => setActiveTab(column.key)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-[11px] font-bold whitespace-nowrap border-b-2 transition-all duration-150 ${
+                    isActive
+                      ? `${column.tabActiveBorder} ${column.tabActiveText} ${column.tabActiveBg}`
+                      : "border-transparent text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  <FontAwesomeIcon icon={column.icon} className="text-[10px]" />
+                  <span className="truncate hidden xs:inline">
+                    {column.key}
+                  </span>
+                  <span
+                    className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                      isActive
+                        ? "bg-white shadow-xs"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+            {activeColumnReports.map((report) => (
+              <MobileCard
+                key={report.id}
+                report={report}
+                updatingId={updatingId}
+                onStatusChange={changeReportStatus}
+                onReply={(r) => {
+                  setReplyReport(r);
+                  setReplyText(
+                    `Halo,\n\nPengaduan Anda tentang penumpukan sampah di ${r.zone?.name || "wilayah Anda"} telah kami terima. Tim supir pengangkut sedang menjadwalkan armada.`,
+                  );
+                }}
+                onLightbox={setLightboxImage}
+              />
+            ))}
+
+            {activeColumnReports.length === 0 && (
+              <div className="py-16 bg-white/50 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 gap-2.5">
+                <FontAwesomeIcon
+                  icon={faInbox}
+                  className="text-3xl text-slate-300"
+                />
+                <span className="text-xs font-medium">Belum ada pengaduan</span>
+                <span className="text-[10px] text-slate-300">
+                  di kolom {activeTab.toLowerCase()}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
       </div>
 
       {/* Lightbox Modal */}
@@ -488,16 +563,23 @@ export default function CitizenReports() {
           >
             <div className="px-4 sm:px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
               <div className="min-w-0">
-                <h3 className="font-bold text-slate-800 text-sm">Kirim Balasan WhatsApp</h3>
+                <h3 className="font-bold text-slate-800 text-sm">
+                  Kirim Balasan WhatsApp
+                </h3>
                 <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1 truncate">
-                  <FontAwesomeIcon icon={faWhatsapp} className="text-emerald-500 shrink-0" />
-                  <span className="truncate">{replyReport.whatsapp_number}</span>
+                  <FontAwesomeIcon
+                    icon={faWhatsapp}
+                    className="text-emerald-500 shrink-0"
+                  />
+                  <span className="truncate">
+                    {replyReport.whatsapp_number}
+                  </span>
                 </p>
               </div>
               <button
                 onClick={() => {
                   setReplyReport(null);
-                  setReplyText('');
+                  setReplyText("");
                 }}
                 className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer shrink-0"
               >
@@ -527,23 +609,29 @@ export default function CitizenReports() {
                   <button
                     onClick={() =>
                       insertTemplate(
-                        `Halo,\n\nPengaduan Anda tentang penumpukan sampah di ${replyReport.zone?.name || 'wilayah Anda'} telah kami terima. Tim supir pengangkut sedang menjadwalkan armada.`
+                        `Halo,\n\nPengaduan Anda tentang penumpukan sampah di ${replyReport.zone?.name || "wilayah Anda"} telah kami terima. Tim supir pengangkut sedang menjadwalkan armada.`,
                       )
                     }
                     className="w-full text-left text-[11px] sm:text-xs bg-white hover:bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-slate-600 font-medium transition-colors cursor-pointer flex items-center gap-2"
                   >
-                    <FontAwesomeIcon icon={faClipboardList} className="text-slate-400 shrink-0" />
+                    <FontAwesomeIcon
+                      icon={faClipboardList}
+                      className="text-slate-400 shrink-0"
+                    />
                     <span>Draf: Jadwalkan Pengangkutan</span>
                   </button>
                   <button
                     onClick={() =>
                       insertTemplate(
-                        `Halo,\n\nTerima kasih atas laporannya. Wilayah ${replyReport.zone?.name || 'wilayah Anda'} saat ini dikonfirmasi sudah bersih oleh supir armada kami.`
+                        `Halo,\n\nTerima kasih atas laporannya. Wilayah ${replyReport.zone?.name || "wilayah Anda"} saat ini dikonfirmasi sudah bersih oleh supir armada kami.`,
                       )
                     }
                     className="w-full text-left text-[11px] sm:text-xs bg-white hover:bg-slate-50 border border-slate-200 p-2.5 rounded-lg text-slate-600 font-medium transition-colors cursor-pointer flex items-center gap-2"
                   >
-                    <FontAwesomeIcon icon={faCheckCircle} className="text-slate-400 shrink-0" />
+                    <FontAwesomeIcon
+                      icon={faCheckCircle}
+                      className="text-slate-400 shrink-0"
+                    />
                     <span>Draf: Konfirmasi Bersih / Selesai</span>
                   </button>
                 </div>
@@ -554,7 +642,7 @@ export default function CitizenReports() {
               <button
                 onClick={() => {
                   setReplyReport(null);
-                  setReplyText('');
+                  setReplyText("");
                 }}
                 className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-lg text-xs font-bold transition-colors cursor-pointer"
               >
@@ -581,7 +669,14 @@ export default function CitizenReports() {
 }
 
 /* ─── DESKTOP CARD COMPONENT ─── */
-function DesktopCard({ report, updatingId, onDragStart, onDragEnd, onReply, onLightbox }) {
+function DesktopCard({
+  report,
+  updatingId,
+  onDragStart,
+  onDragEnd,
+  onReply,
+  onLightbox,
+}) {
   return (
     <div
       draggable
@@ -589,8 +684,8 @@ function DesktopCard({ report, updatingId, onDragStart, onDragEnd, onReply, onLi
       onDragEnd={onDragEnd}
       className={`p-4 bg-white border rounded-xl shadow-xs hover:shadow-md transition-all duration-200 relative group flex flex-col justify-between cursor-grab active:cursor-grabbing select-none ${
         updatingId === report.id
-          ? 'opacity-50 pointer-events-none border-slate-200'
-          : 'border-slate-200 hover:border-slate-300 hover:-translate-y-0.5'
+          ? "opacity-50 pointer-events-none border-slate-200"
+          : "border-slate-200 hover:border-slate-300 hover:-translate-y-0.5"
       }`}
     >
       {/* Zone & AI Grouped Badges */}
@@ -599,10 +694,13 @@ function DesktopCard({ report, updatingId, onDragStart, onDragEnd, onReply, onLi
           <span
             className="w-1.5 h-1.5 rounded-full shrink-0"
             style={{
-              backgroundColor: ZONE_COLORS[(report.zone_id || 0) % ZONE_COLORS.length],
+              backgroundColor:
+                ZONE_COLORS[(report.zone_id || 0) % ZONE_COLORS.length],
             }}
           />
-          <span className="truncate">{report.zone?.name || 'Wilayah Luar'}</span>
+          <span className="truncate">
+            {report.zone?.name || "Wilayah Luar"}
+          </span>
         </span>
         {report.is_grouped && (
           <span className="shrink-0 text-[8px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full flex items-center gap-1">
@@ -666,7 +764,13 @@ function DesktopCard({ report, updatingId, onDragStart, onDragEnd, onReply, onLi
 }
 
 /* ─── MOBILE CARD COMPONENT ─── */
-function MobileCard({ report, updatingId, onStatusChange, onReply, onLightbox }) {
+function MobileCard({
+  report,
+  updatingId,
+  onStatusChange,
+  onReply,
+  onLightbox,
+}) {
   const nextStatus = getNextStatus(report.status);
   const prevStatus = getPrevStatus(report.status);
   const isUpdating = updatingId === report.id;
@@ -674,7 +778,7 @@ function MobileCard({ report, updatingId, onStatusChange, onReply, onLightbox })
   return (
     <div
       className={`p-3.5 bg-white border border-slate-200 rounded-xl shadow-xs transition-all duration-200 ${
-        isUpdating ? 'opacity-50 pointer-events-none' : ''
+        isUpdating ? "opacity-50 pointer-events-none" : ""
       }`}
     >
       {/* Header: Zone + AI Grouped */}
@@ -683,10 +787,13 @@ function MobileCard({ report, updatingId, onStatusChange, onReply, onLightbox })
           <span
             className="w-1.5 h-1.5 rounded-full shrink-0"
             style={{
-              backgroundColor: ZONE_COLORS[(report.zone_id || 0) % ZONE_COLORS.length],
+              backgroundColor:
+                ZONE_COLORS[(report.zone_id || 0) % ZONE_COLORS.length],
             }}
           />
-          <span className="truncate">{report.zone?.name || 'Wilayah Luar'}</span>
+          <span className="truncate">
+            {report.zone?.name || "Wilayah Luar"}
+          </span>
         </span>
         {report.is_grouped && (
           <span className="shrink-0 text-[7px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.5 rounded-full flex items-center gap-0.5">
@@ -722,7 +829,10 @@ function MobileCard({ report, updatingId, onStatusChange, onReply, onLightbox })
       <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
         <div className="overflow-hidden min-w-0">
           <span className="text-[10px] font-bold text-slate-600 block truncate flex items-center gap-1">
-            <FontAwesomeIcon icon={faWhatsapp} className="text-emerald-500 text-[8px] shrink-0" />
+            <FontAwesomeIcon
+              icon={faWhatsapp}
+              className="text-emerald-500 text-[8px] shrink-0"
+            />
             <span className="truncate">{report.whatsapp_number}</span>
           </span>
           <span className="text-[9px] text-slate-400 flex items-center gap-1">
@@ -748,7 +858,7 @@ function MobileCard({ report, updatingId, onStatusChange, onReply, onLightbox })
               disabled={isUpdating}
               className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all disabled:opacity-50"
             >
-              {nextStatus === 'Sedang Ditangani' ? 'Proses' : 'Selesai'} &rarr;
+              {nextStatus === "Sedang Ditangani" ? "Proses" : "Selesai"} &rarr;
             </button>
           )}
           <button
