@@ -1,0 +1,32 @@
+{
+  "Jakarta Pusat": {
+    "latitude": -6.1844,
+    "longitude": 106.8302,
+    "name": "Depot DLH Jakarta Pusat"
+  },
+  "Jakarta Utara": {
+    "latitude": -6.1244,
+    "longitude": 106.8912,
+    "name": "Depot DLH Jakarta Utara"
+  },
+  "Jakarta Barat": {
+    "latitude": -6.1674,
+    "longitude": 106.7637,
+    "name": "Depot DLH Jakarta Barat"
+  },
+  "Jakarta Selatan": {
+    "latitude": -6.2701,
+    "longitude": 106.8077,
+    "name": "Depot DLH Jakarta Selatan"
+  },
+  "Jakarta Timur": {
+    "latitude": -6.2250,
+    "longitude": 106.9004,
+    "name": "Depot DLH Jakarta Timur"
+  },
+  "Kepulauan Seribu": {
+    "latitude": -5.6124,
+    "longitude": 106.5612,
+    "name": "Depot DLH Kepulauan Seribu"
+  }
+}

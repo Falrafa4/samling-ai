@@ -9,6 +9,7 @@ class DriverCreate(BaseModel):
     fleet_id: Optional[int] = None
     username: str = Field(..., min_length=3)
     password: Optional[str] = None  # Bisa diisi manual, atau default ke 'driver123' jika kosong
+    coverage_area: Optional[str] = None
 
 class DriverUpdate(BaseModel):
     name: Optional[str] = None
@@ -17,6 +18,7 @@ class DriverUpdate(BaseModel):
     username: Optional[str] = None
     password: Optional[str] = None
     status: Optional[str] = None  # 'Available', 'On Duty', 'Offline'
+    coverage_area: Optional[str] = None
 
 class DriverResponse(BaseModel):
     id: int
@@ -27,6 +29,9 @@ class DriverResponse(BaseModel):
     fleet: Optional[FleetResponse] = None
     status: Optional[str] = "Offline"
     role: str = "driver"
+    coverage_area: Optional[str] = None
+    depot_latitude: Optional[float] = None
+    depot_longitude: Optional[float] = None
     created_at: datetime
 
     class Config:

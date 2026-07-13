@@ -238,6 +238,7 @@ Authorization: Bearer <jwt_access_token>
         "fleet_id": 1,
         "status": "Offline",
         "role": "driver",
+        "coverage_area": "Jakarta Pusat",
         "created_at": "2026-07-05T05:20:21"
       }
     ]
@@ -253,6 +254,7 @@ Authorization: Bearer <jwt_access_token>
   * `fleet_id` (int, optional)
   * `username` (string, required)
   * `password` (string, required)
+  * `coverage_area` (string, optional - pilihan: "Jakarta Pusat", "Jakarta Utara", "Jakarta Barat", "Jakarta Selatan", "Jakarta Timur", "Kepulauan Seribu")
 * **Success Response (`201 Created`)**:
   ```json
   {
@@ -266,6 +268,7 @@ Authorization: Bearer <jwt_access_token>
       "fleet_id": 1,
       "status": "Offline",
       "role": "driver",
+      "coverage_area": "Jakarta Barat",
       "created_at": "2026-07-05T06:50:00"
     }
   }
@@ -287,6 +290,7 @@ Authorization: Bearer <jwt_access_token>
   * `username` (string, optional)
   * `password` (string, optional)
   * `status` (string, optional - "Available", "On Duty", "Offline")
+  * `coverage_area` (string, optional - pilihan: "Jakarta Pusat", "Jakarta Utara", "Jakarta Barat", "Jakarta Selatan", "Jakarta Timur", "Kepulauan Seribu")
 * **Success Response (`200 OK`)**:
   ```json
   {
@@ -300,6 +304,7 @@ Authorization: Bearer <jwt_access_token>
       "fleet_id": 1,
       "status": "Available",
       "role": "driver",
+      "coverage_area": "Jakarta Selatan",
       "created_at": "2026-07-05T05:20:21"
     }
   }
@@ -308,6 +313,49 @@ Authorization: Bearer <jwt_access_token>
 ### DELETE `/drivers/{id}`
 * **Deskripsi**: Menghapus data driver dari database.
 * **Auth**: Bearer Token
+
+### GET `/depots`
+* **Deskripsi**: Mengambil seluruh daftar pemetaan koordinat depot DLH DKI Jakarta secara dinamis dari file `depots.json` terpusat.
+* **Auth**: Bearer Token
+* **Success Response (`200 OK`)**:
+  ```json
+  {
+    "success": true,
+    "message": "Data koordinat depot berhasil diambil.",
+    "data": {
+      "Jakarta Pusat": {
+        "latitude": -6.1844,
+        "longitude": 106.8302,
+        "name": "Depot DLH Jakarta Pusat"
+      },
+      "Jakarta Utara": {
+        "latitude": -6.1244,
+        "longitude": 106.8912,
+        "name": "Depot DLH Jakarta Utara"
+      },
+      "Jakarta Barat": {
+        "latitude": -6.1674,
+        "longitude": 106.7637,
+        "name": "Depot DLH Jakarta Barat"
+      },
+      "Jakarta Selatan": {
+        "latitude": -6.2701,
+        "longitude": 106.8077,
+        "name": "Depot DLH Jakarta Selatan"
+      },
+      "Jakarta Timur": {
+        "latitude": -6.2250,
+        "longitude": 106.9004,
+        "name": "Depot DLH Jakarta Timur"
+      },
+      "Kepulauan Seribu": {
+        "latitude": -5.6124,
+        "longitude": 106.5612,
+        "name": "Depot DLH Kepulauan Seribu"
+      }
+    }
+  }
+  ```
 
 ---
 

@@ -14,6 +14,19 @@ class User(Base):
     whatsapp_number = Column(String, nullable=True)
     fleet_id = Column(Integer, ForeignKey("fleets.id"), nullable=True)
     status = Column(String, nullable=True)  # 'Available', 'On Duty', 'Offline' (untuk driver)
+    coverage_area = Column(String, nullable=True)  # 'Jakarta Pusat', 'Jakarta Utara', dll.
     created_at = Column(DateTime, default=func.now())
 
     fleet = relationship("Fleet", back_populates="drivers")
+
+    @property
+    def depot_latitude(self):
+        from app.utils.depots import get_depot_coords
+        coords = get_depot_coords(self.coverage_area)
+        return coords["latitude"] if coords else None
+
+    @property
+    def depot_longitude(self):
+        from app.utils.depots import get_depot_coords
+        coords = get_depot_coords(self.coverage_area)
+        return coords["longitude"] if coords else None

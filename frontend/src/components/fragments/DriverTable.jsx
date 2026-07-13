@@ -30,6 +30,7 @@ export default function DriverTable({ drivers, fleets = [], onEdit, onDelete, lo
             <th className="px-6 py-3.5">Username</th>
             <th className="px-6 py-3.5">No WhatsApp</th>
             <th className="px-6 py-3.5">Armada Tugas</th>
+            <th className="px-6 py-3.5">Jangkauan Area</th>
             <th className="px-6 py-3.5">Status Kerja</th>
             <th className="px-6 py-3.5 text-right">Aksi</th>
           </tr>
@@ -42,6 +43,9 @@ export default function DriverTable({ drivers, fleets = [], onEdit, onDelete, lo
                 <td className="px-6 py-4 font-mono text-slate-600">{driver.username}</td>
                 <td className="px-6 py-4 text-slate-600">{driver.whatsapp_number}</td>
                 <td className="px-6 py-4">{getFleetName(driver.fleet_id)}</td>
+                <td className="px-6 py-4 text-slate-650">
+                  {driver.coverage_area || <span className="text-slate-400 font-normal">Semua Wilayah</span>}
+                </td>
                 <td className="px-6 py-4">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                     driver.status === 'Available'

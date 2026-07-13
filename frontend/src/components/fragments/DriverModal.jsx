@@ -9,6 +9,7 @@ export default function DriverModal({ isOpen, onClose, driver = null, fleets = [
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [fleetId, setFleetId] = useState('');
   const [status, setStatus] = useState('Offline');
+  const [coverageArea, setCoverageArea] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,6 +22,7 @@ export default function DriverModal({ isOpen, onClose, driver = null, fleets = [
         setPassword(''); // Kosongkan password saat edit
         setWhatsappNumber(driver.whatsapp_number || '');
         setFleetId(driver.fleet_id || '');
+        setCoverageArea(driver.coverage_area || '');
         setStatus(driver.status || 'Offline');
       } else {
         setName('');
@@ -28,6 +30,7 @@ export default function DriverModal({ isOpen, onClose, driver = null, fleets = [
         setPassword('');
         setWhatsappNumber('628');
         setFleetId('');
+        setCoverageArea('');
         setStatus('Offline');
       }
       setError('');
@@ -53,6 +56,7 @@ export default function DriverModal({ isOpen, onClose, driver = null, fleets = [
       username,
       whatsapp_number: whatsappNumber,
       fleet_id: fleetId ? Number(fleetId) : null,
+      coverage_area: coverageArea || null,
     };
 
     if (password) {
@@ -192,6 +196,30 @@ export default function DriverModal({ isOpen, onClose, driver = null, fleets = [
                     [{f.category}] {f.name} ({f.capacity || 'Tanpa Kapasitas'})
                   </option>
                 ))}
+              </select>
+            </div>
+          </div>
+ 
+          {/* Coverage Area Selection */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Jangkauan Area Tugas</label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                <FontAwesomeIcon icon={faMapPin} className="text-xs" />
+              </span>
+              <select
+                value={coverageArea}
+                onChange={(e) => setCoverageArea(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:bg-white focus:border-emerald-500 cursor-pointer"
+                required
+              >
+                <option value="">-- Pilih Wilayah Tugas --</option>
+                <option value="Jakarta Pusat">Jakarta Pusat</option>
+                <option value="Jakarta Utara">Jakarta Utara</option>
+                <option value="Jakarta Barat">Jakarta Barat</option>
+                <option value="Jakarta Selatan">Jakarta Selatan</option>
+                <option value="Jakarta Timur">Jakarta Timur</option>
+                <option value="Kepulauan Seribu">Kepulauan Seribu</option>
               </select>
             </div>
           </div>

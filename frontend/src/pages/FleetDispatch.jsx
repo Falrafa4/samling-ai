@@ -24,6 +24,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
+
+
 export default function FleetDispatch() {
   const [drivers, setDrivers] = useState([]);
   const [zones, setZones] = useState([]);
@@ -177,6 +179,33 @@ export default function FleetDispatch() {
 
       const latlngs = routeZones.map((z) => [z.latitude, z.longitude]);
 
+      // Ambil referensi driver terpilih untuk menambahkan starting point depot/pool
+      const driver = drivers.find((d) => d.id === selectedDriverId);
+      if (driver && driver.depot_latitude && driver.depot_longitude) {
+        const depotLat = driver.depot_latitude;
+        const depotLng = driver.depot_longitude;
+        
+        // Tambahkan marker khusus Depot DLH
+        const depotMarker = L.marker([depotLat, depotLng], {
+          icon: L.divIcon({
+            className: 'custom-depot-marker',
+            html: `
+              <div class="w-8 h-8 rounded-full bg-blue-600 border border-white text-white flex items-center justify-center font-bold text-sm shadow-md animate-pulse">
+                🏢
+              </div>
+            `,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+          })
+        }).addTo(miniMapRef.current);
+        
+        depotMarker.bindTooltip(`<b>Pool Depot DLH: ${driver.coverage_area}</b>`, { direction: 'top', offset: [0, -10] });
+        mapMarkersRef.current.push(depotMarker);
+
+        // Prepend depot ke latlngs agar polyline dimulai dari Depot
+        latlngs.unshift([depotLat, depotLng]);
+      }
+
       // Add custom numbered markers
       routeZones.forEach((z, index) => {
         const marker = L.marker([z.latitude, z.longitude], {
@@ -214,7 +243,7 @@ export default function FleetDispatch() {
     } catch (e) {
       console.error('Gagal merender rute pada mini map:', e);
     }
-  }, [activeRoute, zones]);
+  }, [activeRoute, zones, selectedDriverId, drivers]);
 
   // Handle Route Assignment / Dispatch
   const handleDispatch = async () => {
@@ -421,6 +450,9 @@ export default function FleetDispatch() {
                       <p className="text-[10px] text-slate-500 mt-0.5">
                         Armada: {assignedFleet ? assignedFleet.name : 'Tanpa Kendaraan'}
                       </p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        Wilayah: {driver.coverage_area || 'Semua Wilayah'}
+                      </p>
                     </div>
                     <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold border ${getStatusClasses(driver.status)}`}>
                       {driver.status}
@@ -443,7 +475,7 @@ export default function FleetDispatch() {
             ) : selectedDriver ? (
               <div className="space-y-3 text-xs">
                 <p className="text-slate-500">
-                  Supir: <span className="font-bold text-slate-800">{selectedDriver.name}</span> ({selectedDriver.whatsapp_number})
+                  Supir: <span className="font-bold text-slate-800">{selectedDriver.name}</span> ({selectedDriver.whatsapp_number}) | Wilayah: <span className="font-semibold text-slate-700">{selectedDriver.coverage_area || 'Semua Wilayah'}</span>
                 </p>
 
                 {/* If Driver is On Duty, allow resolving / complete manually */}

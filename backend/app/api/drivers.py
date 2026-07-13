@@ -11,7 +11,7 @@ from app.api.deps import get_current_user
 from app.utils.response import response_success
 from app.utils.security import get_password_hash
 
-router = APIRouter(tags=["drivers"], dependencies=[Depends(get_current_user)])
+router = APIRouter(tags=["drivers"])
 
 @router.get("/drivers")
 def get_drivers(db: Session = Depends(get_db)):
@@ -77,6 +77,7 @@ def create_driver(driver_data: DriverCreate, db: Session = Depends(get_db)):
         role="driver",
         whatsapp_number=driver_data.whatsapp_number,
         fleet_id=driver_data.fleet_id,
+        coverage_area=driver_data.coverage_area,
         status="Offline"
     )
     db.add(new_driver)
@@ -159,3 +160,11 @@ def delete_driver(id: int, db: Session = Depends(get_db)):
     db.delete(driver)
     db.commit()
     return response_success(message="Driver berhasil dihapus.")
+
+@router.get("/depots")
+def get_all_depots():
+    """
+    Mengambil seluruh daftar pemetaan koordinat depot DLH dari depots.json secara dinamis.
+    """
+    from app.utils.depots import load_depots
+    return response_success(data=load_depots(), message="Data koordinat depot berhasil diambil.")

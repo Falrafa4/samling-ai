@@ -9,6 +9,7 @@ class UserCreate(BaseModel):
     role: Optional[str] = "admin"  # 'admin' atau 'driver'
     whatsapp_number: Optional[str] = None
     status: Optional[str] = None  # 'Available', 'On Duty', 'Offline'
+    coverage_area: Optional[str] = None
 
 class UserResponse(BaseModel):
     id: int
@@ -17,6 +18,9 @@ class UserResponse(BaseModel):
     role: str
     whatsapp_number: Optional[str] = None
     status: Optional[str] = None
+    coverage_area: Optional[str] = None
+    depot_latitude: Optional[float] = None
+    depot_longitude: Optional[float] = None
     created_at: datetime
 
     class Config:
