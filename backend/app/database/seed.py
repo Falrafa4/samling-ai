@@ -182,41 +182,16 @@ def seed_data():
         zone4 = zone_sample[3]
         zone5 = zone_sample[4]
 
-        prediction_records = []
-
-        prediction_records.extend([
-            VolumePrediction(zone_id=zone1.id, predicted_volume=90.0, target_time=now + timedelta(days=1), confidence_score=0.95),
-            VolumePrediction(zone_id=zone1.id, predicted_volume=95.0, target_time=now + timedelta(days=2), confidence_score=0.90),
-            VolumePrediction(zone_id=zone1.id, predicted_volume=100.0, target_time=now + timedelta(days=3), confidence_score=0.85),
-            VolumePrediction(zone_id=zone1.id, predicted_volume=105.0, target_time=now + timedelta(days=4), confidence_score=0.80),
-        ])
-        prediction_records.extend([
-            VolumePrediction(zone_id=zone2.id, predicted_volume=30.0, target_time=now + timedelta(days=1), confidence_score=0.98),
-            VolumePrediction(zone_id=zone2.id, predicted_volume=35.0, target_time=now + timedelta(days=2), confidence_score=0.95),
-            VolumePrediction(zone_id=zone2.id, predicted_volume=40.0, target_time=now + timedelta(days=3), confidence_score=0.92),
-            VolumePrediction(zone_id=zone2.id, predicted_volume=45.0, target_time=now + timedelta(days=4), confidence_score=0.89),
-        ])
-        prediction_records.extend([
-            VolumePrediction(zone_id=zone3.id, predicted_volume=70.0, target_time=now + timedelta(days=1), confidence_score=0.94),
-            VolumePrediction(zone_id=zone3.id, predicted_volume=75.0, target_time=now + timedelta(days=2), confidence_score=0.88),
-            VolumePrediction(zone_id=zone3.id, predicted_volume=80.0, target_time=now + timedelta(days=3), confidence_score=0.85),
-            VolumePrediction(zone_id=zone3.id, predicted_volume=85.0, target_time=now + timedelta(days=4), confidence_score=0.80),
-        ])
-        prediction_records.extend([
-            VolumePrediction(zone_id=zone4.id, predicted_volume=20.0, target_time=now + timedelta(days=1), confidence_score=0.97),
-            VolumePrediction(zone_id=zone4.id, predicted_volume=25.0, target_time=now + timedelta(days=2), confidence_score=0.94),
-            VolumePrediction(zone_id=zone4.id, predicted_volume=30.0, target_time=now + timedelta(days=3), confidence_score=0.90),
-            VolumePrediction(zone_id=zone4.id, predicted_volume=35.0, target_time=now + timedelta(days=4), confidence_score=0.85),
-        ])
-        prediction_records.extend([
-            VolumePrediction(zone_id=zone5.id, predicted_volume=75.0, target_time=now + timedelta(days=1), confidence_score=0.93),
-            VolumePrediction(zone_id=zone5.id, predicted_volume=80.0, target_time=now + timedelta(days=2), confidence_score=0.90),
-            VolumePrediction(zone_id=zone5.id, predicted_volume=85.0, target_time=now + timedelta(days=3), confidence_score=0.86),
-            VolumePrediction(zone_id=zone5.id, predicted_volume=90.0, target_time=now + timedelta(days=4), confidence_score=0.80),
-        ])
+        prediction_records = [
+            VolumePrediction(tps_id=zone1.id, kecamatan=zone1.kecamatan, predicted_volume_percentage=90.0, prediction_status="Awas", priority_rank=1, forecast_batch_id="batch_seed", model_version="1.0"),
+            VolumePrediction(tps_id=zone2.id, kecamatan=zone2.kecamatan, predicted_volume_percentage=35.0, prediction_status="Aman", priority_rank=5, forecast_batch_id="batch_seed", model_version="1.0"),
+            VolumePrediction(tps_id=zone3.id, kecamatan=zone3.kecamatan, predicted_volume_percentage=80.0, prediction_status="Waspada", priority_rank=2, forecast_batch_id="batch_seed", model_version="1.0"),
+            VolumePrediction(tps_id=zone4.id, kecamatan=zone4.kecamatan, predicted_volume_percentage=30.0, prediction_status="Aman", priority_rank=4, forecast_batch_id="batch_seed", model_version="1.0"),
+            VolumePrediction(tps_id=zone5.id, kecamatan=zone5.kecamatan, predicted_volume_percentage=75.0, prediction_status="Waspada", priority_rank=3, forecast_batch_id="batch_seed", model_version="1.0"),
+        ]
 
         db.add_all(prediction_records)
-        print("Tabel volume_predictions (20 data proyeksi) berhasil di-seed.")
+        print("Tabel volume_predictions (5 data proyeksi) berhasil di-seed.")
 
         # 6. Seed CitizenReports
         citizen_reports_data = [
