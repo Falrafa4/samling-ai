@@ -1,19 +1,27 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
 
 class VolumePredictionCreate(BaseModel):
-    zone_id: int
-    predicted_volume: float
-    target_time: datetime
-    confidence_score: float = Field(..., ge=0.0, le=1.0)  # Desimal 0.0 s.d 1.0
+    kecamatan: str
+    tps_id: int
+    tps_type: str
+    zone_population: int
+    tps_capacity_kg: int
+    day_of_week: int
+    is_weekend: int
+    is_holiday: int
+    daily_growth_rate: float
+    rainfall_today: float
+    event_urgency_score: float
+    current_fill_percentage: float
+    created_at: datetime
 
 class VolumePredictionResponse(BaseModel):
     id: int
-    zone_id: int
-    predicted_volume: float
-    target_time: datetime
-    confidence_score: float
+    kecamatan: str
+    tps_id: int
+    predicted_volume_percentage: float
+    prediction_status: str
     created_at: datetime
 
     class Config:

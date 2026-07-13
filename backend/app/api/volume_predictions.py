@@ -11,6 +11,18 @@ from app.schemas.volume_predictions import VolumePredictionCreate, VolumePredict
 from app.api.deps import get_current_user
 from app.utils.response import response_success
 
+# Load AI Model
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "ai", "models", "waste_volume", "forecast_waste_volume_model.pkl")
+ENCODERS_PATH = os.path.join(os.path.dirname(__file__), "..", "ai", "models", "waste_volume", "encoders.pkl")
+MODEL_VERSION = os.path.splitext(os.path.split(MODEL_PATH)[1])[0]
+try:
+    model = joblib.load(MODEL_PATH)
+    encoders = joblib.load(ENCODERS_PATH)
+except Exception as e:
+    model = None
+    encoders = None
+    print(f"Error loading ML model: {e}")
+
 router = APIRouter(tags=["volume-predictions"])
 
 @router.post("/volume-predictions", status_code=status.HTTP_201_CREATED)
@@ -20,26 +32,89 @@ def create_volume_prediction(prediction_in: VolumePredictionCreate, db: Session 
     Memvalidasi zone_id sebelum menyimpan data.
     """
     # 1. Validasi zone_id ada di database
-    zone = db.query(Zone).filter(Zone.id == prediction_in.zone_id).first()
+    zone = db.query(Zone).filter(Zone.id == prediction_in.tps_id).first()
+
     if not zone:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Zone dengan ID {prediction_in.zone_id} tidak terdaftar di sistem."
+            detail=f"Zone dengan ID {prediction_in.tps_id} tidak terdaftar di sistem."
         )
 
-    # 2. Simpan data prediksi
+    if model is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Model AI tidak berhasil dimuat."
+        )
+
+    # 2. Lakukan Prediksi (Inference)
+    features = pd.DataFrame([{
+        "kecamatan": prediction_in.kecamatan,
+        "tps_id": prediction_in.tps_id,
+        "tps_type": prediction_in.tps_type,
+        "zone_population": prediction_in.zone_population,
+        "tps_capacity_kg": prediction_in.tps_capacity_kg,
+        "day_of_week": prediction_in.day_of_week,
+        "is_weekend": prediction_in.is_weekend,
+        "is_holiday": prediction_in.is_holiday,
+        "daily_growth_rate": prediction_in.daily_growth_rate,
+        "rainfall_today": prediction_in.rainfall_today,
+        "event_urgency_score": prediction_in.event_urgency_score,
+        "current_fill_percentage": prediction_in.current_fill_percentage
+    }])
+    
+    df_features = pd.DataFrame(features)
+    
+    # Apply encoders
+    for col in ["kecamatan", "tps_type"]:
+        df_features[col] = encoders[col].transform(df_features[col])
+        
+    try:
+        predicted_volume_percentage = float(model.predict(df_features)[0])
+        predicted_volume_percentage = max(
+            0.0,
+            min(100.0, predicted_volume_percentage)
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Inference failed: {str(e)}")
+    
+    forecast_batch_id = f"batch_{datetime.now():%Y%m%d_%H%M%S}"
+
+    prediction_status = ""
+
+    if predicted_volume_percentage >= 90:
+        prediction_status = "CRITICAL"
+    elif predicted_volume_percentage >= 70:
+        prediction_status = "WARNING"
+    else:
+        prediction_status = "NORMAL"
+
+    # 3. Simpan data prediksi
     new_prediction = VolumePrediction(
-        zone_id=prediction_in.zone_id,
-        predicted_volume=prediction_in.predicted_volume,
-        target_time=prediction_in.target_time,
-        confidence_score=prediction_in.confidence_score
+        forecast_batch_id=forecast_batch_id,
+        kecamatan=prediction_in.kecamatan,
+        tps_id=prediction_in.tps_id,
+        predicted_volume_percentage=predicted_volume_percentage,
+        priority_rank=None,
+        prediction_status=prediction_status,
+        model_version=MODEL_VERSION,
     )
+
     db.add(new_prediction)
     db.commit()
     db.refresh(new_prediction)
 
     data = VolumePredictionResponse.model_validate(new_prediction)
     return response_success(data=data, message="Hasil prediksi AI berhasil disimpan.")
+
+@router.get("/volume-predictions", response_model=List[VolumePredictionResponse])
+def get_volume_predictions(db: Session = Depends(get_db)):
+    """
+    Mengambil semua data proyeksi volume sampah (Memerlukan Autentikasi).
+    Menyaring target_time dari sekarang s.d 7 hari ke depan, diurutkan ascending.
+    """
+    projections = db.query(VolumePrediction).all()
+    data = [VolumePredictionResponse.model_validate(p) for p in projections]
+    return response_success(data=data, message="Data proyeksi volume sampah berhasil diambil.")
 
 @router.get("/volume-predictions/{zone_id}/projections")
 def get_volume_projections(
@@ -76,7 +151,6 @@ def get_volume_projections(
 
     data = [VolumePredictionResponse.model_validate(p) for p in projections]
     return response_success(data=data, message="Data proyeksi volume sampah 7 hari berhasil diambil.")
-
 
 @router.get("/volume-predictions/summary")
 def get_predictions_summary(db: Session = Depends(get_db)):

@@ -35,3 +35,9 @@ uvicorn==0.49.0
 uvloop==0.22.1
 watchfiles==1.2.0
 websockets==16.1
+pandas
+joblib
+pillow
+scikit-learn
+ortools
+requests

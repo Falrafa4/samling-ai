@@ -6,10 +6,11 @@ from app.database.database import Base
 class RouteRecommendation(Base):
     __tablename__ = "route_recommendations"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
+    forecast_batch_id = Column(String(30), index=True)
     driver_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    route_json = Column(Text, nullable=False)
-    status = Column(String, default="Pending", nullable=False)  # 'Pending', 'In Progress', 'Completed'
+    route_json = Column(Text)
+    status = Column(String, default="Pending", nullable=False)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 

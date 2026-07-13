@@ -28,6 +28,7 @@ from app.models.sensor_data import SensorData
 from app.models.volume_predictions import VolumePrediction
 from app.models.users import User
 from app.models.fleets import Fleet
+from app.models.historical_waste_data import HistoricalWasteData
 
 target_metadata = Base.metadata
 
