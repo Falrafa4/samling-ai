@@ -20,7 +20,7 @@ Chart.register(...registerables);
 
 export default function Overview() {
   const [adminUser] = useLocalStorage("admin_user", null);
-  const [activeDateFilter, setActiveDateFilter] = useState("7hari");
+  const [activeDateFilter, setActiveDateFilter] = useState("besok");
 
   // API States
   const [summary, setSummary] = useState(null);
@@ -30,7 +30,6 @@ export default function Overview() {
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingProjections, setLoadingProjections] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [selectedZoneFilter, setSelectedZoneFilter] = useState("");
   const zoneOptions = [
     { value: "", label: "Semua Wilayah" },
     ...zones.map((zone) => ({
@@ -74,7 +73,10 @@ export default function Overview() {
 
   // Fetch projections whenever selectedZoneId changes
   useEffect(() => {
-    if (!selectedZoneId) return;
+    if (!selectedZoneId) {
+      setProjections([]);
+      return;
+    }
 
     async function fetchProjections() {
       try {
@@ -226,7 +228,7 @@ export default function Overview() {
   const dateFilters = [
     { id: "hariIni", label: "Hari Ini" },
     { id: "besok", label: "Besok" },
-    { id: "7hari", label: "7 Hari Ke Depan" },
+    // { id: "7hari", label: "7 Hari Ke Depan" },
   ];
 
   if (loadingSummary) {
@@ -252,7 +254,7 @@ export default function Overview() {
           title={`Selamat Datang, ${adminUser?.name || "Admin"}`}
           subtitle="Berikut ringkasan situasi darurat sampah kota hari ini."
           rightContent={
-            <div className="bg-slate-100 p-1 rounded-lg flex items-center gap-1 border border-slate-200 w-full sm:w-auto overflow-x-auto">
+            <div className="bg-slate-100 p-1 rounded-lg hidden md:flex items-center gap-1 border border-slate-200 w-full sm:w-auto overflow-x-auto">
               {dateFilters.map((filter) => (
                 <button
                   key={filter.id}
@@ -269,6 +271,22 @@ export default function Overview() {
             </div>
           }
         />
+
+        <div className="sticky top-0 z-20 md:hidden flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 w-full sm:w-auto overflow-x-auto">
+          {dateFilters.map((filter) => (
+            <button
+              key={filter.id}
+              onClick={() => setActiveDateFilter(filter.id)}
+              className={`flex-1 sm:flex-initial text-center px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 whitespace-nowrap ${
+                activeDateFilter === filter.id
+                  ? "bg-emerald-500 text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200"
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
 
         {/* Main Grid Content */}
         <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
@@ -356,8 +374,8 @@ export default function Overview() {
                   </span>
                   <SearchableSelect
                     options={zoneOptions}
-                    value={selectedZoneFilter}
-                    onChange={(value) => setSelectedZoneFilter(value)}
+                    value={selectedZoneId}
+                    onChange={(value) => setSelectedZoneId(value)}
                     placeholder="Semua Wilayah TPS"
                     icon={faMapMarkerAlt}
                     emptyMessage="Tidak ada wilayah ditemukan"

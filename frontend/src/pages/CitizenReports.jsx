@@ -303,7 +303,7 @@ export default function CitizenReports() {
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
       {/* Scrollable wrapper — header + content scroll together */}
-      <div className="flex-1 overflow-y-auto flex flex-col">
+      <div className="flex-1 flex flex-col">
         <Header
           title="Laporan Pengaduan Warga"
           subtitle="Kelola pengaduan penumpukan sampah yang dikirim oleh masyarakat."
@@ -461,9 +461,9 @@ export default function CitizenReports() {
         </div>
 
         {/* ─── MOBILE: TAB VIEW ─── */}
-        <div className="flex md:hidden flex-1 flex-col overflow-hidden">
+        <div className="flex md:hidden flex-1 flex-col">
           {/* Tab Bar */}
-          <div className="flex border-b border-slate-200 bg-white">
+          <div className="sticky top-0 flex border-b border-slate-200 bg-white">
             {COLUMNS.map((column) => {
               const count = filteredReports.filter(
                 (r) => r.status === column.key,

@@ -306,7 +306,7 @@ export default function Zones() {
         )}
 
         {/* Search & Filter & Stats Card */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="sticky top-5 bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto">
             <div className="relative flex-1 md:w-72">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none text-xs">
