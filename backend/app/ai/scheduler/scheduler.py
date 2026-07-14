@@ -1,4 +1,5 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.database.database import SessionLocal
 
@@ -9,19 +10,13 @@ from app.ai.scheduler.retrain_scheduler import retrain_model
 
 
 def run_daily_pipeline():
-    db = SessionLocal()
+    print("Collecting daily data...")
+    collect_daily_data()
 
-    try:
-        print("Collecting daily data...")
-        collect_daily_data(db)
+    print("Forecasting waste volume...")
+    forecast_all_tps()
 
-        print("Forecasting waste volume...")
-        forecast_all_tps()
-
-        print("=== Daily Pipeline Finished ===")
-
-    finally:
-        db.close()
+    print("=== Daily Pipeline Finished ===")
 
 
 def run_route_recommendation():
@@ -41,21 +36,16 @@ def run_route_recommendation():
 
 
 def run_weekly_retrain():
-    db = SessionLocal()
-
-    try:
-        print("Retraining model...")
-        retrain_model(db)
-
-        print("Retraining finished.")
-
-    finally:
-        db.close()
+    print("Retraining model...")
+    retrain_model()
+    print("Retraining finished.")
 
 
-def start_scheduler():
-
-    scheduler = BlockingScheduler()
+def start_scheduler(blocking: bool = True):
+    if blocking:
+        scheduler = BlockingScheduler()
+    else:
+        scheduler = BackgroundScheduler()
 
     # Daily 07:00
     scheduler.add_job(
@@ -88,9 +78,10 @@ def start_scheduler():
         replace_existing=True,
     )
 
-    print("Scheduler started. Jobs:")
+    print(f"Scheduler started ({'blocking' if blocking else 'background'}). Jobs:")
     print("daily_pipeline        — every day 07:00")
     print("route_recommendation  — every day 07:30")
     print("weekly_retrain        — every Monday 00:00")
 
     scheduler.start()
+    return scheduler

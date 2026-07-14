@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from contextlib import asynccontextmanager
 
 from app.api.zones import router as zones_router
 from app.api.auth import router as auth_router
@@ -14,8 +15,17 @@ from app.api.citizen_reports import router as citizen_reports_router
 from app.api.route_recommendations import router as route_recommendations_router
 from app.api.dashboard import router as dashboard_router
 from app.api.fleets import router as fleets_router
+from app.ai.scheduler.scheduler import start_scheduler
 
-app = FastAPI(title="Samling API", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Starting background scheduler...")
+    scheduler = start_scheduler(blocking=False)
+    yield
+    print("Stopping background scheduler...")
+    scheduler.shutdown()
+
+app = FastAPI(title="Samling API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
