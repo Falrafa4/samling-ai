@@ -135,25 +135,82 @@ def seed_data():
         print("Tabel fleets (Armada DLH DKI Jakarta) berhasil di-seed.")
 
         # Ambil referensi fleet untuk dihubungkan ke driver
-        f_dump = db.query(Fleet).filter(Fleet.name == "Dump Truck Besar").first()
-        f_ar_besar = db.query(Fleet).filter(Fleet.name == "Arm Roll Besar").first()
-        f_compactor = db.query(Fleet).filter(Fleet.name == "Truk Compactor RDF").first()
-        f_ar_kecil = db.query(Fleet).filter(Fleet.name == "Arm Roll Kecil").first()
-        f_tronton = db.query(Fleet).filter(Fleet.name == "Truk Tronton").first()
-
-        # 4. Seed Drivers (Linked to Fleets)
-        drivers_data = [
-            User(name="Budi Utomo", username="driver_budi", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281234567890", fleet_id=f_dump.id if f_dump else None, status="Offline", coverage_area="Jakarta Pusat"),
-            User(name="Joko Susilo", username="driver_joko", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281298765432", fleet_id=f_ar_besar.id if f_ar_besar else None, status="Offline", coverage_area="Jakarta Barat"),
-            User(name="Agus Saputra", username="driver_agus", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281311223344", fleet_id=f_compactor.id if f_compactor else None, status="Offline", coverage_area="Jakarta Selatan"),
-            User(name="Herman Wijaya", username="driver_herman", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281355667788", fleet_id=f_ar_kecil.id if f_ar_kecil else None, status="Offline", coverage_area="Jakarta Timur"),
-            User(name="Rudy Hermawan", username="driver_rudy", password=get_password_hash("driver123"), role="driver", whatsapp_number="6281288990011", fleet_id=f_tronton.id if f_tronton else None, status="Offline", coverage_area="Jakarta Utara"),
+        fleet_options = [
+            db.query(Fleet).filter(Fleet.name == "Dump Truck Besar").first(),
+            db.query(Fleet).filter(Fleet.name == "Arm Roll Besar").first(),
+            db.query(Fleet).filter(Fleet.name == "Truk Compactor RDF").first(),
+            db.query(Fleet).filter(Fleet.name == "Arm Roll Kecil").first(),
+            db.query(Fleet).filter(Fleet.name == "Truk Tronton").first(),
         ]
+
+        # 4. Seed Drivers (5 driver untuk setiap wilayah administrasi DKI Jakarta)
+        driver_seed_by_area = {
+            "Jakarta Pusat": [
+                ("Budi Utomo", "budi_pusat", "6281234567890"),
+                ("Dedi Kurniawan", "dedi_pusat", "6281234567891"),
+                ("Eko Prasetyo", "eko_pusat", "6281234567892"),
+                ("Fajar Nugroho", "fajar_pusat", "6281234567893"),
+                ("Gilang Maulana", "gilang_pusat", "6281234567894"),
+            ],
+            "Jakarta Barat": [
+                ("Joko Susilo", "joko_barat", "6281298765430"),
+                ("Hendra Saputra", "hendra_barat", "6281298765431"),
+                ("Irfan Hakim", "irfan_barat", "6281298765432"),
+                ("Kurnia Ramadhan", "kurnia_barat", "6281298765433"),
+                ("Lukman Santoso", "lukman_barat", "6281298765434"),
+            ],
+            "Jakarta Selatan": [
+                ("Agus Saputra", "agus_selatan", "6281311223340"),
+                ("Maman Suryaman", "maman_selatan", "6281311223341"),
+                ("Nanda Pratama", "nanda_selatan", "6281311223342"),
+                ("Oki Firmansyah", "oki_selatan", "6281311223343"),
+                ("Pandu Wijaya", "pandu_selatan", "6281311223344"),
+            ],
+            "Jakarta Timur": [
+                ("Herman Wijaya", "herman_timur", "6281355667780"),
+                ("Qomar Hidayat", "qomar_timur", "6281355667781"),
+                ("Rizky Febrian", "rizky_timur", "6281355667782"),
+                ("Sandi Permana", "sandi_timur", "6281355667783"),
+                ("Teguh Wibowo", "teguh_timur", "6281355667784"),
+            ],
+            "Jakarta Utara": [
+                ("Rudy Hermawan", "rudy_utara", "6281288990010"),
+                ("Umar Faruq", "umar_utara", "6281288990011"),
+                ("Vicky Setiawan", "vicky_utara", "6281288990012"),
+                ("Wahyu Saputra", "wahyu_utara", "6281288990013"),
+                ("Yusuf Maulana", "yusuf_utara", "6281288990014"),
+            ],
+            "Kepulauan Seribu": [
+                ("Arif Rahman", "arif_seribu", "6281377008800"),
+                ("Bambang Satria", "bambang_seribu", "6281377008801"),
+                ("Chandra Putra", "chandra_seribu", "6281377008802"),
+                ("Darmawan Saleh", "darmawan_seribu", "6281377008803"),
+                ("Endra Kusuma", "endra_seribu", "6281377008804"),
+            ],
+        }
+
+        drivers_data = []
+        for area, driver_profiles in driver_seed_by_area.items():
+            for index, (name, username, whatsapp_number) in enumerate(driver_profiles):
+                fleet = fleet_options[index % len(fleet_options)]
+                drivers_data.append(
+                    User(
+                        name=name,
+                        username=username,
+                        password=get_password_hash("driver123"),
+                        role="driver",
+                        whatsapp_number=whatsapp_number,
+                        fleet_id=fleet.id if fleet else None,
+                        status="Offline",
+                        coverage_area=area,
+                    )
+                )
+
         db.add_all(drivers_data)
         db.commit()
-        print("Tabel users (5 driver ber-armada) berhasil di-seed.")
+        print(f"Tabel users ({len(drivers_data)} driver ber-armada, 5 driver per wilayah DKI Jakarta) berhasil di-seed.")
 
-        # 4. Seed SensorData
+        # 5. Seed SensorData
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         sensor_data_records = []
         import random
@@ -175,7 +232,7 @@ def seed_data():
         db.add_all(sensor_data_records)
         print(f"Tabel sensor_data ({len(sensor_data_records)} data pembacaan IoT fresh bernilai 0) berhasil di-seed.")
 
-        # 5. Seed VolumePredictions
+        # 6. Seed VolumePredictions
         zone1 = zone_sample[0]
         zone2 = zone_sample[1]
         zone3 = zone_sample[2]
@@ -193,7 +250,7 @@ def seed_data():
         db.add_all(prediction_records)
         print("Tabel volume_predictions (5 data proyeksi) berhasil di-seed.")
 
-        # 6. Seed CitizenReports
+        # 7. Seed CitizenReports
         citizen_reports_data = [
             CitizenReport(
                 whatsapp_number="6281234567890",
@@ -289,7 +346,7 @@ def seed_data():
         db.add_all(citizen_reports_data)
         print("Tabel citizen_reports (10 data aduan warga) berhasil di-seed.")
 
-        # 7. Seed RouteRecommendations
+        # 8. Seed RouteRecommendations
         tps_ids_ordered = [zone_sample[0].id, zone_sample[2].id, zone_sample[4].id, zone_sample[1].id, zone_sample[3].id]
         all_drivers = db.query(User).filter(User.role == "driver").all()
         route_recommendation = RouteRecommendation(

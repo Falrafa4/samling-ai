@@ -223,7 +223,7 @@ export default function FeaturesSection() {
             >
               <div className="bg-white p-6 rounded-2xl shadow-soft border border-gray-100">
                 <div className="flex items-center justify-between mb-6">
-                  <h4 className="font-bold text-gray-800">Prediksi Sampah Gelora Bung Karno, Jakarta</h4>
+                  <h4 className="font-bold text-gray-800">Prediksi Sampah Kecamatan Gambir, Jakarta</h4>
                   <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold">Warning Alert</span>
                 </div>
                 <div className="h-48 flex items-end gap-2 border-b border-gray-200 pb-3">
