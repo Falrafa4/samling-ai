@@ -24,5 +24,11 @@ class VolumePredictionResponse(BaseModel):
     prediction_status: str
     created_at: datetime
 
+    # Field kompatibilitas mundur untuk React frontend
+    zone_id: int
+    predicted_volume: float
+    target_time: datetime
+    confidence_score: float
+
     class Config:
         from_attributes = True

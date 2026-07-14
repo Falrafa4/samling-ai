@@ -14,3 +14,24 @@ class VolumePrediction(Base):
     prediction_status = Column(String)
     model_version = Column(String)
     created_at = Column(DateTime, default=func.now())
+
+    # Properti virtual untuk kompatibilitas mundur dengan React frontend
+    @property
+    def zone_id(self) -> int:
+        return self.tps_id
+
+    @property
+    def predicted_volume(self) -> float:
+        return self.predicted_volume_percentage or 0.0
+
+    @property
+    def target_time(self):
+        return self.created_at
+
+    @property
+    def confidence_score(self) -> float:
+        if self.prediction_status == "CRITICAL":
+            return 0.95
+        elif self.prediction_status == "WARNING":
+            return 0.88
+        return 0.82

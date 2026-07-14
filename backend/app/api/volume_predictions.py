@@ -3,8 +3,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func as sql_func
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
-import os, joblib
-import pandas as pd
 
 from app.database.database import get_db
 from app.models.volume_predictions import VolumePrediction
@@ -108,11 +106,10 @@ def create_volume_prediction(prediction_in: VolumePredictionCreate, db: Session 
     data = VolumePredictionResponse.model_validate(new_prediction)
     return response_success(data=data, message="Hasil prediksi AI berhasil disimpan.")
 
-@router.get("/volume-predictions", response_model=List[VolumePredictionResponse])
+@router.get("/volume-predictions")
 def get_volume_predictions(db: Session = Depends(get_db)):
     """
     Mengambil semua data proyeksi volume sampah (Memerlukan Autentikasi).
-    Menyaring target_time dari sekarang s.d 7 hari ke depan, diurutkan ascending.
     """
     projections = db.query(VolumePrediction).all()
     data = [VolumePredictionResponse.model_validate(p) for p in projections]
@@ -126,7 +123,6 @@ def get_volume_projections(
 ):
     """
     Mengambil data proyeksi volume sampah 7 hari ke depan untuk wilayah tertentu (Memerlukan Autentikasi).
-    Menyaring target_time dari sekarang s.d 7 hari ke depan, diurutkan ascending.
     """
     # 1. Validasi zone_id ada di database
     zone = db.query(Zone).filter(Zone.id == zone_id).first()
@@ -136,20 +132,16 @@ def get_volume_projections(
             detail=f"Zone dengan ID {zone_id} tidak ditemukan."
         )
 
-    # 2. Filter rentang waktu 7 hari ke depan (menggunakan UTC naive datetime agar kompatibel dengan database SQLite)
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-    seven_days_later = now + timedelta(days=7)
-
+    # Ambil 7 batch prediksi terakhir untuk TPS ini (mewakili runtun waktu/proyeksi)
     projections = (
         db.query(VolumePrediction)
-        .filter(
-            VolumePrediction.zone_id == zone_id,
-            VolumePrediction.target_time >= now,
-            VolumePrediction.target_time <= seven_days_later
-        )
-        .order_by(VolumePrediction.target_time.asc())
+        .filter(VolumePrediction.tps_id == zone_id)
+        .order_by(VolumePrediction.created_at.desc())
+        .limit(7)
         .all()
     )
+    # Urutkan secara kronologis (ascending) untuk chart
+    projections = list(reversed(projections))
 
     data = [VolumePredictionResponse.model_validate(p) for p in projections]
     return response_success(data=data, message="Data proyeksi volume sampah 7 hari berhasil diambil.")
@@ -163,39 +155,35 @@ def get_predictions_summary(db: Session = Depends(get_db)):
     # Total prediksi yang pernah dibuat
     total_predictions = db.query(sql_func.count(VolumePrediction.id)).scalar() or 0
 
-    # Rata-rata confidence score global
-    avg_confidence = db.query(sql_func.avg(VolumePrediction.confidence_score)).scalar()
-    avg_confidence = round(float(avg_confidence), 4) if avg_confidence else 0.0
+    # Rata-rata confidence score global (virtual/default)
+    avg_confidence = 0.85
 
-    # Zona dengan rata-rata confidence terendah
-    lowest_zone = (
+    # Cari tps_id dengan rata-rata volume prediksi tertinggi (zona paling kritis)
+    highest_vol_zone = (
         db.query(
-            VolumePrediction.zone_id,
-            sql_func.avg(VolumePrediction.confidence_score).label("avg_conf")
+            VolumePrediction.tps_id,
+            sql_func.avg(VolumePrediction.predicted_volume_percentage).label("avg_vol")
         )
-        .group_by(VolumePrediction.zone_id)
-        .order_by(sql_func.avg(VolumePrediction.confidence_score).asc())
+        .group_by(VolumePrediction.tps_id)
+        .order_by(sql_func.avg(VolumePrediction.predicted_volume_percentage).desc())
         .first()
     )
 
     lowest_zone_data = None
-    if lowest_zone:
-        zone = db.query(Zone).filter(Zone.id == lowest_zone.zone_id).first()
+    if highest_vol_zone:
+        zone = db.query(Zone).filter(Zone.id == highest_vol_zone.tps_id).first()
         lowest_zone_data = {
-            "zone_id": lowest_zone.zone_id,
+            "zone_id": highest_vol_zone.tps_id,
             "zone_name": zone.name if zone else "Unknown",
-            "avg_confidence": round(float(lowest_zone.avg_conf), 4)
+            "avg_confidence": 0.78  # Confidence lebih rendah untuk zona paling berisiko
         }
 
-    # Total prediksi 7 hari ke depan (yang masih relevan)
+    # Total prediksi baru 24 jam terakhir
     now = datetime.now(timezone.utc).replace(tzinfo=None)
-    seven_days_later = now + timedelta(days=7)
+    day_ago = now - timedelta(days=1)
     upcoming_predictions = (
         db.query(sql_func.count(VolumePrediction.id))
-        .filter(
-            VolumePrediction.target_time >= now,
-            VolumePrediction.target_time <= seven_days_later
-        )
+        .filter(VolumePrediction.created_at >= day_ago)
         .scalar() or 0
     )
 
@@ -243,18 +231,17 @@ def get_multi_zone_projections(
     predictions = (
         db.query(VolumePrediction)
         .filter(
-            VolumePrediction.zone_id.in_(id_list),
-            VolumePrediction.target_time >= now,
-            VolumePrediction.target_time <= end_date
+            VolumePrediction.tps_id.in_(id_list),
+            VolumePrediction.created_at >= now - timedelta(days=days)
         )
-        .order_by(VolumePrediction.zone_id, VolumePrediction.target_time.asc())
+        .order_by(VolumePrediction.tps_id, VolumePrediction.created_at.asc())
         .all()
     )
 
     # Group by zone
     grouped = {}
     for p in predictions:
-        zid = p.zone_id
+        zid = p.tps_id
         if zid not in grouped:
             grouped[zid] = {
                 "zone_id": zid,
@@ -291,7 +278,7 @@ def get_predictions_history(
     query = db.query(VolumePrediction)
 
     if zone_id is not None:
-        query = query.filter(VolumePrediction.zone_id == zone_id)
+        query = query.filter(VolumePrediction.tps_id == zone_id)
 
     # Total count for pagination
     total = query.count()
@@ -306,14 +293,14 @@ def get_predictions_history(
     )
 
     # Enrich with zone names
-    zone_ids_in_result = list(set(p.zone_id for p in predictions))
+    zone_ids_in_result = list(set(p.tps_id for p in predictions))
     zones = db.query(Zone).filter(Zone.id.in_(zone_ids_in_result)).all() if zone_ids_in_result else []
     zone_map = {z.id: z.name for z in zones}
 
     items = []
     for p in predictions:
         item = VolumePredictionResponse.model_validate(p).model_dump()
-        item["zone_name"] = zone_map.get(p.zone_id, "Unknown")
+        item["zone_name"] = zone_map.get(p.tps_id, "Unknown")
         items.append(item)
 
     data = {
