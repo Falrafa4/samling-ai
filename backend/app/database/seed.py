@@ -344,19 +344,12 @@ def seed_data():
             ),
         ]
         db.add_all(citizen_reports_data)
-        print("Tabel citizen_reports (10 data aduan warga) berhasil di-seed.")
+        db.commit()
 
-        # 8. Seed RouteRecommendations
-        tps_ids_ordered = [zone_sample[0].id, zone_sample[2].id, zone_sample[4].id, zone_sample[1].id, zone_sample[3].id]
-        all_drivers = db.query(User).filter(User.role == "driver").all()
-        route_recommendation = RouteRecommendation(
-            driver_id=None,
-            route_json=json.dumps(tps_ids_ordered),
-            status="Pending",
-            created_at=now - timedelta(hours=1)
-        )
-        db.add(route_recommendation)
-        print("Tabel route_recommendations (1 rute) berhasil di-seed.")
+        # 8. Seed RouteRecommendations via AI Scheduler
+        # from app.ai.scheduler.route_scheduler import generate_routes
+        # generate_routes(db)
+        # print("Tabel route_recommendations (rute dinamis AI) berhasil di-seed.")
 
         db.commit()
         print("Seeding selesai dengan sukses!")

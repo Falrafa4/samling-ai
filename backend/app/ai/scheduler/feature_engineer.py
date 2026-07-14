@@ -1,10 +1,11 @@
 import random
 from datetime import datetime, timedelta
 import requests
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.database.database import SessionLocal
 
+from app.models.users import User
 from app.models.zones import Zone
 from app.models.drivers import Driver
 from app.models.historical_waste_data import HistoricalWasteData

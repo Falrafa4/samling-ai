@@ -368,6 +368,16 @@ export const api = {
   },
 
   /**
+   * Menjalankan pipeline rekomendasi rute secara langsung.
+   * Endpoint: POST /route-recommendations/trigger
+   */
+  async triggerRouteGeneration() {
+    return fetchWithAuth('/route-recommendations/trigger', {
+      method: 'POST',
+    });
+  },
+
+  /**
    * Mengambil rute pengangkutan sampah aktif milik driver tertentu.
    * Endpoint: GET /route-recommendations/driver/{driver_id}
    */

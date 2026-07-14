@@ -81,7 +81,7 @@ def load_depots() -> dict:
         return json.load(f)
 
 
-def fetch_latest_forecast(db: Session) -> list[dict]:
+def fetch_latest_forecast(db: Session) -> tuple[list[dict], str] | None:
     latest_batch = (
         db.query(VolumePrediction.forecast_batch_id)
         .order_by(VolumePrediction.created_at.desc())
@@ -91,7 +91,7 @@ def fetch_latest_forecast(db: Session) -> list[dict]:
 
     if not latest_batch:
         print("No forecast batch found.")
-        return []
+        return None
 
     predictions = (
         db.query(VolumePrediction)
@@ -105,7 +105,7 @@ def fetch_latest_forecast(db: Session) -> list[dict]:
 
     if not predictions:
         print(f"No CRITICAL/WARNING predictions in batch {latest_batch}.")
-        return []
+        return None
 
     tps_ids = [p.tps_id for p in predictions]
     zones = db.query(Zone).filter(Zone.id.in_(tps_ids)).all()
