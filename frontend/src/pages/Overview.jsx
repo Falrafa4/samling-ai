@@ -292,7 +292,7 @@ export default function Overview() {
         <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
           {errorMessage && (
             <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl">
-              ⚠️ {errorMessage}
+              <FontAwesomeIcon icon={faTriangleExclamation} className="mr-1.5" /> {errorMessage}
             </div>
           )}
 

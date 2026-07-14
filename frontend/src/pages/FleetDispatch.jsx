@@ -8,7 +8,9 @@ import {
   faPlay,
   faCog,
   faUser,
-  faTruck
+  faTruck,
+  faTriangleExclamation,
+  faHourglassHalf
 } from '@fortawesome/free-solid-svg-icons';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -164,8 +166,10 @@ export default function FleetDispatch() {
           icon: L.divIcon({
             className: 'custom-depot-marker',
             html: `
-              <div class="w-8 h-8 rounded-full bg-blue-600 border border-white text-white flex items-center justify-center font-bold text-sm shadow-md">
-                🏢
+              <div class="w-8 h-8 rounded-full bg-blue-600 border border-white text-white flex items-center justify-center shadow-md">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M48 96V416H336V96H48zM0 64C0 46.3 14.3 32 32 32H352c17.7 0 32 14.3 32 32V448c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V64zM96 144h48v48H96V144zm0 96h48v48H96V240zm0 96h48v48H96V336zm144-192h48v48H240V144zm0 96h48v48H240V240zm0 96h48v48H240V336z"/>
+                </svg>
               </div>
             `,
             iconSize: [32, 32],
@@ -509,13 +513,13 @@ export default function FleetDispatch() {
             
             {/* Messages Alerts */}
             {errorMessage && (
-              <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl">
-                ⚠️ {errorMessage}
+              <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl flex items-center gap-1.5">
+                <FontAwesomeIcon icon={faTriangleExclamation} /> <span>{errorMessage}</span>
               </div>
             )}
             {successMessage && (
-              <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-xl">
-                ✅ {successMessage}
+              <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-xl flex items-center gap-1.5">
+                <FontAwesomeIcon icon={faCheckCircle} /> <span>{successMessage}</span>
               </div>
             )}
 
@@ -593,15 +597,15 @@ export default function FleetDispatch() {
                       </button>
                     </div>
                   ) : selectedDriver.status === 'Offline' ? (
-                    <p className="text-xs text-slate-400 bg-slate-100 p-2.5 rounded-lg border border-slate-200/80 leading-relaxed">
-                      ⚠️ Supir sedang offline. Harap minta supir menyalakan status di aplikasi driver agar dapat ditugaskan.
+                    <p className="text-xs text-slate-400 bg-slate-100 p-2.5 rounded-lg border border-slate-200/80 leading-relaxed flex items-center gap-1.5">
+                      <FontAwesomeIcon icon={faTriangleExclamation} /> <span>Supir sedang offline. Harap minta supir menyalakan status di aplikasi driver agar dapat ditugaskan.</span>
                     </p>
                   ) : selectedRoute.status === 'Completed' ? (
-                    <p className="text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200/80 font-medium">
-                      ✓ Rute optimal ini telah selesai dikerjakan secara menyeluruh.
+                    <p className="text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded-lg border border-emerald-200/80 font-medium flex items-center gap-1.5">
+                      <FontAwesomeIcon icon={faCheckCircle} /> <span>Rute optimal ini telah selesai dikerjakan secara menyeluruh.</span>
                     </p>
                   ) : (
-                    <p className="text-xs text-slate-505 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       Kirim manifes rute prioritas ini ke dasbor aplikasi supir yang bertugas.
                     </p>
                   )}
@@ -649,8 +653,8 @@ export default function FleetDispatch() {
                     </div>
                   ) : selectedRoute.status === 'In Progress' ? (
                     <div className="h-28 bg-blue-50/40 border border-dashed border-blue-200 rounded-lg flex flex-col items-center justify-center p-4 text-center">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2 animate-bounce">
-                        🚚
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2">
+                        <FontAwesomeIcon icon={faTruck} className="animate-bounce" />
                       </div>
                       <p className="text-[10px] font-bold text-slate-700">Supir Sedang Bertugas</p>
                       <p className="text-[9px] text-slate-500 mt-0.5 leading-relaxed">
@@ -659,15 +663,15 @@ export default function FleetDispatch() {
                     </div>
                   ) : (
                     <div className="h-28 bg-slate-50 border border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center p-4 text-center">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2">
-                        ⏳
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2 text-sm">
+                        <FontAwesomeIcon icon={faHourglassHalf} className="animate-pulse" />
                       </div>
                       <p className="text-[10px] font-bold text-slate-600">
                         {selectedRoute.driver ? 'Siap Ditugaskan (Alokasi AI)' : 'Rute Belum Dialokasikan'}
                       </p>
                       <p className="text-[9px] text-slate-500 mt-1 leading-relaxed max-w-[220px]">
                         {selectedRoute.driver 
-                          ? `Rute telah dialokasikan otomatis oleh AI kepada supir ${selectedRoute.driver.name}. Klik tombol "Kirim Rute ke Supir" di atas untuk memulai.` 
+                          ? `Rute telah alokasikan otomatis oleh AI kepada supir ${selectedRoute.driver.name}. Klik tombol "Kirim Rute ke Supir" di atas untuk memulai.` 
                           : 'Tidak ada supir yang tersedia untuk wilayah rute ini. Harap siapkan supir terlebih dahulu.'}
                       </p>
                     </div>

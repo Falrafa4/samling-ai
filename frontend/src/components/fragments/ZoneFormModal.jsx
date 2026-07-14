@@ -6,7 +6,8 @@ import {
   faChevronDown,
   faChevronUp,
   faMapPin,
-  faGlobe
+  faGlobe,
+  faTriangleExclamation
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function ZoneFormModal({
@@ -103,7 +104,7 @@ export default function ZoneFormModal({
         <form onSubmit={handleFormSubmit} className="p-5 space-y-2.5">
           {errorMessage && (
             <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-[11px] font-semibold rounded-lg">
-              ⚠️ {errorMessage}
+              <FontAwesomeIcon icon={faTriangleExclamation} className="mr-1.5" /> {errorMessage}
             </div>
           )}
 

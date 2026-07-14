@@ -4,7 +4,8 @@ import {
   faSliders,
   faLocationCrosshairs,
   faSpinner,
-  faXmark
+  faXmark,
+  faTriangleExclamation
 } from '@fortawesome/free-solid-svg-icons';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -305,7 +306,7 @@ export default function PredictiveMap() {
 
             {errorMessage && (
               <div className="p-2.5 mb-3 bg-red-50/80 backdrop-blur-sm border border-red-200/60 text-red-700 text-[10px] font-semibold rounded-xl leading-relaxed">
-                ⚠️ {errorMessage}
+                <FontAwesomeIcon icon={faTriangleExclamation} className="mr-1.5" /> {errorMessage}
               </div>
             )}
 

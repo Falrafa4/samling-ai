@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faSpinner, faTruck, faFolderOpen, faGaugeHigh, faHashtag } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faSpinner, faTruck, faFolderOpen, faGaugeHigh, faHashtag, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 
 const FLEET_TYPES = [
   'Motor Gerobak',
@@ -101,7 +101,7 @@ export default function FleetModal({ isOpen, onClose, fleet = null, onSave }) {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
             <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-xs font-semibold text-red-600">
-              ⚠️ {error}
+              <FontAwesomeIcon icon={faTriangleExclamation} className="mr-1.5" /> {error}
             </div>
           )}
 

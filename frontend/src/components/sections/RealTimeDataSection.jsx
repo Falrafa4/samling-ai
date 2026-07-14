@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashAlt, faTruck, faWind, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import { faTrashAlt, faTruck, faWind, faCalendarAlt, faMapPin } from '@fortawesome/free-solid-svg-icons';
 import { useState, useEffect, useRef } from 'react';
 
 // Smooth counting up animation for numbers as they enter viewport
@@ -207,7 +207,7 @@ export default function RealTimeDataSection() {
             <h4 className="text-gray-500 text-sm font-bold mb-1">Udara Terbaik (ISPU)</h4>
             <div className="text-3xl font-bold text-heading text-green-500"><CountUp target={42} /> <span className="text-lg font-normal text-gray-500">/ Baik</span></div>
             <div className="text-xs text-gray-600 mt-2 font-medium">
-              📍 Jakarta Selatan (Jagakarsa)
+              <FontAwesomeIcon icon={faMapPin} className="text-gray-400 mr-1.5" /> Jakarta Selatan (Jagakarsa)
             </div>
           </div>
 
@@ -222,7 +222,7 @@ export default function RealTimeDataSection() {
             <h4 className="text-gray-500 text-sm font-bold mb-1">Udara Terburuk (ISPU)</h4>
             <div className="text-3xl font-bold text-heading text-red-500"><CountUp target={115} /> <span className="text-lg font-normal text-gray-500">/ Tidak Sehat</span></div>
             <div className="text-xs text-gray-600 mt-2 font-medium">
-              📍 Jakarta Timur (Cipayung)
+              <FontAwesomeIcon icon={faMapPin} className="text-gray-400 mr-1.5" /> Jakarta Timur (Cipayung)
             </div>
           </div>
 
