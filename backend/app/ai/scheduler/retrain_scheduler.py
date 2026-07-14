@@ -1,7 +1,9 @@
 import joblib
 import pandas as pd
+import os
 
 from sqlalchemy.orm import Session
+from app.database.database import SessionLocal
 
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.preprocessing import LabelEncoder
@@ -26,7 +28,9 @@ ENCODER_PATH = os.path.join(
 )
 
 
-def retrain_model(db: Session):
+def retrain_model():
+
+    db = SessionLocal()
 
     print("Loading historical data...")
 
@@ -45,7 +49,6 @@ def retrain_model(db: Session):
 
     encoding_cols = [
         "kecamatan",
-        "tps_id",
         "tps_type"
     ]
 

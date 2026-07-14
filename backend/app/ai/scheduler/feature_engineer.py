@@ -3,7 +3,10 @@ from datetime import datetime, timedelta
 import requests
 from sqlalchemy.orm import Session
 
+from app.database.database import SessionLocal
+
 from app.models.zones import Zone
+from app.models.drivers import Driver
 from app.models.historical_waste_data import HistoricalWasteData
 
 features = [
@@ -226,6 +229,9 @@ TPS_CAPACITY = {
 def get_registered_tps(db: Session):
     return db.query(Zone).all()
 
+def get_drivers(db: Session):
+    return db.query(User).options(joinedload(User.fleet)).filter(User.role == "driver").all()
+
 
 def get_zone_population(kecamatan):
     return ZONE_POPULATION.get(kecamatan.title(), 30000)
@@ -291,17 +297,27 @@ def get_current_fill(previous):
 
     current_fill = previous.current_fill_percentage
 
-    # Simulate daily accumulation
+    # Waste accumulates
     current_fill += previous.daily_growth_rate
 
     # Small randomness
     current_fill += random.uniform(-2, 2)
 
-    # Simulate collection every 2-3 days when nearly full
-    if current_fill >= random.uniform(80, 90):
-        current_fill = random.uniform(15, 30)
-
     return round(max(0, min(current_fill, 100)), 2)
+
+def collect_waste(current_fill_percentage, tps_capacity_kg, truck_capacity_kg):
+
+    current_waste_kg = (current_fill_percentage / 100) * tps_capacity_kg
+
+    collected_kg = min(current_waste_kg, truck_capacity_kg)
+
+    remaining_waste_kg = current_waste_kg - collected_kg
+
+    new_fill_percentage = (
+        remaining_waste_kg / tps_capacity_kg
+    ) * 100
+
+    return round(new_fill_percentage, 2), collected_kg
 
 
 def get_event_score():
@@ -319,16 +335,18 @@ def build_feature_row(db: Session, zone: Zone):
     rainfall = get_rainfall(zone)
     event_score = get_event_score()
 
+    growth_rate = get_growth_rate(rainfall, event_score)
+
     feature = {
         "kecamatan": zone.kecamatan,
         "tps_id": zone.id,
-        "tps_type": zone.tps_type,
+        "tps_type": zone.jenis_tps,
         "zone_population": get_zone_population(zone.kecamatan),
         "tps_capacity_kg": get_tps_capacity(zone.id),
         "day_of_week": temporal["day_of_week"],
         "is_weekend": temporal["is_weekend"],
         "is_holiday": 0,
-        "daily_growth_rate": get_growth_rate(rainfall, event_score),
+        "daily_growth_rate": growth_rate,
         "rainfall_today": rainfall,
         "event_urgency_score": event_score,
         "current_fill_percentage": get_current_fill(previous),
@@ -336,3 +354,24 @@ def build_feature_row(db: Session, zone: Zone):
     }
 
     return feature
+
+
+def collect_daily_data():
+
+    db = SessionLocal()
+
+    try:
+        zones = get_registered_tps(db)
+
+        for zone in zones:
+
+            feature = build_feature_row(db, zone)
+
+            db.add(HistoricalWasteData(**feature))
+
+        db.commit()
+
+        print(f"Inserted {len(zones)} historical records.")
+
+    finally:
+        db.close()

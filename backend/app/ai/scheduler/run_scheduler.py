@@ -1,10 +1,9 @@
 import argparse
 
-from app.ai.scheduler import (
-    forececast_scheduler,
-    feature_engineer,
-    retrain_scheduler,
-)
+from app.ai.scheduler.feature_engineer import collect_daily_data
+from app.ai.scheduler.forecast_scheduler import forecast_all_tps
+from app.ai.scheduler.retrain_scheduler import retrain_model
+from app.ai.scheduler.scheduler import start_scheduler
 
 parser = argparse.ArgumentParser()
 
@@ -23,10 +22,11 @@ parser.add_argument(
 args = parser.parse_args()
 
 if args.run_now:
-    run_daily_pipeline()
+    collect_daily_data()
+    forecast_all_tps()
 
 elif args.retrain_now:
-    run_weekly_retrain()
+    retrain_model()
 
 else:
     start_scheduler()

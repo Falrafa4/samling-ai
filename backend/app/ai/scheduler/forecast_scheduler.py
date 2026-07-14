@@ -6,24 +6,14 @@ from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.database.database import SessionLocal
+
 from app.models.historical_waste_data import HistoricalWasteData
 from app.models.volume_predictions import VolumePrediction
+from app.ai.scheduler.route_scheduler import generate_routes
 
-MODEL_PATH = os.path.join(
-    os.path.dirname(__file__),
-    "..",
-    "ai",
-    "models",
-    "forecast_waste_volume_model.pkl"
-)
-
-ENCODER_PATH = os.path.join(
-    os.path.dirname(__file__),
-    "..",
-    "ai",
-    "models",
-    "label_encoders.pkl"
-)
+MODEL_PATH = "app/ai/models/waste_volume/forecast_waste_volume_model.pkl"
+ENCODER_PATH = "app/ai/models/waste_volume/encoders.pkl"
 
 MODEL_VERSION = "v1.0"
 
@@ -97,7 +87,8 @@ def prepare_features(rows, encoders):
         for r in rows
     ])
 
-    for col in ["kecamatan", "tps_id", "tps_type"]:
+    for col in ["kecamatan", "tps_type"]:
+        print(col, df[col].unique())
         df[col] = encoders[col].transform(df[col])
 
     return df[FEATURE_COLUMNS]
@@ -122,14 +113,29 @@ def get_prediction_status(value):
 
     return "NORMAL"
 
+def assign_priority_rank(rows, predictions):
 
-def save_predictions(db: Session, rows, predictions):
+    ranked = sorted(
+        zip(rows, predictions),
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    result = []
+
+    for rank, (row, prediction) in enumerate(ranked, start=1):
+        result.append((row, prediction, rank))
+
+    return result
+
+
+def save_predictions(db: Session, ranked_predictions):
 
     batch_id = f"batch_{datetime.now():%Y%m%d_%H%M%S}"
 
     prediction_objects = []
 
-    for row, prediction in zip(rows, predictions):
+    for row, prediction, rank in ranked_predictions:
 
         prediction_objects.append(
 
@@ -138,7 +144,7 @@ def save_predictions(db: Session, rows, predictions):
                 kecamatan=row.kecamatan,
                 tps_id=row.tps_id,
                 predicted_volume_percentage=float(prediction),
-                priority_rank=None,
+                priority_rank=rank,
                 prediction_status=get_prediction_status(prediction),
                 model_version=MODEL_VERSION,
             )
@@ -150,7 +156,9 @@ def save_predictions(db: Session, rows, predictions):
     db.commit()
 
 
-def forecast_all_tps(db: Session):
+def forecast_all_tps():
+
+    db = SessionLocal()
 
     print("Loading model...")
 
@@ -173,9 +181,14 @@ def forecast_all_tps(db: Session):
     print("Running inference...")
 
     predictions = predict(model, X)
+    ranked_predictions = assign_priority_rank(rows, predictions)
 
     print("Saving predictions...")
 
-    save_predictions(db, rows, predictions)
+    save_predictions(db, ranked_predictions)
 
     print(f"Finished forecasting {len(rows)} TPS.")
+
+    generate_routes(db)
+
+    print("Finished route recommendation.")

@@ -2,9 +2,9 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 from app.database.database import SessionLocal
 
-from app.scheduler.data_pipeline import collect_daily_data
-from app.scheduler.forecast_scheduler import forecast_all_tps
-from app.scheduler.retrain_scheduler import retrain_model
+from app.ai.scheduler.feature_engineer import collect_daily_data
+from app.ai.scheduler.forecast_scheduler import forecast_all_tps
+from app.ai.scheduler.retrain_scheduler import retrain_model
 
 
 def run_daily_pipeline():
@@ -15,7 +15,7 @@ def run_daily_pipeline():
         collect_daily_data(db)
 
         print("Forecasting waste volume...")
-        forecast_all_tps(db)
+        forecast_scheduler(db)
 
         print("Daily pipeline finished.")
 
@@ -40,11 +40,11 @@ def start_scheduler():
 
     scheduler = BlockingScheduler()
 
-    # Daily 06:00
+    # Daily 07:00
     scheduler.add_job(
         run_daily_pipeline,
         trigger="cron",
-        hour=6,
+        hour=7,
         minute=0,
         id="daily_pipeline",
         replace_existing=True,
