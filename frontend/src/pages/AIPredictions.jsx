@@ -16,6 +16,7 @@ import Header from '../components/Header';
 import StatCard from '../components/fragments/StatCard';
 import AccuracyBar from '../components/fragments/AccuracyBar';
 import { fmtDate, fmtDateTime } from '../utils/helpers';
+import SearchableSelect from '../components/fragments/SearchableSelect';
 
 // Helper: confidence badge styling
 function confidenceBadge(score) {
@@ -29,10 +30,17 @@ export default function AIPredictions() {
   const [trend, setTrend] = useState([]);
   const [history, setHistory] = useState({ items: [], total: 0, page: 1, per_page: 15, total_pages: 1 });
   const [zones, setZones] = useState([]);
-  const [filterZone, setFilterZone] = useState('');
+  const [selectedZoneFilter, setSelectedZoneFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [trendDays, setTrendDays] = useState(30);
   const [histPage, setHistPage] = useState(1);
+  const zoneFilterOptions = [
+    { value: '', label: 'Semua Zona' },
+    ...zones.map((zone) => ({
+      value: zone.id,
+      label: zone.name,
+    })),
+  ];
 
   // Fetch summary
   const fetchSummary = useCallback(async () => {
@@ -53,10 +61,10 @@ export default function AIPredictions() {
   // Fetch history
   const fetchHistory = useCallback(async () => {
     try {
-      const res = await api.getPredictionsHistory(histPage, 10, filterZone || null);
+      const res = await api.getPredictionsHistory(histPage, 10, selectedZoneFilter || null);
       if (res.success) setHistory(res.data);
     } catch { /* silent */ }
-  }, [histPage, filterZone]);
+  }, [histPage, selectedZoneFilter]);
 
   // Fetch zones for filter
   const fetchZones = useCallback(async () => {
@@ -180,16 +188,16 @@ export default function AIPredictions() {
               <h2 className="text-sm font-semibold text-gray-700">Riwayat Prediksi</h2>
               <div className="flex items-center gap-2">
                 <FontAwesomeIcon icon={faFilter} className="text-gray-400 text-xs" />
-                <select
-                  value={filterZone}
-                  onChange={(e) => { setFilterZone(e.target.value); setHistPage(1); }}
-                  className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-primary-400 max-w-45"
-                >
-                  <option value="">Semua Zona</option>
-                  {zones.map((z) => (
-                    <option key={z.id} value={z.id}>{z.name}</option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  options={zoneFilterOptions}
+                  value={selectedZoneFilter}
+                  onChange={(value) => {
+                    setSelectedZoneFilter(value);
+                    setHistPage(1);
+                  }}
+                  placeholder="Cari zona..."
+                  emptyMessage="Zona tidak ditemukan"
+                />
               </div>
             </div>
 

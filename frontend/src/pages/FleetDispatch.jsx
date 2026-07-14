@@ -132,6 +132,8 @@ export default function FleetDispatch() {
   useEffect(() => {
     if (!miniMapRef.current || zones.length === 0) return;
 
+    let active = true;
+
     // Clear old markers
     mapMarkersRef.current.forEach((marker) => miniMapRef.current.removeLayer(marker));
     mapMarkersRef.current = [];
@@ -162,7 +164,7 @@ export default function FleetDispatch() {
           icon: L.divIcon({
             className: 'custom-depot-marker',
             html: `
-              <div class="w-8 h-8 rounded-full bg-blue-600 border border-white text-white flex items-center justify-center font-bold text-sm shadow-md animate-pulse">
+              <div class="w-8 h-8 rounded-full bg-blue-600 border border-white text-white flex items-center justify-center font-bold text-sm shadow-md">
                 🏢
               </div>
             `,
@@ -201,12 +203,51 @@ export default function FleetDispatch() {
 
       // Draw polyline connecting markers
       if (latlngs.length > 1) {
+        // Draw initial straight polyline first (as fallback/placeholder)
         polylineRef.current = L.polyline(latlngs, {
           color: '#10b981', // Emerald 500
           weight: 4,
           dashArray: '5, 10',
-          lineCap: 'round'
+          lineCap: 'round',
+          opacity: 0.5 // semi-transparent while loading road route
         }).addTo(miniMapRef.current);
+
+        // Fetch actual road routing coordinates from OSRM
+        const coordinatesString = latlngs.map(coord => `${coord[1]},${coord[0]}`).join(';');
+        fetch(`https://router.project-osrm.org/route/v1/driving/${coordinatesString}?geometries=geojson&overview=full`)
+          .then(res => res.json())
+          .then(data => {
+            if (!active) return;
+            if (data.code === 'Ok' && data.routes && data.routes[0]) {
+              const geojsonCoordinates = data.routes[0].geometry.coordinates;
+              const roadLatLngs = geojsonCoordinates.map(coord => [coord[1], coord[0]]);
+              
+              // Remove fallback/straight polyline
+              if (polylineRef.current) {
+                miniMapRef.current.removeLayer(polylineRef.current);
+              }
+
+              // Draw new polyline along the roads
+              polylineRef.current = L.polyline(roadLatLngs, {
+                color: '#10b981', // Emerald 500
+                weight: 4,
+                lineCap: 'round',
+                lineJoin: 'round'
+              }).addTo(miniMapRef.current);
+            } else {
+              // If OSRM fails to route, restore full opacity to the straight polyline fallback
+              if (polylineRef.current) {
+                polylineRef.current.setStyle({ opacity: 1.0 });
+              }
+            }
+          })
+          .catch(err => {
+            console.error('Gagal mengambil rute jalan dari OSRM:', err);
+            // Fallback straight line is already drawn, just make it solid
+            if (polylineRef.current) {
+              polylineRef.current.setStyle({ opacity: 1.0 });
+            }
+          });
       }
 
       // Fit map bounds
@@ -217,6 +258,10 @@ export default function FleetDispatch() {
     } catch (e) {
       console.error('Gagal merender rute pada mini map:', e);
     }
+
+    return () => {
+      active = false;
+    };
   }, [selectedRoute, zones]);
 
   // Handle Pipeline Trigger Route Scheduler
@@ -585,25 +630,52 @@ export default function FleetDispatch() {
             {/* Proof Viewer Card */}
             <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm">
               <div className="flex justify-between items-center mb-3">
-                <h4 className="text-xs font-bold text-slate-800">Bukti Pengangkutan Driver</h4>
+                <h4 className="text-xs font-bold text-slate-800">Status Pengangkutan Sampah</h4>
                 <FontAwesomeIcon icon={faImages} className="text-slate-400 text-sm" />
               </div>
-              <p className="text-[10px] text-slate-500 mb-4">
-                Review foto bukti TPS bersih yang dikirim driver melalui aplikasi.
-              </p>
-              
-              {selectedRoute && selectedRoute.status === 'Completed' ? (
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex flex-col items-center justify-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                    <FontAwesomeIcon icon={faCheckCircle} />
-                  </div>
-                  <p className="text-[10px] font-semibold text-slate-700 text-center">
-                    Rute Selesai &amp; Terverifikasi Bersih
-                  </p>
+              {selectedRoute ? (
+                <div className="space-y-3">
+                  {selectedRoute.status === 'Completed' ? (
+                    <div className="space-y-2">
+                      <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-lg flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2 text-emerald-800 text-xs font-bold">
+                          <FontAwesomeIcon icon={faCheckCircle} className="text-emerald-600" />
+                          <span>Terverifikasi Bersih</span>
+                        </div>
+                        <div className="text-[10px] text-slate-500">
+                          Selesai pada: <span className="font-semibold text-slate-700">{new Date(selectedRoute.updated_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : selectedRoute.status === 'In Progress' ? (
+                    <div className="h-28 bg-blue-50/40 border border-dashed border-blue-200 rounded-lg flex flex-col items-center justify-center p-4 text-center">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2 animate-bounce">
+                        🚚
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-700">Supir Sedang Bertugas</p>
+                      <p className="text-[9px] text-slate-500 mt-0.5 leading-relaxed">
+                        Menunggu konfirmasi penyelesaian digital dari aplikasi supir.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="h-28 bg-slate-50 border border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center p-4 text-center">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2">
+                        ⏳
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-600">
+                        {selectedRoute.driver ? 'Siap Ditugaskan (Alokasi AI)' : 'Rute Belum Dialokasikan'}
+                      </p>
+                      <p className="text-[9px] text-slate-500 mt-1 leading-relaxed max-w-[220px]">
+                        {selectedRoute.driver 
+                          ? `Rute telah dialokasikan otomatis oleh AI kepada supir ${selectedRoute.driver.name}. Klik tombol "Kirim Rute ke Supir" di atas untuk memulai.` 
+                          : 'Tidak ada supir yang tersedia untuk wilayah rute ini. Harap siapkan supir terlebih dahulu.'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="h-24 bg-slate-50 border border-dashed border-slate-200 rounded-lg flex items-center justify-center text-slate-400 text-[10px]">
-                  Belum ada bukti foto diunggah untuk rute ini.
+                <div className="h-28 bg-slate-50 border border-dashed border-slate-200 rounded-lg flex items-center justify-center text-slate-400 text-[10px] italic">
+                  Pilih rute untuk melihat bukti pengangkutan.
                 </div>
               )}
             </div>
