@@ -1,7 +1,9 @@
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 from app.database.database import SessionLocal
+from app.core.config import settings
 
 from app.ai.scheduler.feature_engineer import collect_daily_data
 from app.ai.scheduler.forecast_scheduler import forecast_all_tps
@@ -47,41 +49,34 @@ def start_scheduler(blocking: bool = True):
     else:
         scheduler = BackgroundScheduler()
 
-    # Daily 07:00
+    # Daily Pipeline
     scheduler.add_job(
         run_daily_pipeline,
-        trigger="cron",
-        hour=7,
-        minute=0,
+        trigger=CronTrigger.from_crontab(settings.SCHEDULER_DAILY_PIPELINE_CRON),
         id="daily_pipeline",
         replace_existing=True,
     )
 
-    # Daily 07.30
+    # Route Recommendation
     scheduler.add_job(
         run_route_recommendation,
-        trigger="cron",
-        hour=7,
-        minute=30,
+        trigger=CronTrigger.from_crontab(settings.SCHEDULER_ROUTE_RECOMMENDATION_CRON),
         id="route_recommendation",
         replace_existing=True,
     )
 
-    # Monday 00:00
+    # Weekly Retrain
     scheduler.add_job(
         run_weekly_retrain,
-        trigger="cron",
-        day_of_week="mon",
-        hour=0,
-        minute=0,
+        trigger=CronTrigger.from_crontab(settings.SCHEDULER_WEEKLY_RETRAIN_CRON),
         id="weekly_retrain",
         replace_existing=True,
     )
 
     print(f"Scheduler started ({'blocking' if blocking else 'background'}). Jobs:")
-    print("daily_pipeline        — every day 07:00")
-    print("route_recommendation  — every day 07:30")
-    print("weekly_retrain        — every Monday 00:00")
+    print(f"daily_pipeline        — {settings.SCHEDULER_DAILY_PIPELINE_CRON}")
+    print(f"route_recommendation  — {settings.SCHEDULER_ROUTE_RECOMMENDATION_CRON}")
+    print(f"weekly_retrain        — {settings.SCHEDULER_WEEKLY_RETRAIN_CRON}")
 
     scheduler.start()
     return scheduler

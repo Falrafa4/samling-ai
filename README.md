@@ -107,6 +107,20 @@ cd samling-ai
    * Server backend Anda akan berjalan di `http://127.0.0.1:8000`.
    * Akses dokumentasi interaktif Swagger API di `http://127.0.0.1:8000/docs`.
 
+#### ⚙️ Penjadwalan Otomatis AI (Background Scheduler)
+Saat server backend FastAPI dijalankan (via Uvicorn), scheduler otomatis berjalan di background untuk memproses tugas-tugas AI secara terjadwal. Tugas-tugas ini dikonfigurasi melalui variabel environment di berkas `.env` backend:
+
+* **`SCHEDULER_DAILY_PIPELINE_CRON`** (Default: `"0 7 * * *"` — Setiap hari pukul 07:00 pagi):
+  Mengumpulkan data sensor kapasitas terupdate (`collect_daily_data`) dan menjalankan peramalan volume sampah (`forecast_all_tps`) untuk 7 hari ke depan pada semua TPS.
+* **`SCHEDULER_ROUTE_RECOMMENDATION_CRON`** (Default: `"30 7 * * *"` — Setiap hari pukul 07:30 pagi):
+  Menghitung rute navigasi armada pengangkutan optimal bagi supir (`generate_routes`) menggunakan Google OR-Tools untuk memecahkan Vehicle Routing Problem (VRP) berdasarkan TPS yang berstatus Kritis (`CRITICAL`) atau Peringatan (`WARNING`).
+* **`SCHEDULER_WEEKLY_RETRAIN_CRON`** (Default: `"0 0 * * 1"` — Setiap hari Senin pukul 00:00 dini hari):
+  Melatih ulang (*retraining*) model machine learning Gradient Boosting Regressor (`retrain_model`) dengan data historis baru agar kualitas peramalan tetap akurat seiring waktu.
+
+> [!TIP]
+> Anda dapat mengubah frekuensi penjadwalan ini di berkas `.env` (misalnya, diubah ke `"*/5 * * * *"` untuk pengujian setiap 5 menit sekali) lalu restart server backend.
+
+
 ### 3. Setup Frontend (React + Vite)
 1. Buka terminal baru dan masuk ke direktori frontend:
    ```bash
