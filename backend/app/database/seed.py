@@ -1,6 +1,7 @@
 import sys
 import os
 from datetime import datetime, timedelta, timezone
+from app.utils.timezone import get_jakarta_now
 import json
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -211,7 +212,7 @@ def seed_data():
         print(f"Tabel users ({len(drivers_data)} driver ber-armada, 5 driver per wilayah DKI Jakarta) berhasil di-seed.")
 
         # 5. Seed SensorData
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        now = get_jakarta_now()
         sensor_data_records = []
         import random
         random.seed(42)

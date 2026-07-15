@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func as sql_func
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
+from app.utils.timezone import get_jakarta_now
 import os
 import pandas as pd
 import joblib
@@ -80,7 +81,7 @@ def create_volume_prediction(prediction_in: VolumePredictionCreate, db: Session 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Inference failed: {str(e)}")
     
-    forecast_batch_id = f"batch_{datetime.now():%Y%m%d_%H%M%S}"
+    forecast_batch_id = f"batch_{get_jakarta_now():%Y%m%d_%H%M%S}"
 
     prediction_status = ""
 
@@ -182,7 +183,7 @@ def get_predictions_summary(db: Session = Depends(get_db)):
         }
 
     # Total prediksi baru 24 jam terakhir
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = get_jakarta_now()
     day_ago = now - timedelta(days=1)
     upcoming_predictions = (
         db.query(sql_func.count(VolumePrediction.id))
@@ -228,7 +229,7 @@ def get_multi_zone_projections(
     zones = db.query(Zone).filter(Zone.id.in_(id_list)).all()
     zone_map = {z.id: z.name for z in zones}
 
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = get_jakarta_now()
     end_date = now + timedelta(days=days)
 
     predictions = (
@@ -326,7 +327,7 @@ def get_accuracy_trend(
     Tren rata-rata confidence score per hari (Endpoint Publik).
     Mengembalikan data point per hari selama N hari terakhir.
     """
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = get_jakarta_now()
     start_date = now - timedelta(days=days)
 
     predictions = (

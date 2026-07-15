@@ -1,6 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, Float, DateTime, String
-from sqlalchemy.sql import func
 from app.database.database import Base
+from app.utils.timezone import get_jakarta_now
 
 class VolumePrediction(Base):
     __tablename__ = "volume_predictions"
@@ -13,7 +13,7 @@ class VolumePrediction(Base):
     priority_rank = Column(Integer)
     prediction_status = Column(String)
     model_version = Column(String)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=get_jakarta_now)
 
     # Properti virtual untuk kompatibilitas mundur dengan React frontend
     @property

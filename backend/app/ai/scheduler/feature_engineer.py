@@ -1,5 +1,6 @@
 import random
 from datetime import datetime, timedelta
+from app.utils.timezone import get_jakarta_now
 import requests
 from sqlalchemy.orm import Session, joinedload
 
@@ -243,7 +244,7 @@ def get_tps_capacity(tps_id):
 
 
 def get_temporal():
-    now = datetime.now()
+    now = get_jakarta_now()
 
     return {
         "timestamp_prediction": now,

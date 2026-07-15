@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
-from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database.database import Base
+from app.utils.timezone import get_jakarta_now
 
 class SensorData(Base):
     __tablename__ = "sensor_data"
@@ -11,7 +11,7 @@ class SensorData(Base):
     sensor_type = Column(String, index=True)
     fill_percentage = Column(Float)
     value = Column(Float)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime, default=get_jakarta_now)
+    updated_at = Column(DateTime, default=get_jakarta_now, onupdate=get_jakarta_now)
 
     zone = relationship("Zone")

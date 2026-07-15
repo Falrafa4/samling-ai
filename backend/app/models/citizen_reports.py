@@ -1,7 +1,7 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Boolean, Enum
-from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database.database import Base
+from app.utils.timezone import get_jakarta_now
 
 class CitizenReport(Base):
     __tablename__ = "citizen_reports"
@@ -14,6 +14,6 @@ class CitizenReport(Base):
     is_grouped = Column(Boolean, default=False)
     image_path = Column(String, nullable=True)
     type = Column(Enum("waste", "event", name="report_type_enum"), default="waste", nullable=False, index=True)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=get_jakarta_now)
 
     zone = relationship("Zone")

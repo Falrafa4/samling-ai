@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from typing import List, Optional
 from datetime import datetime, timedelta, timezone
+from app.utils.timezone import get_jakarta_now
 
 from app.database.database import get_db
 from app.models.sensor_data import SensorData
@@ -34,7 +35,7 @@ async def create_sensor_data(sensor_data_in: SensorDataCreate, db: Session = Dep
         )
 
     # 2. Selalu simpan sebagai baris baru untuk membangun data deret waktu (time-series log)
-    now = datetime.now()
+    now = get_jakarta_now()
     sensor_record = SensorData(
         zone_id=sensor_data_in.zone_id,
         sensor_type=sensor_data_in.sensor_type,
@@ -141,7 +142,7 @@ def get_sensor_data_history(zone_id: int, days: int = 7, db: Session = Depends(g
         )
 
     # 2. Filter rentang waktu ke belakang (UTC naive datetime untuk SQLite)
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = get_jakarta_now()
     start_date = now - timedelta(days=days)
 
     history = (
@@ -222,7 +223,7 @@ def create_sensor_data_manually(
             detail=f"Sensor tipe '{sensor_in.sensor_type}' sudah terpasang di wilayah {zone.name}."
         )
 
-    now = datetime.now()
+    now = get_jakarta_now()
     new_record = SensorData(
         zone_id=sensor_in.zone_id,
         sensor_type=sensor_in.sensor_type,
@@ -300,7 +301,7 @@ def update_sensor_data_manually(
     if sensor_in.value is not None:
         record.value = sensor_in.value
     
-    record.updated_at = datetime.now()
+    record.updated_at = get_jakarta_now()
     db.commit()
 
     zone = db.query(Zone).filter(Zone.id == target_zone_id).first()

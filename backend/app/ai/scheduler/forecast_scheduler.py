@@ -3,6 +3,7 @@ import joblib
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from app.utils.timezone import get_jakarta_now
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -130,7 +131,7 @@ def assign_priority_rank(rows, predictions):
 
 def save_predictions(db: Session, ranked_predictions):
 
-    batch_id = f"batch_{datetime.now():%Y%m%d_%H%M%S}"
+    batch_id = f"batch_{get_jakarta_now():%Y%m%d_%H%M%S}"
 
     prediction_objects = []
 

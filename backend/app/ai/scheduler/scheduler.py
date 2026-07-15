@@ -45,9 +45,9 @@ def run_weekly_retrain():
 
 def start_scheduler(blocking: bool = True):
     if blocking:
-        scheduler = BlockingScheduler()
+        scheduler = BlockingScheduler(timezone="Asia/Jakarta")
     else:
-        scheduler = BackgroundScheduler()
+        scheduler = BackgroundScheduler(timezone="Asia/Jakarta")
 
     # Daily Pipeline
     scheduler.add_job(

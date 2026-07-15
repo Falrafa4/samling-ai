@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, Enum
-from sqlalchemy.sql import func
 from app.database.database import Base
+from app.utils.timezone import get_jakarta_now
 
 class Zone(Base):
     __tablename__ = "zones"
@@ -15,4 +15,4 @@ class Zone(Base):
     latitude = Column(Float)
     longitude = Column(Float)
     risk_status = Column(Enum("Normal", "Warning", "High Priority", name="risk_status_enum"), default="Normal", index=True)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=get_jakarta_now)

@@ -14,7 +14,7 @@ export default function MasterTabs({ activeTab, onTabChange, driverCount, fleetC
   };
 
   return (
-    <div className="sticky top-5 z-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+    <div className="sticky top-5 z-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
       <div className="flex bg-slate-100 p-1 rounded-[0.6rem] w-fit">
         <button
           onClick={() => onTabChange('driver')}

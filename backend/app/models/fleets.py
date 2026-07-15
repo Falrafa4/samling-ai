@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database.database import Base
+from app.utils.timezone import get_jakarta_now
 
 class Fleet(Base):
     __tablename__ = "fleets"
@@ -12,6 +12,6 @@ class Fleet(Base):
     type = Column(String, index=True, nullable=False)      # 'Dump Truck', 'Arm Roll', 'Compactor', etc.
     capacity = Column(String, nullable=True)               # Kapasitas/Volume angkut
     total_units = Column(Integer, default=0, nullable=False)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=get_jakarta_now)
 
     drivers = relationship("User", back_populates="fleet")

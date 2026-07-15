@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Form, File, Uploa
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
+from app.utils.timezone import get_jakarta_now
 from difflib import SequenceMatcher
 import os
 import uuid
@@ -46,7 +47,7 @@ def create_citizen_report(
         )
 
     # 2. Ambil laporan di zona yang sama dalam 12 jam terakhir dengan tipe yang sama
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = get_jakarta_now()
     twelve_hours_ago = now - timedelta(hours=12)
     
     previous_reports = (
@@ -277,7 +278,7 @@ def whatsapp_webhook(webhook_in: WhatsAppWebhookInput, db: Session = Depends(get
         )
 
     # 2. Ambil laporan di zona yang sama dalam 12 jam terakhir dengan tipe yang sama
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = get_jakarta_now()
     twelve_hours_ago = now - timedelta(hours=12)
     
     previous_reports = (

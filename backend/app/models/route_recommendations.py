@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
-from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database.database import Base
+from app.utils.timezone import get_jakarta_now
 
 class RouteRecommendation(Base):
     __tablename__ = "route_recommendations"
@@ -13,7 +13,7 @@ class RouteRecommendation(Base):
     total_stops         = Column(Integer, nullable=True)              # # of TPS stops (excl. depot)
     route_json          = Column(Text)                                # JSON list of stop dicts
     status              = Column(String, default="Pending", nullable=False)
-    created_at          = Column(DateTime, default=func.now())
-    updated_at          = Column(DateTime, default=func.now(), onupdate=func.now())
+    created_at          = Column(DateTime, default=get_jakarta_now)
+    updated_at          = Column(DateTime, default=get_jakarta_now, onupdate=get_jakarta_now)
 
     driver = relationship("User")
