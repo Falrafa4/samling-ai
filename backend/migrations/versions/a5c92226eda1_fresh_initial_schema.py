@@ -88,6 +88,7 @@ def upgrade() -> None:
     sa.Column('status', sa.String(), nullable=True),
     sa.Column('is_grouped', sa.Boolean(), nullable=True),
     sa.Column('image_path', sa.String(), nullable=True),
+    sa.Column('type', sa.Enum('waste', 'event', name='report_type_enum'), nullable=False, server_default='waste'),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['zone_id'], ['zones.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -95,6 +96,7 @@ def upgrade() -> None:
     with op.batch_alter_table('citizen_reports', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_citizen_reports_id'), ['id'], unique=False)
         batch_op.create_index(batch_op.f('ix_citizen_reports_status'), ['status'], unique=False)
+        batch_op.create_index(batch_op.f('ix_citizen_reports_type'), ['type'], unique=False)
         batch_op.create_index(batch_op.f('ix_citizen_reports_whatsapp_number'), ['whatsapp_number'], unique=False)
 
     op.create_table('sensor_data',
@@ -194,6 +196,7 @@ def downgrade() -> None:
     with op.batch_alter_table('citizen_reports', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_citizen_reports_whatsapp_number'))
         batch_op.drop_index(batch_op.f('ix_citizen_reports_status'))
+        batch_op.drop_index(batch_op.f('ix_citizen_reports_type'))
         batch_op.drop_index(batch_op.f('ix_citizen_reports_id'))
 
     op.drop_table('citizen_reports')
