@@ -15,6 +15,7 @@ from app.models.zones import Zone
 from app.models.users import User
 from app.models.fleets import Fleet
 from app.models.route_recommendations import RouteRecommendation
+from app.models.historical_waste_data import HistoricalWasteData
 
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
@@ -22,6 +23,11 @@ DEPOTS_PATH = os.path.join(
     os.path.dirname(__file__),
     "../../core/depots.json"
 )
+FINISH_POINT = {
+    "name": "TPST Bantar Gebang",
+    "latitude": -6.348984,
+    "longitude": 106.993631,
+}
 
 AREA_MAPPING = {
     "Cakung": "Jakarta Timur",
@@ -93,6 +99,28 @@ def fetch_latest_forecast(db: Session) -> tuple[list[dict], str] | None:
         print("No forecast batch found.")
         return None
 
+    # Get the latest historical data entry for each TPS to find its capacity
+    latest_historical_subquery = (
+        db.query(
+            HistoricalWasteData.tps_id,
+            func.max(HistoricalWasteData.timestamp_prediction).label("latest_ts")
+        )
+        .group_by(HistoricalWasteData.tps_id)
+        .subquery()
+    )
+
+    tps_capacity_map = {
+        r.tps_id: r.tps_capacity_kg
+        for r in db.query(
+            HistoricalWasteData.tps_id,
+            HistoricalWasteData.tps_capacity_kg
+        ).join(
+            latest_historical_subquery,
+            (HistoricalWasteData.tps_id == latest_historical_subquery.c.tps_id) &
+            (HistoricalWasteData.timestamp_prediction == latest_historical_subquery.c.latest_ts)
+        ).all()
+    }
+
     predictions = (
         db.query(VolumePrediction)
         .filter(
@@ -117,7 +145,13 @@ def fetch_latest_forecast(db: Session) -> tuple[list[dict], str] | None:
         if zone is None:
             print(f"Zone not found for tps_id={p.tps_id}, skipping.")
             continue
+        
+        tps_capacity_kg = tps_capacity_map.get(p.tps_id)
+        if tps_capacity_kg is None:
+            print(f"Capacity not found for tps_id={p.tps_id}, skipping.")
+            continue
 
+        waste_volume_kg = (p.predicted_volume_percentage / 100) * tps_capacity_kg
         kecamatan = p.kecamatan
         coverage_area = AREA_MAPPING.get(kecamatan)
 
@@ -126,6 +160,8 @@ def fetch_latest_forecast(db: Session) -> tuple[list[dict], str] | None:
             "tps_id": p.tps_id,
             "kecamatan": kecamatan,
             "predicted_volume_percentage": p.predicted_volume_percentage,
+            "tps_capacity_kg": tps_capacity_kg,
+            "waste_volume_kg": waste_volume_kg,
             "priority_rank": p.priority_rank,
             "prediction_status": p.prediction_status,
             "latitude": zone.latitude,
@@ -235,55 +271,119 @@ def solve_vrp(distance_matrix: list[list[float]]) -> list[int] | None:
 
     return order
 
-def build_area_route(
+def assign_routes_for_area(
     area: str,
     tps_rows: list[dict],
-    driver: dict,
+    drivers: list[dict],
     depots: dict,
-) -> list[dict]:
+) -> list[tuple[int, list[dict]]]:
     """
-    Build the ordered stop list for one coverage area using VRP.
-    Returns a list of stop dicts (Depot | TPS) matching the notebook format.
+    Builds and assigns routes for an area based on driver capacity.
+    Returns a list of tuples: (driver_id, route_stops).
     """
     depot = depots.get(area)
     if not depot:
         print(f"No depot config for area '{area}', skipping.")
         return []
+    
+    if not drivers:
+        print(f"No available drivers for area '{area}', skipping.")
+        return []
 
-    # Point list: [depot] + [tps...]
-    points = [(depot["latitude"], depot["longitude"])]
-    points += [(row["latitude"], row["longitude"]) for row in tps_rows]
+    # Sort TPS by priority
+    tps_rows.sort(key=lambda x: x["priority_rank"])
 
-    # Build distance matrix
-    distance_matrix = build_distance_matrix(points)
+    routes = []
+    driver_idx = 0
 
-    # Solve VRP
-    order = solve_vrp(distance_matrix)
-    if order is None:
-        print(f"VRP returned no solution for area '{area}', using sequential order.")
-        order = list(range(len(points))) + [0]
+    while tps_rows and driver_idx < len(drivers):
+        current_driver = drivers[driver_idx]
+        driver_capacity_kg = current_driver.get("truck_capacity_kg") or 0
+        current_load_kg = 0
+        
+        stops_for_this_route = []
+        
+        # Greedily assign TPS to the current driver
+        remaining_tps = []
+        for tps in tps_rows:
+            if current_load_kg + tps["waste_volume_kg"] <= driver_capacity_kg:
+                stops_for_this_route.append(tps)
+                current_load_kg += tps["waste_volume_kg"]
+            else:
+                remaining_tps.append(tps)
+        
+        if not stops_for_this_route:
+            # Current driver can't even handle the first TPS, move to next driver
+            driver_idx += 1
+            continue
 
-    # Build route stop list
-    route_result = []
-    for idx in order:
-        if idx == 0:
-            route_result.append({
-                "type": "Depot",
-                "name": area,
-            })
+        # VRP for the assigned stops
+        points = [(depot["latitude"], depot["longitude"])]
+        points += [(row["latitude"], row["longitude"]) for row in stops_for_this_route]
+        points.append((FINISH_POINT["latitude"], FINISH_POINT["longitude"]))
+        
+        distance_matrix = build_distance_matrix(points)
+        
+        # We need a custom VRP solver that handles a fixed finish point
+        # For now, let's adapt the existing one. The finish point is the last index.
+        num_locations = len(points)
+        depot_index = 0
+        finish_index = num_locations - 1
+
+        manager = pywrapcp.RoutingIndexManager(num_locations, 1, [depot_index], [finish_index])
+        routing = pywrapcp.RoutingModel(manager)
+
+        def distance_callback(from_idx, to_idx):
+            return int(distance_matrix[manager.IndexToNode(from_idx)][manager.IndexToNode(to_idx)])
+
+        transit_cb = routing.RegisterTransitCallback(distance_callback)
+        routing.SetArcCostEvaluatorOfAllVehicles(transit_cb)
+
+        params = pywrapcp.DefaultRoutingSearchParameters()
+        params.first_solution_strategy = (
+            routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
+        )
+        
+        solution = routing.SolveWithParameters(params)
+
+        if solution:
+            # Build ordered list of stops from VRP solution
+            ordered_stops = []
+            index = routing.Start(0)
+            while not routing.IsEnd(index):
+                node_index = manager.IndexToNode(index)
+                if node_index != depot_index and node_index != finish_index:
+                     ordered_stops.append(stops_for_this_route[node_index - 1])
+                index = solution.Value(routing.NextVar(index))
         else:
-            row = tps_rows[idx - 1]
-            route_result.append({
-                "type": "TPS",
-                "tps_id": row["tps_id"],
-                "kecamatan": row["kecamatan"],
-                "priority_rank": row["priority_rank"],
-                "prediction": round(row["predicted_volume_percentage"], 4),
-                "latitude": row["latitude"],
-                "longitude": row["longitude"],
-            })
+            print(f"VRP failed for driver {current_driver['id']}, using sequential order.")
+            ordered_stops = stops_for_this_route # Fallback to priority order
 
-    return route_result
+        # Final route structure
+        final_route = [{"type": "Depot", "name": area}]
+        for stop in ordered_stops:
+            final_route.append({
+                "type": "TPS",
+                "tps_id": stop["tps_id"],
+                "kecamatan": stop["kecamatan"],
+                "priority_rank": stop["priority_rank"],
+                "prediction": round(stop["predicted_volume_percentage"], 4),
+                "tps_capacity_kg": stop.get("tps_capacity_kg"),
+                "waste_volume_kg": round(stop.get("waste_volume_kg", 0.0), 2),
+                "latitude": stop["latitude"],
+                "longitude": stop["longitude"],
+            })
+        final_route.append({"type": "Finish", "name": FINISH_POINT["name"]})
+        
+        routes.append((current_driver["id"], final_route))
+
+        tps_rows = remaining_tps
+        driver_idx += 1
+
+    if tps_rows:
+        print(f"[Warning] Ran out of drivers for area '{area}'. {len(tps_rows)} TPS remain unassigned.")
+        
+    return routes
 
 
 def save_route_recommendation(
@@ -314,7 +414,6 @@ def generate_routes(db: Session | None = None) -> None:
 
     try:
         print("[RouteScheduler] Fetching latest forecast...")
-
         result = fetch_latest_forecast(db)
         if not result:
             print("[RouteScheduler] No forecast data. Aborting.")
@@ -323,54 +422,70 @@ def generate_routes(db: Session | None = None) -> None:
         forecast_rows, forecast_batch_id = result
         print(f"[RouteScheduler] Batch: {forecast_batch_id} | Rows: {len(forecast_rows)}")
 
+        # --- Prevent Duplicates ---
+        existing_routes = db.query(RouteRecommendation).filter_by(forecast_batch_id=forecast_batch_id).all()
+        if existing_routes:
+            print(f"[RouteScheduler] Deleting {len(existing_routes)} existing routes for batch {forecast_batch_id}.")
+            for route in existing_routes:
+                db.delete(route)
+            db.commit()
+
         print("[RouteScheduler] Fetching drivers...")
         driver_list = fetch_drivers(db)
 
         print("[RouteScheduler] Loading depot config...")
         depots = load_depots()
 
-        # Group TPS rows by coverage_area
+        # Group TPS and drivers by coverage_area
         area_tps: dict[str, list[dict]] = {}
         for row in forecast_rows:
-            area = row["coverage_area"]
-            if area is None:
-                print(f"[RouteScheduler] kecamatan '{row['kecamatan']}' has no area mapping, skipping.")
-                continue
-            area_tps.setdefault(area, []).append(row)
+            area = row.get("coverage_area")
+            if area:
+                area_tps.setdefault(area, []).append(row)
 
-        # Build driver lookup by coverage_area (first available driver per area)
-        driver_by_area: dict[str, dict] = {}
+        drivers_by_area: dict[str, list[dict]] = {}
         for d in driver_list:
-            area = d["coverage_area"]
-            if area and area not in driver_by_area:
-                driver_by_area[area] = d
+            area = d.get("coverage_area")
+            if area:
+                drivers_by_area.setdefault(area, []).append(d)
 
         # Process each area
-        saved = 0
-        for area, tps_rows in area_tps.items():
-            driver = driver_by_area.get(area)
-            if not driver:
-                print(f"[RouteScheduler] No driver for area '{area}', skipping.")
+        saved_count = 0
+        for area, tps_in_area in area_tps.items():
+            drivers_in_area = drivers_by_area.get(area, [])
+            if not drivers_in_area:
+                print(f"[RouteScheduler] No drivers for area '{area}', skipping.")
                 continue
+            
+            # Sort drivers by capacity, largest first, to be more efficient
+            drivers_in_area.sort(key=lambda x: x.get("truck_capacity_kg") or 0, reverse=True)
 
-            print(f"[RouteScheduler] Solving VRP for '{area}' ({len(tps_rows)} TPS stops)...")
-
-            route_stops = build_area_route(area, tps_rows, driver, depots)
-            if not route_stops:
-                continue
-
-            save_route_recommendation(
-                db=db,
-                forecast_batch_id=forecast_batch_id,
-                coverage_area=area,
-                driver_id=driver["id"],
-                route_stops=route_stops,
+            print(f"[RouteScheduler] Assigning routes for '{area}' ({len(tps_in_area)} TPS, {len(drivers_in_area)} drivers)...")
+            
+            generated_routes = assign_routes_for_area(
+                area=area,
+                tps_rows=tps_in_area,
+                drivers=drivers_in_area,
+                depots=depots,
             )
 
-            saved += 1
-            print(f"[RouteScheduler] Saved route for '{area}' (driver: {driver['name']}).")
+            if not generated_routes:
+                print(f"[RouteScheduler] No routes could be generated for area '{area}'.")
+                continue
 
-        print(f"[RouteScheduler] Done. Saved {saved} route recommendations.")
+            for driver_id, route_stops in generated_routes:
+                rec = save_route_recommendation(
+                    db=db,
+                    forecast_batch_id=forecast_batch_id,
+                    coverage_area=area,
+                    driver_id=driver_id,
+                    route_stops=route_stops,
+                )
+                saved_count += 1
+                driver_name = next((d['name'] for d in drivers_in_area if d['id'] == driver_id), 'Unknown')
+                print(f"[RouteScheduler] Saved route for '{area}' (ID: {rec.id}, Driver: {driver_name}).")
+
+        print(f"[RouteScheduler] Done. Saved {saved_count} route recommendations.")
 
     finally:
         if own_db:

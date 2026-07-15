@@ -10,7 +10,6 @@ from app.database.database import SessionLocal
 
 from app.models.historical_waste_data import HistoricalWasteData
 from app.models.volume_predictions import VolumePrediction
-from app.ai.scheduler.route_scheduler import generate_routes
 
 MODEL_PATH = "app/ai/models/waste_volume/forecast_waste_volume_model.pkl"
 ENCODER_PATH = "app/ai/models/waste_volume/encoders.pkl"
@@ -105,10 +104,10 @@ def predict(model, X):
 
 def get_prediction_status(value):
 
-    if value >= 90:
+    if value >= 85:
         return "CRITICAL"
 
-    elif value >= 70:
+    elif value >= 60:
         return "WARNING"
 
     return "NORMAL"
@@ -189,6 +188,6 @@ def forecast_all_tps():
 
     print(f"Finished forecasting {len(rows)} TPS.")
 
-    generate_routes(db)
-
-    print("Finished route recommendation.")
+    # Route recommendation is handled by the scheduler runner.
+    db.close()
+    print("Finished forecasting and closed DB.")
