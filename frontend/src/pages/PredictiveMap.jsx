@@ -9,6 +9,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import 'leaflet.markercluster';
 import { api } from '../services/api';
 
 // Fix Leaflet's default icon assets issue in bundlers (Vite)
@@ -24,7 +27,12 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function PredictiveMap() {
-  const [showNormalZones, setShowNormalZones] = useState(true);
+  const [selectedStatuses, setSelectedStatuses] = useState({
+    Normal: true,
+    Warning: true,
+    'High Priority': true,
+    Offline: true
+  });
   const [filterOpen, setFilterOpen] = useState(false);
 
   // API States
@@ -43,6 +51,7 @@ export default function PredictiveMap() {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const clusterGroupRef = useRef(null);
 
   // Fetch initial zones, sensors, and drivers
   useEffect(() => {
@@ -115,16 +124,18 @@ export default function PredictiveMap() {
   useEffect(() => {
     if (!mapRef.current || zones.length === 0) return;
 
-    // Bersihkan marker sebelumnya
-    markersRef.current.forEach((marker) => mapRef.current.removeLayer(marker));
+    // Bersihkan cluster group sebelumnya
+    if (clusterGroupRef.current) {
+      mapRef.current.removeLayer(clusterGroupRef.current);
+      clusterGroupRef.current = null;
+    }
     markersRef.current = [];
 
-    // Filter berdasarkan Tampilan Area Normal
+    // Filter berdasarkan Tampilan Area Normal dan Status Lainnya
     const filteredZones = zones.filter((z) => {
-      if (z.risk_status === 'Normal' && !showNormalZones) {
-        return false;
-      }
-      return true;
+      const sensor = sensorData.find((s) => s.zone_id === z.id && s.sensor_type?.startsWith('Ultrasonic'));
+      const status = sensor ? z.risk_status : 'Offline';
+      return selectedStatuses[status] === true;
     });
 
     // Buat ikon kustom Leaflet menggunakan Tailwind CSS
@@ -158,6 +169,11 @@ export default function PredictiveMap() {
       });
     };
 
+    const clusterGroup = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      maxClusterRadius: 50
+    });
+
     // Tambahkan marker untuk setiap zone
     filteredZones.forEach((zone) => {
       const sensor = sensorData.find((s) => s.zone_id === zone.id && s.sensor_type?.startsWith('Ultrasonic'));
@@ -166,7 +182,7 @@ export default function PredictiveMap() {
 
       const marker = L.marker([zone.latitude, zone.longitude], {
         icon: createMarkerIcon(status)
-      }).addTo(mapRef.current);
+      });
 
       // Custom popup HTML
       const popupContent = `
@@ -222,15 +238,19 @@ export default function PredictiveMap() {
         }
       });
 
+      clusterGroup.addLayer(marker);
       markersRef.current.push(marker);
     });
+
+    mapRef.current.addLayer(clusterGroup);
+    clusterGroupRef.current = clusterGroup;
 
     // Auto-fit bounds if we have markers
     if (markersRef.current.length > 0) {
       const group = L.featureGroup(markersRef.current);
       mapRef.current.fitBounds(group.getBounds().pad(0.15));
     }
-  }, [zones, sensorData, drivers, showNormalZones]);
+  }, [zones, sensorData, drivers, selectedStatuses]);
 
   // Recenter map focus to primary bounds
   const handleRecenter = () => {
@@ -311,25 +331,39 @@ export default function PredictiveMap() {
             )}
 
             <div className="space-y-3 mb-4">
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lapisan Peta</h4>
-              <label className="flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer select-none group/label">
-                <div className="relative w-4 h-4">
-                  <input
-                    type="checkbox"
-                    checked={showNormalZones}
-                    onChange={(e) => setShowNormalZones(e.target.checked)}
-                    className="peer appearance-none w-4 h-4 border-2 border-slate-300 rounded-md checked:border-emerald-500 checked:bg-emerald-500 transition-all duration-150 cursor-pointer"
-                  />
-                  <svg
-                    className="absolute inset-0 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-150 pointer-events-none"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                  >
-                    <path d="M4 8.5L6.5 11L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <span className="group-hover/label:text-slate-900 transition-colors">Tampilkan Area Normal</span>
-              </label>
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filter Status TPS</h4>
+              
+              {[
+                { key: 'Normal', label: 'Normal', color: 'bg-emerald-500', ping: 'bg-emerald-400' },
+                { key: 'Warning', label: 'Warning / Waspada', color: 'bg-amber-500', ping: 'bg-amber-400' },
+                { key: 'High Priority', label: 'High Priority / Awas', color: 'bg-red-500', ping: 'bg-red-400' },
+                { key: 'Offline', label: 'Offline / Tanpa Sensor', color: 'bg-slate-400', ping: 'bg-slate-300' }
+              ].map(({ key, label, color, ping }) => (
+                <label key={key} className="flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer select-none group/label">
+                  <div className="relative w-4 h-4 shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedStatuses[key]}
+                      onChange={(e) => setSelectedStatuses(prev => ({ ...prev, [key]: e.target.checked }))}
+                      className="peer appearance-none w-4 h-4 border-2 border-slate-300 rounded-md checked:border-emerald-500 checked:bg-emerald-500 transition-all duration-150 cursor-pointer"
+                    />
+                    <svg
+                      className="absolute inset-0 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-150 pointer-events-none"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                    >
+                      <path d="M4 8.5L6.5 11L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <div className="flex items-center gap-2 group-hover/label:text-slate-900 transition-colors">
+                    <span className="relative flex h-3 w-3 items-center justify-center shrink-0">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${ping} opacity-75`} />
+                      <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${color} ring-1 ring-white/10`} />
+                    </span>
+                    <span>{label}</span>
+                  </div>
+                </label>
+              ))}
             </div>
 
             <div className="space-y-3 pt-3 border-t border-slate-100/60">
