@@ -4,10 +4,10 @@
     "wilayah": "Kota Adm. Jakarta Timur",
     "kecamatan": "Cakung",
     "kelurahan": "Penggilingan",
-    "jenis_tps": "Tps 3R",
+    "jenis_tps": "Tipe 3R",
     "alamat": "PIK 2 pengiilingan",
-    "latitude": -6.2365936,
-    "longitude": 106.8985081,
+    "latitude": -6.2045068,
+    "longitude": 106.9306323,
     "risk_status": "Normal"
   },
   {
@@ -28,8 +28,8 @@
     "kelurahan": "Ujung Menteng",
     "jenis_tps": "Tipe 2",
     "alamat": "Perum Taman Modern",
-    "latitude": -6.2602588,
-    "longitude": 106.8577072,
+    "latitude": -6.193419,
+    "longitude": 106.954633,
     "risk_status": "Normal"
   },
   {
@@ -39,8 +39,8 @@
     "kelurahan": "Pulogebang",
     "jenis_tps": "Tipe 3",
     "alamat": "Walikota",
-    "latitude": -6.2654353,
-    "longitude": 106.8975486,
+    "latitude": -6.214478,
+    "longitude": 106.94348,
     "risk_status": "Normal"
   },
   {
@@ -50,8 +50,8 @@
     "kelurahan": "Ujung Menteng",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Rawa Kuning",
-    "latitude": -6.2609165,
-    "longitude": 106.8772891,
+    "latitude": -6.19109956049,
+    "longitude": 106.966771181,
     "risk_status": "Normal"
   },
   {
@@ -59,10 +59,10 @@
     "wilayah": "Kota Adm. Jakarta Pusat",
     "kecamatan": "Cempaka Putih",
     "kelurahan": "Cempaka Putih Timur",
-    "jenis_tps": "Tps 3R",
+    "jenis_tps": "Tipe 3R",
     "alamat": "Komplek Perkantoran Rawa Kerbau",
-    "latitude": -6.2006632,
-    "longitude": 106.8512493,
+    "latitude": -6.184775,
+    "longitude": 106.87368,
     "risk_status": "Normal"
   },
   {
@@ -83,8 +83,8 @@
     "kelurahan": "Cempaka Putih Barat",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Cempaka Putih Barat 2",
-    "latitude": -6.1935168,
-    "longitude": 106.832073,
+    "latitude": -6.173841,
+    "longitude": 106.860502,
     "risk_status": "Normal"
   },
   {
@@ -92,10 +92,10 @@
     "wilayah": "KOTA ADM. JAKARTA BARAT",
     "kecamatan": "Cengkareng",
     "kelurahan": "CENGKARENG BARAT",
-    "jenis_tps": "Tps 3R",
+    "jenis_tps": "Tipe 1",
     "alamat": "JL. BINA SERASIH RT 05 RW 05 KELURAHAN CENGKARENG BARAT KECAMATAN CENGKARENG",
-    "latitude": -6.1708232,
-    "longitude": 106.7318593,
+    "latitude": -6.130247,
+    "longitude": 106.725349,
     "risk_status": "Normal"
   },
   {
@@ -105,8 +105,8 @@
     "kelurahan": "Cengkareng Barat",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Bina Serasih III",
-    "latitude": -6.1307605,
-    "longitude": 106.7632312,
+    "latitude": -6.130247,
+    "longitude": 106.725349,
     "risk_status": "Normal"
   },
   {
@@ -114,10 +114,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Cengkareng",
     "kelurahan": "Cengkareng Timur",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jl  Kayu besar dalam",
-    "latitude": -6.1273588,
-    "longitude": 106.7570535,
+    "latitude": -6.14954,
+    "longitude": 106.728601,
     "risk_status": "Normal"
   },
   {
@@ -125,10 +125,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Cilandak",
     "kelurahan": "Gandaria Selatan",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Poncol Gandaria Selatan",
-    "latitude": -6.236315,
-    "longitude": 106.7842645,
+    "latitude": -6.298236,
+    "longitude": 106.820649,
     "risk_status": "Normal"
   },
   {
@@ -136,10 +136,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Cilandak",
     "kelurahan": "Lebak Bulus",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  Karang Tengah Raya RT  13 RW  3  Lb  Bulus  Kec  Cilandak",
-    "latitude": -6.2750876,
-    "longitude": 106.8418228,
+    "latitude": -6.3080412504,
+    "longitude": 106.782484293,
     "risk_status": "Normal"
   },
   {
@@ -147,10 +147,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Cilandak",
     "kelurahan": "Perbatasan Kel  Cilandak Barat dan Kel  Lebak Bulus",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  Gunung Balong Kel  Lebak Bulus",
-    "latitude": -6.2530249,
-    "longitude": 106.8318745,
+    "latitude": -6.30277937018,
+    "longitude": 106.78934892,
     "risk_status": "Normal"
   },
   {
@@ -169,10 +169,10 @@
     "wilayah": "Jakarta Utara",
     "kecamatan": "Cilincing",
     "kelurahan": "Semper Barat",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Raya Cilincing RW  15",
-    "latitude": -6.15032,
-    "longitude": 106.9161072,
+    "latitude": -6.134835,
+    "longitude": 106.928804,
     "risk_status": "Normal"
   },
   {
@@ -180,10 +180,10 @@
     "wilayah": "Jakarta Utara",
     "kecamatan": "Cilincing",
     "kelurahan": "Rorotan",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jl  Rorotan II No 8",
-    "latitude": -6.1099181,
-    "longitude": 106.8700911,
+    "latitude": -6.147538,
+    "longitude": 106.951807,
     "risk_status": "Normal"
   },
   {
@@ -193,8 +193,8 @@
     "kelurahan": "Semper Barat",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Belibis IV",
-    "latitude": -6.1355576,
-    "longitude": 106.8905509,
+    "latitude": -6.134835,
+    "longitude": 106.928804,
     "risk_status": "Normal"
   },
   {
@@ -204,8 +204,8 @@
     "kelurahan": "Bambu Apus",
     "jenis_tps": "Tipe 1",
     "alamat": "Komplek Perum Taman Mini RT  08 RW  04",
-    "latitude": -6.2502251,
-    "longitude": 106.8770221,
+    "latitude": -6.301678,
+    "longitude": 106.908315,
     "risk_status": "Normal"
   },
   {
@@ -213,10 +213,10 @@
     "wilayah": "Jakarta Timur",
     "kecamatan": "Cipayung",
     "kelurahan": "Cilangkap",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  Assyafiyah",
-    "latitude": -6.2671747,
-    "longitude": 106.8632247,
+    "latitude": -6.33378,
+    "longitude": 106.90288,
     "risk_status": "Normal"
   },
   {
@@ -224,10 +224,10 @@
     "wilayah": "Jakarta Timur",
     "kecamatan": "Cipayung",
     "kelurahan": "Cilangkap",
-    "jenis_tps": "Tipe 3",
+    "jenis_tps": "Tipe 2",
     "alamat": "Komplek Mabes AL",
-    "latitude": -6.2703188,
-    "longitude": 106.9130757,
+    "latitude": -6.328643,
+    "longitude": 106.907978,
     "risk_status": "Normal"
   },
   {
@@ -237,8 +237,8 @@
     "kelurahan": "Setu",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  H  Karim RT  04 RW  05",
-    "latitude": -6.2378251,
-    "longitude": 106.8900909,
+    "latitude": -6.313565,
+    "longitude": 106.911993,
     "risk_status": "Normal"
   },
   {
@@ -246,10 +246,10 @@
     "wilayah": "Kota Adm. Jakarta Timur",
     "kecamatan": "Ciracas",
     "kelurahan": "Ciracas",
-    "jenis_tps": "Tps 3R",
+    "jenis_tps": "Tipe 3R",
     "alamat": "Jl  Pule Komplek Dinas Kebersihan Ciracas",
-    "latitude": -6.224003,
-    "longitude": 106.9129694,
+    "latitude": -6.31721092705,
+    "longitude": 106.87535196,
     "risk_status": "Normal"
   },
   {
@@ -268,10 +268,10 @@
     "wilayah": "Jakarta Timur",
     "kecamatan": "Ciracas",
     "kelurahan": "Kelapa Dua Wetan",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  Manunggal",
-    "latitude": -6.2491093,
-    "longitude": 106.9017673,
+    "latitude": -6.33286,
+    "longitude": 106.879019,
     "risk_status": "Normal"
   },
   {
@@ -279,10 +279,10 @@
     "wilayah": "Jakarta Timur",
     "kecamatan": "Ciracas",
     "kelurahan": "Susukan",
-    "jenis_tps": "Tipe 3",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Supriyadi RW  03",
-    "latitude": -6.2453902,
-    "longitude": 106.8742568,
+    "latitude": -6.308882,
+    "longitude": 106.869432,
     "risk_status": "Normal"
   },
   {
@@ -290,10 +290,10 @@
     "wilayah": "Jakarta Timur",
     "kecamatan": "Ciracas",
     "kelurahan": "Ciracas",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 2",
     "alamat": "Gg  Hanafi Jl  Raya Centex",
-    "latitude": -6.272501,
-    "longitude": 106.8646539,
+    "latitude": -6.26447073742,
+    "longitude": 106.872142163,
     "risk_status": "Normal"
   },
   {
@@ -336,8 +336,8 @@
     "kelurahan": "Duren Sawit",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Abadi Komplek Abadi RW  06 Kel  Duren Sawit",
-    "latitude": -6.2505448,
-    "longitude": 106.8553578,
+    "latitude": -6.22721560365,
+    "longitude": 106.908189694,
     "risk_status": "Normal"
   },
   {
@@ -345,10 +345,10 @@
     "wilayah": "Kota Adm. Jakarta Pusat",
     "kecamatan": "Gambir",
     "kelurahan": "Duri Pulo",
-    "jenis_tps": "Tps 3R",
+    "jenis_tps": "Tipe 3R",
     "alamat": "Jl  KH  Zainul Arifin No  67",
-    "latitude": -6.1665834,
-    "longitude": 106.824092,
+    "latitude": -6.16123161705,
+    "longitude": 106.809912953,
     "risk_status": "Normal"
   },
   {
@@ -358,8 +358,8 @@
     "kelurahan": "Cideng",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Tanjung Selor",
-    "latitude": -6.2055301,
-    "longitude": 106.8232912,
+    "latitude": -6.17298394789,
+    "longitude": 106.806215051,
     "risk_status": "Normal"
   },
   {
@@ -391,8 +391,8 @@
     "kelurahan": "Cideng",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Cideng Barat",
-    "latitude": -6.155727,
-    "longitude": 106.8463671,
+    "latitude": -6.179356,
+    "longitude": 106.812698,
     "risk_status": "Normal"
   },
   {
@@ -400,10 +400,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Grogol Petamburan",
     "kelurahan": "Tanjung Duren Utara",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 4",
     "alamat": "RT  09   RW  03 Tanjung Duren Utara",
-    "latitude": -6.1651427,
-    "longitude": 106.7179771,
+    "latitude": -6.144109,
+    "longitude": 106.810759,
     "risk_status": "Normal"
   },
   {
@@ -411,10 +411,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Grogol Petamburan",
     "kelurahan": "Jelambar",
-    "jenis_tps": "Tipe 3",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Jelambar No  11",
-    "latitude": -6.1453765,
-    "longitude": 106.7213067,
+    "latitude": -6.15301480197,
+    "longitude": 106.787016204,
     "risk_status": "Normal"
   },
   {
@@ -422,10 +422,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Grogol Petamburan",
     "kelurahan": "Tanjung Duren Selatan",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 1",
     "alamat": "Loksem Pasar Kopro",
-    "latitude": -6.1492538,
-    "longitude": 106.723344,
+    "latitude": -6.149502,
+    "longitude": 106.728549,
     "risk_status": "Normal"
   },
   {
@@ -444,10 +444,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Jagakarsa",
     "kelurahan": "Lenteng Agung",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Raya Lenteng Agung Timur",
-    "latitude": -6.2590411,
-    "longitude": 106.7818935,
+    "latitude": -6.334635,
+    "longitude": 106.835663,
     "risk_status": "Normal"
   },
   {
@@ -455,10 +455,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Jagakarsa",
     "kelurahan": "Srengseng Sawah",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 4",
     "alamat": "Unit Pengelola Kawasan Perkampungan Budaya Betawi Setu Babakan",
-    "latitude": -6.245397,
-    "longitude": 106.7888857,
+    "latitude": -6.345276,
+    "longitude": 106.819612,
     "risk_status": "Normal"
   },
   {
@@ -466,10 +466,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Jagakarsa",
     "kelurahan": "Lenteng Agung",
-    "jenis_tps": "Tipe 3",
+    "jenis_tps": "Tipe 2",
     "alamat": "Jalan Camat Gabun  Asrama Suku Dinas Lingkungan Hidup Kota Adm  Jakarta Selatan",
-    "latitude": -6.2695017,
-    "longitude": 106.7818156,
+    "latitude": -6.331488,
+    "longitude": 106.83321,
     "risk_status": "Normal"
   },
   {
@@ -479,8 +479,8 @@
     "kelurahan": "Srengseng Sawah",
     "jenis_tps": "Tipe 4",
     "alamat": "RW  08 Setu Babakan Kelurahan Srengseng Sawah",
-    "latitude": -6.245397,
-    "longitude": 106.7888857,
+    "latitude": -6.345276,
+    "longitude": 106.819612,
     "risk_status": "Normal"
   },
   {
@@ -499,10 +499,10 @@
     "wilayah": "Jakarta Timur",
     "kecamatan": "Jatinegara",
     "kelurahan": "Cipinang Muara",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jl Cipinang Elok Blok Ag No  18",
-    "latitude": -6.2751294,
-    "longitude": 106.9182919,
+    "latitude": -6.22424653911,
+    "longitude": 106.885594986,
     "risk_status": "Normal"
   },
   {
@@ -521,10 +521,10 @@
     "wilayah": "Jakarta Timur",
     "kecamatan": "Jatinegara",
     "kelurahan": "Cipinang Besar Selatan",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jl  Basuki Rahmat",
-    "latitude": -6.2657832,
-    "longitude": 106.8697107,
+    "latitude": -6.2278337376,
+    "longitude": 106.882945009,
     "risk_status": "Normal"
   },
   {
@@ -534,8 +534,8 @@
     "kelurahan": "Johar Baru",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Johar Baru Utara 1",
-    "latitude": -6.2064887,
-    "longitude": 106.7985128,
+    "latitude": -6.181978,
+    "longitude": 106.856308,
     "risk_status": "Normal"
   },
   {
@@ -545,8 +545,8 @@
     "kelurahan": "Galur",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Rawa Selatan I",
-    "latitude": -6.189761,
-    "longitude": 106.8167441,
+    "latitude": -6.178302,
+    "longitude": 106.85525,
     "risk_status": "Normal"
   },
   {
@@ -554,10 +554,10 @@
     "wilayah": "KOTA ADM. JAKARTA BARAT",
     "kecamatan": "Kalideres",
     "kelurahan": "TEGAL ALUR",
-    "jenis_tps": "Tps 3R",
+    "jenis_tps": "Tipe 4",
     "alamat": "JL. KOMPLEK KEBERSIHAN, RT 3 RW 4  KEC. KALIDERES JAKARTA BARAT",
-    "latitude": -6.1655167,
-    "longitude": 106.7421762,
+    "latitude": -6.120042,
+    "longitude": 106.729633,
     "risk_status": "Normal"
   },
   {
@@ -565,10 +565,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Kalideres",
     "kelurahan": "Kamal",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 2",
     "alamat": "Jl  Perumahan Citra 5",
-    "latitude": -6.1807714,
-    "longitude": 106.7728103,
+    "latitude": -6.142197,
+    "longitude": 106.736236,
     "risk_status": "Normal"
   },
   {
@@ -576,10 +576,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Kalideres",
     "kelurahan": "Kalideres",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 3R",
     "alamat": "Perumahan Citra 1",
-    "latitude": -6.1508659,
-    "longitude": 106.7290611,
+    "latitude": -6.1357,
+    "longitude": 106.724686,
     "risk_status": "Normal"
   },
   {
@@ -587,10 +587,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Kalideres",
     "kelurahan": "Kamal",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jl  Sahabat Kebun 200",
-    "latitude": -6.1318644,
-    "longitude": 106.7647385,
+    "latitude": -6.149502,
+    "longitude": 106.728549,
     "risk_status": "Normal"
   },
   {
@@ -600,8 +600,8 @@
     "kelurahan": "Rawa Barat",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Bakti 1 Kel  Rawa Barat",
-    "latitude": -6.278916,
-    "longitude": 106.8264078,
+    "latitude": -6.233148,
+    "longitude": 106.812814,
     "risk_status": "Normal"
   },
   {
@@ -609,10 +609,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Kebayoran Baru",
     "kelurahan": "Gunung",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  Tebah III No  3  Kel  Gunung",
-    "latitude": -6.2977551,
-    "longitude": 106.8369662,
+    "latitude": -6.2405844,
+    "longitude": 106.7905368,
     "risk_status": "Normal"
   },
   {
@@ -633,8 +633,8 @@
     "kelurahan": "Petogogan",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Pulo Raya V Rw 03 Kel  Petogogan",
-    "latitude": -6.2576651,
-    "longitude": 106.8252058,
+    "latitude": -6.24684087,
+    "longitude": 106.810154,
     "risk_status": "Normal"
   },
   {
@@ -642,10 +642,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Kebayoran Lama",
     "kelurahan": "Grogol Selatan",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 2",
     "alamat": "Dipo Permata Hijau II Perum Permata Hijau II RW  012 Kel  Grogol Selatan",
-    "latitude": -6.2845132,
-    "longitude": 106.8221461,
+    "latitude": -6.2292759,
+    "longitude": 106.7663697,
     "risk_status": "Normal"
   },
   {
@@ -653,10 +653,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Kebayoran Lama",
     "kelurahan": "Grogol Utara",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 3",
     "alamat": "Pool Countainer Graha Pena Jl  Kebayoran Lama RW  01",
-    "latitude": -6.2795413,
-    "longitude": 106.8041832,
+    "latitude": -6.2155,
+    "longitude": 106.7782,
     "risk_status": "Normal"
   },
   {
@@ -666,8 +666,8 @@
     "kelurahan": "Cipulir",
     "jenis_tps": "Tipe 4",
     "alamat": "TPS Komp  Seskoal Jl  Cileduk Raya",
-    "latitude": -6.2913327,
-    "longitude": 106.7996227,
+    "latitude": -6.24260125439,
+    "longitude": 106.774247826,
     "risk_status": "Normal"
   },
   {
@@ -675,10 +675,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Kebon Jeruk",
     "kelurahan": "Kebon Jeruk",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Perumahan Baru Kebon Jeruk",
-    "latitude": -6.1578375,
-    "longitude": 106.7367402,
+    "latitude": -6.17144572546,
+    "longitude": 106.792376381,
     "risk_status": "Normal"
   },
   {
@@ -686,10 +686,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Kebon Jeruk",
     "kelurahan": "Kelapa Dua",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  Panjang Arteri Kelapa Dua",
-    "latitude": -6.1304005,
-    "longitude": 106.7777153,
+    "latitude": -6.20306865467,
+    "longitude": 106.769271021,
     "risk_status": "Normal"
   },
   {
@@ -697,10 +697,10 @@
     "wilayah": "Jakarta Utara",
     "kecamatan": "Kelapa Gading",
     "kelurahan": "Kelapa Gading Barat",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Inspeksi Kali Sunter",
-    "latitude": -6.1558845,
-    "longitude": 106.8977572,
+    "latitude": -6.181883,
+    "longitude": 106.9220623,
     "risk_status": "Normal"
   },
   {
@@ -710,8 +710,8 @@
     "kelurahan": "Pegangsaan Dua",
     "jenis_tps": "Tipe 2",
     "alamat": "Jl  Boulevard Timur",
-    "latitude": -6.1443948,
-    "longitude": 106.8765354,
+    "latitude": -6.14026,
+    "longitude": 106.835712,
     "risk_status": "Normal"
   },
   {
@@ -732,8 +732,8 @@
     "kelurahan": "Gunung Sahari Selatan",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Kran Raya",
-    "latitude": -6.1636184,
-    "longitude": 106.8196029,
+    "latitude": -6.157823,
+    "longitude": 106.845619,
     "risk_status": "Normal"
   },
   {
@@ -754,8 +754,8 @@
     "kelurahan": "Cempaka Baru",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Pam RW  08 Cempaka Baru",
-    "latitude": -6.2148902,
-    "longitude": 106.802304,
+    "latitude": -6.166654,
+    "longitude": 106.863624,
     "risk_status": "Normal"
   },
   {
@@ -776,8 +776,8 @@
     "kelurahan": "Kembangan Utara",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Perumahan Taman Kota Blok B1 RW  05",
-    "latitude": -6.1650424,
-    "longitude": 106.7191313,
+    "latitude": -6.15921603956,
+    "longitude": 106.756589982,
     "risk_status": "Normal"
   },
   {
@@ -785,10 +785,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Kembangan",
     "kelurahan": "Meruya Utara",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jl  Penyelesaian Tomang 3 RW  10",
-    "latitude": -6.1270855,
-    "longitude": 106.725288,
+    "latitude": -6.200273,
+    "longitude": 106.729428,
     "risk_status": "Normal"
   },
   {
@@ -796,10 +796,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Kembangan",
     "kelurahan": "Joglo",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 2",
     "alamat": "Jl  Joglo Raya RW  08",
-    "latitude": -6.1923519,
-    "longitude": 106.7583293,
+    "latitude": -6.218234,
+    "longitude": 106.744448,
     "risk_status": "Normal"
   },
   {
@@ -818,10 +818,10 @@
     "wilayah": "Jakarta Utara",
     "kecamatan": "Koja",
     "kelurahan": "Koja",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  Raya Pelabuhan",
-    "latitude": -6.1609778,
-    "longitude": 106.9001949,
+    "latitude": -6.103602,
+    "longitude": 106.899805,
     "risk_status": "Normal"
   },
   {
@@ -840,10 +840,10 @@
     "wilayah": "Kota Adm. Jakarta Timur",
     "kecamatan": "Kramat Jati",
     "kelurahan": "Cililitan",
-    "jenis_tps": "Tps 3R",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Mayjen  Sutoyo",
-    "latitude": -6.2547427,
-    "longitude": 106.9240461,
+    "latitude": -6.251885,
+    "longitude": 106.87261,
     "risk_status": "Normal"
   },
   {
@@ -875,8 +875,8 @@
     "kelurahan": "Cawang",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl Waru Dalam RW 11 Cawang",
-    "latitude": -6.2193562,
-    "longitude": 106.9188304,
+    "latitude": -6.249535,
+    "longitude": 106.87067,
     "risk_status": "Normal"
   },
   {
@@ -884,10 +884,10 @@
     "wilayah": "Jakarta Timur",
     "kecamatan": "Makasar",
     "kelurahan": "Halim Perdana Kusuma",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 3R",
     "alamat": "Jl  Bima RT  19 RW  03",
-    "latitude": -6.251682,
-    "longitude": 106.8778896,
+    "latitude": -6.281309,
+    "longitude": 106.900557,
     "risk_status": "Normal"
   },
   {
@@ -895,10 +895,10 @@
     "wilayah": "Jakarta Timur",
     "kecamatan": "Makasar",
     "kelurahan": "Cipinang Melayu",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Pangkalan Jati VII",
-    "latitude": -6.2838398,
-    "longitude": 106.8918672,
+    "latitude": -6.162956,
+    "longitude": 106.933009,
     "risk_status": "Normal"
   },
   {
@@ -906,10 +906,10 @@
     "wilayah": "Jakarta Timur",
     "kecamatan": "Makasar",
     "kelurahan": "Cipinang Melayu",
-    "jenis_tps": "Tipe 3",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Seulawah Raya",
-    "latitude": -6.2647142,
-    "longitude": 106.8815798,
+    "latitude": -6.248798,
+    "longitude": 106.913567,
     "risk_status": "Normal"
   },
   {
@@ -917,10 +917,10 @@
     "wilayah": "Jakarta Timur",
     "kecamatan": "Makasar",
     "kelurahan": "Cipinang Melayu",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  Inpeksi Tarum Barat",
-    "latitude": -6.28362,
-    "longitude": 106.8722677,
+    "latitude": -6.27735,
+    "longitude": 106.883305,
     "risk_status": "Normal"
   },
   {
@@ -928,10 +928,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Mampang Prapatan",
     "kelurahan": "Bangka",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 2",
     "alamat": "Jl  Kemang Utara IX RT  06 RW  04 Kel  Bangka",
-    "latitude": -6.2975203,
-    "longitude": 106.7762652,
+    "latitude": -6.255755,
+    "longitude": 106.824642,
     "risk_status": "Normal"
   },
   {
@@ -941,8 +941,8 @@
     "kelurahan": "Kuningan Barat",
     "jenis_tps": "Tipe 2",
     "alamat": "Jl  Gatot Subroto R 01 Kel Kuningan Barat",
-    "latitude": -6.2585491,
-    "longitude": 106.8276408,
+    "latitude": -6.23147084563,
+    "longitude": 106.819125568,
     "risk_status": "Normal"
   },
   {
@@ -950,10 +950,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Mampang Prapatan",
     "kelurahan": "Bangka",
-    "jenis_tps": "Tipe 3",
+    "jenis_tps": "Tipe 2",
     "alamat": "Jl  Kemang Raya RW  01 Kel  Bangka",
-    "latitude": -6.2714076,
-    "longitude": 106.8047862,
+    "latitude": -6.256718,
+    "longitude": 106.813307,
     "risk_status": "Normal"
   },
   {
@@ -974,8 +974,8 @@
     "kelurahan": "Pisangan Baru",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Pisangan Baru Tengah RT  14",
-    "latitude": -6.2757093,
-    "longitude": 106.9198978,
+    "latitude": -6.211106,
+    "longitude": 106.87292,
     "risk_status": "Normal"
   },
   {
@@ -983,10 +983,10 @@
     "wilayah": "Jakarta Timur",
     "kecamatan": "Matraman",
     "kelurahan": "Palmeriam",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Kayu Manis Lama I RW  08",
-    "latitude": -6.2633311,
-    "longitude": 106.8764474,
+    "latitude": -6.215679,
+    "longitude": 106.875806,
     "risk_status": "Normal"
   },
   {
@@ -996,8 +996,8 @@
     "kelurahan": "Utan Kayu Selatan",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Asem Gede I",
-    "latitude": -6.2662587,
-    "longitude": 106.9152277,
+    "latitude": -6.198457,
+    "longitude": 106.868819,
     "risk_status": "Normal"
   },
   {
@@ -1007,8 +1007,8 @@
     "kelurahan": "Pegangsaan",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Matraman Dalam 1",
-    "latitude": -6.179798,
-    "longitude": 106.8141337,
+    "latitude": -6.202699,
+    "longitude": 106.851775,
     "risk_status": "Normal"
   },
   {
@@ -1016,10 +1016,10 @@
     "wilayah": "Jakarta Pusat",
     "kecamatan": "Menteng",
     "kelurahan": "Cikini",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  Cikini Raya",
-    "latitude": -6.1778228,
-    "longitude": 106.8356889,
+    "latitude": -6.190737,
+    "longitude": 106.839861,
     "risk_status": "Normal"
   },
   {
@@ -1027,10 +1027,10 @@
     "wilayah": "Jakarta Pusat",
     "kecamatan": "Menteng",
     "kelurahan": "Cikini",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 2",
     "alamat": "Jl  Raden Saleh II",
-    "latitude": -6.2043533,
-    "longitude": 106.8346485,
+    "latitude": -6.192014,
+    "longitude": 106.842715,
     "risk_status": "Normal"
   },
   {
@@ -1038,10 +1038,10 @@
     "wilayah": "Jakarta Utara",
     "kecamatan": "Pademangan",
     "kelurahan": "Pademangan Timur",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 2",
     "alamat": "Jl  Pademangan IX RT  02 010 Kel  Pademangan Timur",
-    "latitude": -6.1253557,
-    "longitude": 106.9272439,
+    "latitude": -6.131974,
+    "longitude": 106.845908,
     "risk_status": "Normal"
   },
   {
@@ -1049,10 +1049,10 @@
     "wilayah": "Jakarta Utara",
     "kecamatan": "Pademangan",
     "kelurahan": "Pademangan Barat",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jl  Pademangan 1 No 13 RW  14 Kel  Pademangan Barat",
-    "latitude": -6.1064765,
-    "longitude": 106.8985456,
+    "latitude": -6.133118,
+    "longitude": 106.839863,
     "risk_status": "Normal"
   },
   {
@@ -1060,10 +1060,10 @@
     "wilayah": "Jakarta Utara",
     "kecamatan": "Pademangan",
     "kelurahan": "Pademangan Barat",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jl  Pademangan 5 No  46 RW  10 Kel  Pademangan Barat",
-    "latitude": -6.1333031,
-    "longitude": 106.9279436,
+    "latitude": -6.133118,
+    "longitude": 106.839863,
     "risk_status": "Normal"
   },
   {
@@ -1071,10 +1071,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Palmerah",
     "kelurahan": "Palmerah",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 3R",
     "alamat": "Jl  Kepondang Raya RT  006 RW  02",
-    "latitude": -6.1660252,
-    "longitude": 106.755167,
+    "latitude": -6.199951,
+    "longitude": 106.793595,
     "risk_status": "Normal"
   },
   {
@@ -1084,8 +1084,8 @@
     "kelurahan": "Palmerah",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Kemanggisan Pulo",
-    "latitude": -6.1504188,
-    "longitude": 106.7365339,
+    "latitude": -6.144109,
+    "longitude": 106.810759,
     "risk_status": "Normal"
   },
   {
@@ -1095,8 +1095,8 @@
     "kelurahan": "Rawajati",
     "jenis_tps": "Tipe 1",
     "alamat": "JI  Rawajati Barat",
-    "latitude": -6.2976819,
-    "longitude": 106.8120086,
+    "latitude": -6.251723,
+    "longitude": 106.856516,
     "risk_status": "Normal"
   },
   {
@@ -1104,10 +1104,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Pancoran",
     "kelurahan": "Duren tiga",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  Duren Tiga PLN",
-    "latitude": -6.2710074,
-    "longitude": 106.8288953,
+    "latitude": -6.2589379,
+    "longitude": 106.8346663,
     "risk_status": "Normal"
   },
   {
@@ -1115,10 +1115,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Pancoran",
     "kelurahan": "Pancoran",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jl  Tiloka V No  1 Kel  Pancoran Kec  Pancoran",
-    "latitude": -6.3002139,
-    "longitude": 106.8018677,
+    "latitude": -6.24567,
+    "longitude": 106.838785,
     "risk_status": "Normal"
   },
   {
@@ -1126,10 +1126,10 @@
     "wilayah": "Kota Adm. Jakarta Selatan",
     "kecamatan": "Pasar Minggu",
     "kelurahan": "Pejaten Barat",
-    "jenis_tps": "Tps 3R",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jalan Siaga Raya RT  012 RW  04 Pejaten Barat",
-    "latitude": -6.2967425,
-    "longitude": 106.8013427,
+    "latitude": -6.269558,
+    "longitude": 106.836814,
     "risk_status": "Normal"
   },
   {
@@ -1139,8 +1139,8 @@
     "kelurahan": "Pejaten Barat",
     "jenis_tps": "Tipe 2",
     "alamat": "Perumahan Buncit Indah",
-    "latitude": -6.2940486,
-    "longitude": 106.8291846,
+    "latitude": -6.271074,
+    "longitude": 106.83235,
     "risk_status": "Normal"
   },
   {
@@ -1150,8 +1150,8 @@
     "kelurahan": "Jati Padang",
     "jenis_tps": "Tipe 4",
     "alamat": "Kelurahan Jati Padang",
-    "latitude": -6.2996876,
-    "longitude": 106.8391648,
+    "latitude": -6.285552,
+    "longitude": 106.834784,
     "risk_status": "Normal"
   },
   {
@@ -1161,8 +1161,8 @@
     "kelurahan": "Baru",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  H  Moong Rt 006 Rw 002 Kel  Baru",
-    "latitude": -6.267791,
-    "longitude": 106.8590591,
+    "latitude": -6.3259,
+    "longitude": 106.8476,
     "risk_status": "Normal"
   },
   {
@@ -1192,10 +1192,10 @@
     "wilayah": "Kota Adm. Jakarta Utara",
     "kecamatan": "Penjaringan",
     "kelurahan": "Pejagalan",
-    "jenis_tps": "Tps 3R",
+    "jenis_tps": "Tipe 3R",
     "alamat": "Jl  Moa RW  012 Kel  Pejagalan",
-    "latitude": -6.1521171,
-    "longitude": 106.8710506,
+    "latitude": -6.133056,
+    "longitude": 106.782222,
     "risk_status": "Normal"
   },
   {
@@ -1205,8 +1205,8 @@
     "kelurahan": "Penjaringan",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Pluit Selatan Raya",
-    "latitude": -6.1111313,
-    "longitude": 106.9150672,
+    "latitude": -6.1241246,
+    "longitude": 106.8024496,
     "risk_status": "Normal"
   },
   {
@@ -1236,10 +1236,10 @@
     "wilayah": "Jakarta Utara",
     "kecamatan": "Penjaringan",
     "kelurahan": "Penjaringan",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jl  Muara Baru  Penjaringan",
-    "latitude": -6.1062253,
-    "longitude": 106.8760913,
+    "latitude": -6.109167,
+    "longitude": 106.799444,
     "risk_status": "Normal"
   },
   {
@@ -1258,10 +1258,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Pesanggrahan",
     "kelurahan": "Pesanggrahan",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Bintaro Puspita Raya",
-    "latitude": -6.2980097,
-    "longitude": 106.8184932,
+    "latitude": -6.261027,
+    "longitude": 106.758904,
     "risk_status": "Normal"
   },
   {
@@ -1269,10 +1269,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Pesanggrahan",
     "kelurahan": "Pesanggrahan",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  H  Garie",
-    "latitude": -6.253298,
-    "longitude": 106.8322736,
+    "latitude": -6.25305350342,
+    "longitude": 106.760282959,
     "risk_status": "Normal"
   },
   {
@@ -1280,10 +1280,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Pesanggrahan",
     "kelurahan": "Bintaro",
-    "jenis_tps": "Tipe 3",
+    "jenis_tps": "Tipe 4",
     "alamat": "Jl  Madrasah",
-    "latitude": -6.289014,
-    "longitude": 106.8144679,
+    "latitude": -6.26365596089,
+    "longitude": 106.762042048,
     "risk_status": "Normal"
   },
   {
@@ -1293,8 +1293,8 @@
     "kelurahan": "Pesanggrahan",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Pesanggrahan Raya RW  007",
-    "latitude": -6.2509034,
-    "longitude": 106.78454,
+    "latitude": -6.250958,
+    "longitude": 106.756215,
     "risk_status": "Normal"
   },
   {
@@ -1381,8 +1381,8 @@
     "kelurahan": "Kayu Putih",
     "jenis_tps": "Tipe 2",
     "alamat": "Jl  Drompol No 4 RT  4 RW  17",
-    "latitude": -6.2465689,
-    "longitude": 106.8618917,
+    "latitude": -6.186423,
+    "longitude": 106.884286,
     "risk_status": "Normal"
   },
   {
@@ -1392,8 +1392,8 @@
     "kelurahan": "Jati",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Poncol",
-    "latitude": -6.2395023,
-    "longitude": 106.9231565,
+    "latitude": -6.193032,
+    "longitude": 106.901596,
     "risk_status": "Normal"
   },
   {
@@ -1403,8 +1403,8 @@
     "kelurahan": "Gunung Sahari Utara",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Gunung Sahari 7A",
-    "latitude": -6.205782,
-    "longitude": 106.7997395,
+    "latitude": -6.151485765,
+    "longitude": 106.83916572,
     "risk_status": "Normal"
   },
   {
@@ -1414,8 +1414,8 @@
     "kelurahan": "Kartini",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Kartini Raya",
-    "latitude": -6.2024963,
-    "longitude": 106.7972744,
+    "latitude": -6.15434,
+    "longitude": 106.834678333,
     "risk_status": "Normal"
   },
   {
@@ -1425,8 +1425,8 @@
     "kelurahan": "Paseban",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Pramuka Jati",
-    "latitude": -6.1898903,
-    "longitude": 106.8209188,
+    "latitude": -6.19567,
+    "longitude": 106.858105,
     "risk_status": "Normal"
   },
   {
@@ -1434,10 +1434,10 @@
     "wilayah": "Jakarta Pusat",
     "kecamatan": "Senen",
     "kelurahan": "Senen",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  Abdurohman Saleh",
-    "latitude": -6.1840867,
-    "longitude": 106.8451592,
+    "latitude": -6.179726,
+    "longitude": 106.838075,
     "risk_status": "Normal"
   },
   {
@@ -1469,8 +1469,8 @@
     "kelurahan": "Menteng Atas",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Menteng Atas Barat RT  16 RW  05 Kel  Menteng Atas",
-    "latitude": -6.2580812,
-    "longitude": 106.7889291,
+    "latitude": -6.22074685294,
+    "longitude": 106.838256164,
     "risk_status": "Normal"
   },
   {
@@ -1480,8 +1480,8 @@
     "kelurahan": "Pasar Manggis",
     "jenis_tps": "Tipe 2",
     "alamat": "Jl  Sultan Agung Kel  Menteng Atas",
-    "latitude": -6.2450206,
-    "longitude": 106.8305712,
+    "latitude": -6.240256,
+    "longitude": 106.811514,
     "risk_status": "Normal"
   },
   {
@@ -1491,8 +1491,8 @@
     "kelurahan": "Pasar Manggis",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Kota Gedang RW  01 Kel  Ps Manggis",
-    "latitude": -6.2362957,
-    "longitude": 106.8153996,
+    "latitude": -6.211165,
+    "longitude": 106.844265,
     "risk_status": "Normal"
   },
   {
@@ -1500,10 +1500,10 @@
     "wilayah": "KOTA ADM. JAKARTA BARAT",
     "kecamatan": "Taman Sari",
     "kelurahan": "KRUKUT",
-    "jenis_tps": "Tps 3R",
+    "jenis_tps": "Tipe 1",
     "alamat": "RT.9/RW.5, KRUKUT, TAMAN SARI, JAKARTA BARAT  JAKARTA 11140",
-    "latitude": -6.1701662,
-    "longitude": 106.7296591,
+    "latitude": -6.157925,
+    "longitude": 106.811211,
     "risk_status": "Normal"
   },
   {
@@ -1513,8 +1513,8 @@
     "kelurahan": "Glodok",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Keadilan II RT  08 03",
-    "latitude": -6.1673672,
-    "longitude": 106.7561805,
+    "latitude": -6.144109,
+    "longitude": 106.810759,
     "risk_status": "Normal"
   },
   {
@@ -1522,10 +1522,10 @@
     "wilayah": "Jakarta Barat",
     "kecamatan": "Tambora",
     "kelurahan": "Duri Utara",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 2",
     "alamat": "Jl  Duri Utara III RW  02",
-    "latitude": -6.1532319,
-    "longitude": 106.7691662,
+    "latitude": -6.153407,
+    "longitude": 106.805459,
     "risk_status": "Normal"
   },
   {
@@ -1535,8 +1535,8 @@
     "kelurahan": "Angke",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Rumah Susun RW  11",
-    "latitude": -6.1378659,
-    "longitude": 106.7642644,
+    "latitude": -6.147222,
+    "longitude": 106.798637,
     "risk_status": "Normal"
   },
   {
@@ -1544,10 +1544,10 @@
     "wilayah": "Jakarta Pusat",
     "kecamatan": "Tanah Abang",
     "kelurahan": "Gelora",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 3R",
     "alamat": "Jl  Pintu X Gelora Bung Karno",
-    "latitude": -6.1998976,
-    "longitude": 106.8378125,
+    "latitude": -6.21414158098,
+    "longitude": 106.803878034,
     "risk_status": "Normal"
   },
   {
@@ -1568,8 +1568,8 @@
     "kelurahan": "Bendungan Hilir",
     "jenis_tps": "Tipe 4",
     "alamat": "Jl  Lan 2 Pejompongan",
-    "latitude": -6.1741763,
-    "longitude": 106.8390828,
+    "latitude": -6.200452,
+    "longitude": 106.808513,
     "risk_status": "Normal"
   },
   {
@@ -1577,10 +1577,10 @@
     "wilayah": "KOTA ADM. JAKARTA UTARA",
     "kecamatan": "Tanjung Priok",
     "kelurahan": "SUNTER JAYA",
-    "jenis_tps": "Tps 3R",
+    "jenis_tps": "Tipe 3R",
     "alamat": "JL. SUNTER JAYA I, RT.15/RW.1, SUNTER JAYA, KEC. TJ. PRIOK, JKT UTARA",
-    "latitude": -6.1607812,
-    "longitude": 106.9168716,
+    "latitude": -6.149013,
+    "longitude": 106.859466,
     "risk_status": "Normal"
   },
   {
@@ -1588,10 +1588,10 @@
     "wilayah": "Jakarta Utara",
     "kecamatan": "Tanjung Priok",
     "kelurahan": "Papanggo",
-    "jenis_tps": "Tipe 1",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jl  Danau Bisma Blok E",
-    "latitude": -6.153462,
-    "longitude": 106.8878977,
+    "latitude": -6.12525142535,
+    "longitude": 106.872400486,
     "risk_status": "Normal"
   },
   {
@@ -1599,10 +1599,10 @@
     "wilayah": "Jakarta Utara",
     "kecamatan": "Tanjung Priok",
     "kelurahan": "Tanjung Priok",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 3",
     "alamat": "Jalan Bahari 7 RW  14",
-    "latitude": -6.1618098,
-    "longitude": 106.8707179,
+    "latitude": -6.119386,
+    "longitude": 106.870552,
     "risk_status": "Normal"
   },
   {
@@ -1610,10 +1610,10 @@
     "wilayah": "Jakarta Utara",
     "kecamatan": "Tanjung Priok",
     "kelurahan": "Tanjung Priok",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 2",
     "alamat": "Jl  Kp  Bahari RW  013",
-    "latitude": -6.1151004,
-    "longitude": 106.9203655,
+    "latitude": -6.117979,
+    "longitude": 106.871858,
     "risk_status": "Normal"
   },
   {
@@ -1623,8 +1623,8 @@
     "kelurahan": "Tebet Barat",
     "jenis_tps": "Tipe 1",
     "alamat": "Jl  Tebet Barat Raya",
-    "latitude": -6.3028009,
-    "longitude": 106.78167,
+    "latitude": -6.233763,
+    "longitude": 106.850607,
     "risk_status": "Normal"
   },
   {
@@ -1632,10 +1632,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Tebet",
     "kelurahan": "Bukit Duri",
-    "jenis_tps": "Tipe 2",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jl  Kampung Melayu Kecil",
-    "latitude": -6.23859,
-    "longitude": 106.7984381,
+    "latitude": -6.21785,
+    "longitude": 106.854032,
     "risk_status": "Normal"
   },
   {
@@ -1643,10 +1643,10 @@
     "wilayah": "Jakarta Selatan",
     "kecamatan": "Tebet",
     "kelurahan": "Kebon Baru",
-    "jenis_tps": "Tipe 4",
+    "jenis_tps": "Tipe 1",
     "alamat": "Jl  Asem Baris Raya",
-    "latitude": -6.2704257,
-    "longitude": 106.8125033,
+    "latitude": -6.242132079,
+    "longitude": 106.862250995,
     "risk_status": "Normal"
   }
 ]

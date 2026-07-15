@@ -15,6 +15,7 @@ from app.api.citizen_reports import router as citizen_reports_router
 from app.api.route_recommendations import router as route_recommendations_router
 from app.api.dashboard import router as dashboard_router
 from app.api.fleets import router as fleets_router
+from app.admin import setup_admin
 from app.ai.scheduler.scheduler import start_scheduler
 
 @asynccontextmanager
@@ -34,6 +35,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+setup_admin(app)
 
 from fastapi.staticfiles import StaticFiles
 import os
