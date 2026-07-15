@@ -362,7 +362,8 @@ export default function Zones() {
               return (
                 <div
                   key={zone.id}
-                  className="group bg-white border border-slate-200 rounded-xl shadow-2xs hover:shadow-md hover:border-slate-300 transition-all duration-200 overflow-hidden"
+                  onClick={() => handleOpenDetail(zone)}
+                  className="group bg-white border border-slate-200 rounded-xl shadow-2xs hover:shadow-md hover:border-slate-300 transition-all duration-200 overflow-hidden cursor-pointer"
                 >
                   <div className="flex">
                     <div className={`w-1 shrink-0 ${riskAccent}`} />
@@ -412,21 +413,21 @@ export default function Zones() {
                         </span>
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => handleOpenDetail(zone)}
+                            onClick={(e) => { e.stopPropagation(); handleOpenDetail(zone); }}
                             className="w-7 h-7 rounded-lg border border-sky-200 text-sky-500 hover:bg-sky-50 hover:border-sky-300 transition-all flex items-center justify-center cursor-pointer"
                             title="Monitoring Sensor TPS"
                           >
                             <FontAwesomeIcon icon={faGaugeHigh} className="text-[11px]" />
                           </button>
                           <button
-                            onClick={() => handleOpenEdit(zone)}
+                            onClick={(e) => { e.stopPropagation(); handleOpenEdit(zone); }}
                             className="w-7 h-7 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center cursor-pointer"
                             title="Edit Wilayah"
                           >
                             <FontAwesomeIcon icon={faPen} className="text-[11px]" />
                           </button>
                           <button
-                            onClick={() => handleOpenDelete(zone)}
+                            onClick={(e) => { e.stopPropagation(); handleOpenDelete(zone); }}
                             className="w-7 h-7 rounded-lg border border-red-100 text-red-400 hover:bg-red-50 hover:border-red-200 transition-all flex items-center justify-center cursor-pointer"
                             title="Hapus Wilayah"
                           >

@@ -25,6 +25,9 @@ def get_zones(
     """
     Mengambil daftar wilayah TPS (Mendukung paginasi dan penyaringan).
     """
+    from sqlalchemy import exists, case
+    from app.models.sensor_data import SensorData
+
     query = db.query(Zone)
     
     if search:
@@ -38,6 +41,16 @@ def get_zones(
     if jenis_tps:
         query = query.filter(Zone.jenis_tps == jenis_tps)
         
+    # Sort: TPS with sensor monitoring first, then by risk_status (High Priority -> Warning -> Normal)
+    has_sensor = exists().where(SensorData.zone_id == Zone.id)
+    risk_priority = case(
+        (Zone.risk_status == "High Priority", 1),
+        (Zone.risk_status == "Warning", 2),
+        (Zone.risk_status == "Normal", 3),
+        else_=4
+    )
+    query = query.order_by(has_sensor.desc(), risk_priority.asc())
+
     if page is not None and limit is not None:
         total = query.count()
         pages = math.ceil(total / limit) if limit > 0 else 0

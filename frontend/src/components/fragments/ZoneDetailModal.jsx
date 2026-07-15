@@ -36,6 +36,12 @@ export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange })
     updatedAt: null
   });
   const [error, setError] = useState('');
+  
+  // Volume prediction states
+  const [showPrediction, setShowPrediction] = useState(false);
+  const [prediction, setPrediction] = useState(null);
+  const [predictionLoading, setPredictionLoading] = useState(false);
+  const [predictionError, setPredictionError] = useState('');
 
   const getRiskBadgeClasses = (status) => {
     switch (status) {
@@ -56,6 +62,36 @@ export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange })
         return faTriangleExclamation;
       default:
         return faCircleCheck;
+    }
+  };
+
+  const fetchPrediction = async (zoneId) => {
+    if (!zoneId) return;
+    try {
+      setPredictionLoading(true);
+      setPredictionError('');
+      const res = await api.getPredictionsHistory(1, 1, zoneId);
+      if (res.success && res.data && res.data.items) {
+        if (res.data.items.length > 0) {
+          setPrediction(res.data.items[0]);
+        } else {
+          setPrediction(null);
+        }
+      } else {
+        setPredictionError('Gagal membaca data prediksi dari server.');
+      }
+    } catch (err) {
+      setPredictionError(err.message || 'Gagal memuat prediksi volume.');
+    } finally {
+      setPredictionLoading(false);
+    }
+  };
+
+  const handleTogglePrediction = () => {
+    const nextVal = !showPrediction;
+    setShowPrediction(nextVal);
+    if (nextVal && !prediction) {
+      fetchPrediction(zone.id);
     }
   };
 
@@ -118,6 +154,9 @@ export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange })
 
     setLoading(true);
     setError('');
+    setShowPrediction(false);
+    setPrediction(null);
+    setPredictionError('');
 
     async function initFetch() {
       await fetchSensorDetail(zone.id);
@@ -279,6 +318,75 @@ export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange })
                   <FontAwesomeIcon icon={faMap} className="text-slate-400 text-[10px]" />
                   <span>Google Maps</span>
                 </a>
+              </div>
+
+              {/* Opsi volume prediction hari ini */}
+              <div className="mt-4 pt-4 border-t border-slate-200/60">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Proyeksi AI</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Estimasi volume sampah hari ini menurut jadwal pengambilan</p>
+                  </div>
+                  <button
+                    onClick={handleTogglePrediction}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer border ${
+                      showPrediction
+                        ? 'bg-emerald-650 border-emerald-650 bg-emerald-600 hover:bg-emerald-500 text-white'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {showPrediction ? 'Sembunyikan Prediksi' : 'Lihat Prediksi Hari Ini'}
+                  </button>
+                </div>
+
+                {showPrediction && (
+                  <div className="mt-4 bg-white border border-slate-200 rounded-xl p-4 animate-fade-in">
+                    {predictionLoading ? (
+                      <div className="flex items-center justify-center py-4 text-slate-400">
+                        <FontAwesomeIcon icon={faSpinner} className="animate-spin text-lg text-emerald-500 mr-2" />
+                        <span className="text-xs font-semibold">Menganalisis volume dengan AI...</span>
+                      </div>
+                    ) : predictionError ? (
+                      <div className="text-center py-4 text-red-500 text-xs font-medium flex items-center justify-center gap-2">
+                        <FontAwesomeIcon icon={faTriangleExclamation} />
+                        <span>{predictionError}</span>
+                      </div>
+                    ) : prediction ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex flex-col justify-between">
+                          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Prediksi Volume</span>
+                          <span className="text-sm font-extrabold text-slate-800 mt-1 block">
+                            {prediction.predicted_volume != null ? `${prediction.predicted_volume.toFixed(1)}%` : '-'}
+                          </span>
+                        </div>
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex flex-col justify-between">
+                          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Status Prediksi</span>
+                          <div>
+                            <span className={`inline-block text-[10px] px-2 py-0.5 rounded-md mt-1 font-bold ${
+                              prediction.prediction_status === 'CRITICAL' || prediction.prediction_status === 'Awas'
+                                ? 'bg-red-100 text-red-700'
+                                : prediction.prediction_status === 'WARNING' || prediction.prediction_status === 'Waspada'
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-emerald-100 text-emerald-700'
+                            }`}>
+                              {prediction.prediction_status || 'NORMAL'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex flex-col justify-between">
+                          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Confidence Score</span>
+                          <span className="text-sm font-extrabold text-slate-800 mt-1 block">
+                            {prediction.confidence_score != null ? `${Math.round(prediction.confidence_score * 100)}%` : '-'}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-xs text-slate-400 italic">
+                        Belum ada data prediksi AI untuk hari ini di TPS ini.
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
