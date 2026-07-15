@@ -253,7 +253,20 @@ def get_temporal():
     }
 
 
+# ponytail: Caches rainfall per kecamatan for a single run.
+# A more robust solution would use a persistent cache like Redis
+# with a TTL to avoid hitting the API on every scheduler run.
+_rainfall_cache = {}
+
 def get_rainfall(zone: Zone):
+    """
+    Fetches rainfall for a zone's kecamatan, using a cache to avoid redundant API calls.
+    It uses the provided zone's lat/lon for the API call if the kecamatan is not already cached.
+    """
+    kecamatan = zone.kecamatan
+    if kecamatan in _rainfall_cache:
+        return _rainfall_cache[kecamatan]
+
     url = (
         "https://api.open-meteo.com/v1/forecast"
         f"?latitude={zone.latitude}"
@@ -264,10 +277,17 @@ def get_rainfall(zone: Zone):
     )
 
     try:
-        data = requests.get(url, timeout=10).json()
-        return float(data["daily"]["precipitation_sum"][0])
-    except:
-        return round(random.uniform(0, 15), 2)
+        data = requests.get(url, timeout=15).json()
+        rainfall = float(data["daily"]["precipitation_sum"][0])
+        _rainfall_cache[kecamatan] = rainfall
+        print(f"Fetched rainfall for {kecamatan}: {rainfall} mm")
+        return rainfall
+    except Exception as e:
+        print(f"Could not fetch rainfall for {kecamatan}, using random value. Error: {e}")
+        # Cache the random value to ensure consistency for the same kecamatan in this run
+        random_rainfall = round(random.uniform(0, 15), 2)
+        _rainfall_cache[kecamatan] = random_rainfall
+        return random_rainfall
 
 
 def get_previous_history(db: Session, tps_id):
@@ -328,20 +348,19 @@ def get_event_score():
 
 # Build Historical Data
 
-def build_feature_row(db: Session, zone: Zone):
-
+def build_feature_row(db: Session, zone: Zone, rainfall: float):
+    """Builds a feature row for a given zone and pre-fetched rainfall."""
     previous = get_previous_history(db, zone.id)
 
     temporal = get_temporal()
 
-    rainfall = get_rainfall(zone)
     event_score = get_event_score()
 
     growth_rate = get_growth_rate(rainfall, event_score)
 
     feature = {
         "kecamatan": zone.kecamatan,
-        "tps_id": zone.id,
+        "tps_id": str(zone.id),
         "tps_type": zone.jenis_tps,
         "zone_population": get_zone_population(zone.kecamatan),
         "tps_capacity_kg": get_tps_capacity(zone.id),
@@ -359,21 +378,30 @@ def build_feature_row(db: Session, zone: Zone):
 
 
 def collect_daily_data():
-
+    """
+    Collects and stores daily waste data features for all registered TPS zones.
+    Rainfall data is fetched once per kecamatan to improve efficiency.
+    """
     db = SessionLocal()
-
     try:
         zones = get_registered_tps(db)
+        
+        # Clear the cache at the beginning of each run
+        _rainfall_cache.clear()
 
         for zone in zones:
-
-            feature = build_feature_row(db, zone)
+            # get_rainfall will fetch and cache the data on the first call for a kecamatan
+            rainfall = get_rainfall(zone)
+            
+            # Pass the fetched/cached rainfall value to build the feature row
+            feature = build_feature_row(db, zone, rainfall)
 
             db.add(HistoricalWasteData(**feature))
 
         db.commit()
-
         print(f"Inserted {len(zones)} historical records.")
-
+    except Exception as e:
+        print(f"An error occurred during daily data collection: {e}")
+        db.rollback()
     finally:
         db.close()
