@@ -161,22 +161,49 @@ def get_sensor_data_history(zone_id: int, days: int = 7, db: Session = Depends(g
 
 @router.get("/sensor-data", response_model=None)
 def get_all_sensor_data(
+    page: int = Query(1, ge=1, description="Nomor halaman"),
+    per_page: int = Query(10, ge=1, le=100, description="Jumlah data per halaman"),
     zone_id: Optional[int] = Query(None),
     sensor_type: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Mengambil semua data pembacaan sensor (Master Data).
+    Mengambil semua data pembacaan sensor (Master Data) dengan pagination dan filter.
     """
-    query = db.query(SensorData).options(joinedload(SensorData.zone))
+    query = db.query(SensorData)
     if zone_id is not None:
         query = query.filter(SensorData.zone_id == zone_id)
     if sensor_type is not None:
         query = query.filter(SensorData.sensor_type == sensor_type)
+    if search:
+        query = query.join(SensorData.zone).filter(
+            (SensorData.sensor_type.ilike(f"%{search}%")) |
+            (Zone.name.ilike(f"%{search}%")) |
+            (Zone.kecamatan.ilike(f"%{search}%"))
+        )
     
-    records = query.order_by(SensorData.created_at.desc()).all()
-    data = [SensorDataResponse.model_validate(record) for record in records]
+    total = query.count()
+    
+    records = (
+        query
+        .options(joinedload(SensorData.zone))
+        .order_by(SensorData.created_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+    
+    items = [SensorDataResponse.model_validate(record) for record in records]
+    
+    data = {
+        "items": items,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": max(1, -(-total // per_page))
+    }
     return response_success(data=data, message="Semua data sensor berhasil diambil.")
 
 @router.get("/sensor-data/{id}", response_model=None)

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { api } from '../services/api';
 import Header from '../components/Header';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -13,6 +13,7 @@ import DriverModal from '../components/fragments/DriverModal';
 import FleetModal from '../components/fragments/FleetModal';
 import SensorModal from '../components/fragments/SensorModal';
 import ConfirmModal from '../components/fragments/ConfirmModal';
+import Pagination from '../components/fragments/Pagination';
 
 export default function MasterData() {
   const [activeTab, setActiveTab] = useState('driver'); // 'driver', 'fleet', or 'sensor'
@@ -30,9 +31,28 @@ export default function MasterData() {
 
   // Search & Filter States
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedZoneFilter, setSelectedZoneFilter] = useState('');
   const [selectedSensorTypeFilter, setSelectedSensorTypeFilter] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
+
+  // Sensor Pagination States
+  const [sensorPage, setSensorPage] = useState(1);
+  const [sensorTotalPages, setSensorTotalPages] = useState(1);
+  const [sensorTotal, setSensorTotal] = useState(0);
+  const [sensorPerPage] = useState(10);
+
+  // Driver Pagination States
+  const [driverPage, setDriverPage] = useState(1);
+  const [driverTotalPages, setDriverTotalPages] = useState(1);
+  const [driverTotal, setDriverTotal] = useState(0);
+  const [driverPerPage] = useState(10);
+
+  // Fleet Pagination States
+  const [fleetPage, setFleetPage] = useState(1);
+  const [fleetTotalPages, setFleetTotalPages] = useState(1);
+  const [fleetTotal, setFleetTotal] = useState(0);
+  const [fleetPerPage] = useState(10);
 
   // Driver Modals State
   const [isDriverModalOpen, setIsDriverModalOpen] = useState(false);
@@ -50,41 +70,190 @@ export default function MasterData() {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchData = async () => {
+  const fetchStaticData = useCallback(async () => {
     try {
-      setLoading(true);
-      setErrorMessage('');
-
-      // Selalu muat wilayah & armada untuk dropdown referensi silang
       const [zonesRes, fleetsRes] = await Promise.all([
         api.getZones(),
         api.getFleets()
       ]);
-
       if (zonesRes.success) setZones(zonesRes.data || []);
       if (fleetsRes.success) setFleets(fleetsRes.data || []);
+    } catch (err) {
+      setErrorMessage(err.message || 'Gagal memuat data referensi.');
+    }
+  }, []);
 
-      if (activeTab === 'driver') {
-        const driversRes = await api.getDrivers();
-        if (driversRes.success) setDrivers(driversRes.data || []);
-      } else if (activeTab === 'sensor') {
-        const sensorsRes = await api.getSensorData();
-        if (sensorsRes.success) setSensors(sensorsRes.data || []);
+  const fetchDrivers = useCallback(async (page, search, zone) => {
+    try {
+      setLoading(true);
+      setErrorMessage('');
+      const res = await api.getDrivers({
+        page,
+        per_page: driverPerPage,
+        search,
+        zone_id: zone
+      });
+      if (res.success) {
+        setDrivers(res.data.items || []);
+        setDriverTotal(res.data.total || 0);
+        setDriverTotalPages(res.data.total_pages || 1);
       }
     } catch (err) {
-      setErrorMessage(err.message || 'Gagal memuat data master.');
+      setErrorMessage(err.message || 'Gagal memuat data driver.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [driverPerPage]);
 
+  const fetchFleets = useCallback(async (page, search, category) => {
+    try {
+      setLoading(true);
+      setErrorMessage('');
+      const res = await api.getFleets({
+        page,
+        per_page: fleetPerPage,
+        search,
+        category
+      });
+      if (res.success) {
+        setFleets(res.data.items || []);
+        setFleetTotal(res.data.total || 0);
+        setFleetTotalPages(res.data.total_pages || 1);
+      }
+    } catch (err) {
+      setErrorMessage(err.message || 'Gagal memuat data armada.');
+    } finally {
+      setLoading(false);
+    }
+  }, [fleetPerPage]);
+
+  const fetchSensors = useCallback(async (page, search, zone, type) => {
+    try {
+      setLoading(true);
+      setErrorMessage('');
+      const res = await api.getSensorData({
+        page,
+        per_page: sensorPerPage,
+        search,
+        zone_id: zone,
+        sensor_type: type
+      });
+      if (res.success) {
+        setSensors(res.data.items || []);
+        setSensorTotal(res.data.total || 0);
+        setSensorTotalPages(res.data.total_pages || 1);
+      }
+    } catch (err) {
+      setErrorMessage(err.message || 'Gagal memuat data sensor.');
+    } finally {
+      setLoading(false);
+    }
+  }, [sensorPerPage]);
+
+  const fetchMetadataCounts = useCallback(async () => {
+    try {
+      const [driversRes, fleetsRes, sensorsRes] = await Promise.all([
+        api.getDrivers({ page: 1, per_page: 1 }),
+        api.getFleets({ page: 1, per_page: 1 }),
+        api.getSensorData({ page: 1, per_page: 1 })
+      ]);
+      if (driversRes.success) setDriverTotal(driversRes.data.total || 0);
+      if (fleetsRes.success) setFleetTotal(fleetsRes.data.total || 0);
+      if (sensorsRes.success) setSensorTotal(sensorsRes.data.total || 0);
+    } catch {
+      // Fail silently
+    }
+  }, []);
+
+  // Mount Effect
   useEffect(() => {
-    fetchData();
+    fetchStaticData();
+    fetchMetadataCounts();
+  }, [fetchStaticData, fetchMetadataCounts]);
+
+  // Search Debouncing
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // Tab Switch Effect
+  useEffect(() => {
     setSearchQuery('');
+    setDebouncedSearchQuery('');
     setSelectedZoneFilter('');
     setSelectedSensorTypeFilter('');
     setSelectedCategoryFilter('');
-  }, [activeTab]);
+    setDriverPage(1);
+    setFleetPage(1);
+    setSensorPage(1);
+
+    if (activeTab === 'driver') {
+      fetchDrivers(1, '', '');
+    } else if (activeTab === 'fleet') {
+      fetchFleets(1, '', '');
+    } else if (activeTab === 'sensor') {
+      fetchSensors(1, '', '', '');
+    }
+  }, [activeTab, fetchDrivers, fetchFleets, fetchSensors]);
+
+  // Driver Page / Filter Change Effect
+  useEffect(() => {
+    if (activeTab === 'driver') {
+      fetchDrivers(driverPage, debouncedSearchQuery, selectedZoneFilter);
+    }
+  }, [activeTab, driverPage, debouncedSearchQuery, selectedZoneFilter, fetchDrivers]);
+
+  // Fleet Page / Filter Change Effect
+  useEffect(() => {
+    if (activeTab === 'fleet') {
+      fetchFleets(fleetPage, debouncedSearchQuery, selectedCategoryFilter);
+    }
+  }, [activeTab, fleetPage, debouncedSearchQuery, selectedCategoryFilter, fetchFleets]);
+
+  // Sensor Page / Filter Change Effect
+  useEffect(() => {
+    if (activeTab === 'sensor') {
+      fetchSensors(sensorPage, debouncedSearchQuery, selectedZoneFilter, selectedSensorTypeFilter);
+    }
+  }, [activeTab, sensorPage, debouncedSearchQuery, selectedZoneFilter, selectedSensorTypeFilter, fetchSensors]);
+
+  const handleSearchChange = (val) => {
+    setSearchQuery(val);
+    setDriverPage(1);
+    setFleetPage(1);
+    setSensorPage(1);
+  };
+
+  const handleZoneFilterChange = (val) => {
+    setSelectedZoneFilter(val);
+    setDriverPage(1);
+    setSensorPage(1);
+  };
+
+  const handleSensorTypeFilterChange = (val) => {
+    setSelectedSensorTypeFilter(val);
+    setSensorPage(1);
+  };
+
+  const handleCategoryFilterChange = (val) => {
+    setSelectedCategoryFilter(val);
+    setFleetPage(1);
+  };
+
+  const handleRefresh = () => {
+    fetchStaticData();
+    fetchMetadataCounts();
+    if (activeTab === 'driver') {
+      fetchDrivers(driverPage, debouncedSearchQuery, selectedZoneFilter);
+    } else if (activeTab === 'fleet') {
+      fetchFleets(fleetPage, debouncedSearchQuery, selectedCategoryFilter);
+    } else if (activeTab === 'sensor') {
+      fetchSensors(sensorPage, debouncedSearchQuery, selectedZoneFilter, selectedSensorTypeFilter);
+    }
+  };
 
   const triggerSuccessMsg = (msg) => {
     setSuccessMessage(msg);
@@ -97,13 +266,15 @@ export default function MasterData() {
       const res = await api.updateDriver(selectedDriver.id, payload);
       if (res.success) {
         triggerSuccessMsg('Data driver berhasil diperbarui.');
-        fetchData();
+        fetchDrivers(driverPage, debouncedSearchQuery, selectedZoneFilter);
+        fetchMetadataCounts();
       }
     } else {
       const res = await api.createDriver(payload);
       if (res.success) {
         triggerSuccessMsg('Driver baru berhasil didaftarkan.');
-        fetchData();
+        fetchDrivers(driverPage, debouncedSearchQuery, selectedZoneFilter);
+        fetchMetadataCounts();
       }
     }
   };
@@ -114,13 +285,17 @@ export default function MasterData() {
       const res = await api.updateFleet(selectedFleet.id, payload);
       if (res.success) {
         triggerSuccessMsg('Informasi armada berhasil diperbarui.');
-        fetchData();
+        fetchFleets(fleetPage, debouncedSearchQuery, selectedCategoryFilter);
+        fetchMetadataCounts();
+        fetchStaticData();
       }
     } else {
       const res = await api.createFleet(payload);
       if (res.success) {
         triggerSuccessMsg('Tipe armada baru berhasil terdaftar.');
-        fetchData();
+        fetchFleets(fleetPage, debouncedSearchQuery, selectedCategoryFilter);
+        fetchMetadataCounts();
+        fetchStaticData();
       }
     }
   };
@@ -131,13 +306,15 @@ export default function MasterData() {
       const res = await api.updateSensorDataManual(selectedSensor.id, payload);
       if (res.success) {
         triggerSuccessMsg('Data sensor berhasil diperbarui.');
-        fetchData();
+        fetchSensors(sensorPage, debouncedSearchQuery, selectedZoneFilter, selectedSensorTypeFilter);
+        fetchMetadataCounts();
       }
     } else {
       const res = await api.createSensorDataManual(payload);
       if (res.success) {
         triggerSuccessMsg('Sensor baru berhasil dipasang.');
-        fetchData();
+        fetchSensors(sensorPage, debouncedSearchQuery, selectedZoneFilter, selectedSensorTypeFilter);
+        fetchMetadataCounts();
       }
     }
   };
@@ -152,19 +329,23 @@ export default function MasterData() {
         const res = await api.deleteDriver(confirmDeleteId);
         if (res.success) {
           triggerSuccessMsg('Driver berhasil dihapus dari sistem.');
-          fetchData();
+          fetchDrivers(driverPage, debouncedSearchQuery, selectedZoneFilter);
+          fetchMetadataCounts();
         }
       } else if (activeTab === 'fleet') {
         const res = await api.deleteFleet(confirmDeleteId);
         if (res.success) {
           triggerSuccessMsg('Tipe armada berhasil dihapus dari sistem.');
-          fetchData();
+          fetchFleets(fleetPage, debouncedSearchQuery, selectedCategoryFilter);
+          fetchMetadataCounts();
+          fetchStaticData();
         }
       } else {
         const res = await api.deleteSensorData(confirmDeleteId);
         if (res.success) {
           triggerSuccessMsg('Sensor berhasil dicopot dari sistem.');
-          fetchData();
+          fetchSensors(sensorPage, debouncedSearchQuery, selectedZoneFilter, selectedSensorTypeFilter);
+          fetchMetadataCounts();
         }
       }
       setConfirmDeleteId(null);
@@ -175,34 +356,10 @@ export default function MasterData() {
     }
   };
 
-  const getZoneName = (id) => {
-    const found = zones.find(z => z.id === id);
-    return found ? `${found.name} (${found.kecamatan})` : `Zone #${id}`;
-  };
-
   // Filtering Logic
-  const filteredDrivers = drivers.filter(d => {
-    const matchesSearch = d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          d.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          d.whatsapp_number.includes(searchQuery);
-    const matchesZone = selectedZoneFilter ? d.zone_id === Number(selectedZoneFilter) : true;
-    return matchesSearch && matchesZone;
-  });
-
-  const filteredFleets = fleets.filter(f => {
-    const matchesSearch = f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          f.type.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategoryFilter ? f.category === selectedCategoryFilter : true;
-    return matchesSearch && matchesCategory;
-  });
-
-  const filteredSensors = sensors.filter(s => {
-    const matchesSearch = s.sensor_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (s.zone && s.zone.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesZone = selectedZoneFilter ? s.zone_id === Number(selectedZoneFilter) : true;
-    const matchesType = selectedSensorTypeFilter ? s.sensor_type === selectedSensorTypeFilter : true;
-    return matchesSearch && matchesZone && matchesType;
-  });
+  const filteredDrivers = drivers;
+  const filteredFleets = fleets;
+  const filteredSensors = sensors;
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
@@ -211,7 +368,7 @@ export default function MasterData() {
         subtitle="Kelola data operasional terpusat driver dan sensor perangkat IoT."
         rightContent={
           <button
-            onClick={fetchData}
+            onClick={handleRefresh}
             className="w-9 h-9 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-500 rounded-lg flex items-center justify-center cursor-pointer transition-colors shadow-xs"
             title="Segarkan Data"
           >
@@ -227,9 +384,9 @@ export default function MasterData() {
         <MasterTabs
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          driverCount={drivers.length}
-          fleetCount={fleets.length}
-          sensorCount={sensors.length}
+          driverCount={driverTotal}
+          fleetCount={fleetTotal}
+          sensorCount={sensorTotal}
           onAdd={() => {
             if (activeTab === 'driver') {
               setSelectedDriver(null);
@@ -248,14 +405,14 @@ export default function MasterData() {
           <MasterFilters
             activeTab={activeTab}
             searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
+            onSearchChange={handleSearchChange}
             zones={zones}
             selectedZoneFilter={selectedZoneFilter}
-            onZoneFilterChange={setSelectedZoneFilter}
+            onZoneFilterChange={handleZoneFilterChange}
             selectedSensorTypeFilter={selectedSensorTypeFilter}
-            onSensorTypeFilterChange={setSelectedSensorTypeFilter}
+            onSensorTypeFilterChange={handleSensorTypeFilterChange}
             selectedCategoryFilter={selectedCategoryFilter}
-            onCategoryFilterChange={setSelectedCategoryFilter}
+            onCategoryFilterChange={handleCategoryFilterChange}
           />
 
           {activeTab === 'driver' ? (
@@ -287,6 +444,39 @@ export default function MasterData() {
                 setIsSensorModalOpen(true);
               }}
               onDelete={(id) => setConfirmDeleteId(id)}
+              loading={loading}
+            />
+          )}
+
+          {activeTab === 'driver' && (
+            <Pagination
+              currentPage={driverPage}
+              totalPages={driverTotalPages}
+              totalItems={driverTotal}
+              onPageChange={setDriverPage}
+              itemLabel="driver"
+              loading={loading}
+            />
+          )}
+
+          {activeTab === 'fleet' && (
+            <Pagination
+              currentPage={fleetPage}
+              totalPages={fleetTotalPages}
+              totalItems={fleetTotal}
+              onPageChange={setFleetPage}
+              itemLabel="tipe armada"
+              loading={loading}
+            />
+          )}
+
+          {activeTab === 'sensor' && (
+            <Pagination
+              currentPage={sensorPage}
+              totalPages={sensorTotalPages}
+              totalItems={sensorTotal}
+              onPageChange={setSensorPage}
+              itemLabel="data sensor"
               loading={loading}
             />
           )}

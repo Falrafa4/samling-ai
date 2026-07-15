@@ -211,27 +211,10 @@ def seed_data():
         db.commit()
         print(f"Tabel users ({len(drivers_data)} driver ber-armada, 5 driver per wilayah DKI Jakarta) berhasil di-seed.")
 
-        # 5. Seed SensorData
-        now = get_jakarta_now()
-        sensor_data_records = []
-        import random
-        random.seed(42)
-
-        for i, zone in enumerate(zone_sample):
-            # Seed fresh sensor data dengan nilai 0 (seolah baru dipasang)
-            sensor_data_records.extend([
-                SensorData(zone_id=zone.id, sensor_type="Ultrasonic-Organic", fill_percentage=0.0, value=0.0, created_at=now, updated_at=now),
-                SensorData(zone_id=zone.id, sensor_type="Ultrasonic-Anorganic", fill_percentage=0.0, value=0.0, created_at=now, updated_at=now),
-                SensorData(zone_id=zone.id, sensor_type="MQ-135", fill_percentage=0.0, value=0.0, created_at=now, updated_at=now),
-                SensorData(zone_id=zone.id, sensor_type="DHT-22-Temp", fill_percentage=0.0, value=0.0, created_at=now, updated_at=now),
-                SensorData(zone_id=zone.id, sensor_type="DHT-22-Humid", fill_percentage=0.0, value=0.0, created_at=now, updated_at=now)
-            ])
-
-            # Karena kosong, set status risiko ke Normal
-            zone.risk_status = "Normal"
-
-        db.add_all(sensor_data_records)
-        print(f"Tabel sensor_data ({len(sensor_data_records)} data pembacaan IoT fresh bernilai 0) berhasil di-seed.")
+        # 5. Seed SensorData - SKIPPED
+        # Data sensor kini di-seed oleh script terpisah: seed_sensor_data.py
+        # Script tersebut akan membuat data simulasi 7 hari untuk ~10% TPS dengan distribusi status realistis
+        print("Tabel sensor_data akan di-seed oleh script terpisah (seed_sensor_data.py).")
 
         # 6. Seed VolumePredictions
         zone1 = zone_sample[0]
@@ -252,6 +235,7 @@ def seed_data():
         print("Tabel volume_predictions (5 data proyeksi) berhasil di-seed.")
 
         # 7. Seed CitizenReports
+        now = get_jakarta_now()
         citizen_reports_data = [
             CitizenReport(
                 whatsapp_number="6281234567890",

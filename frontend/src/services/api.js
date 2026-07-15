@@ -171,8 +171,16 @@ export const api = {
    * Mengambil seluruh daftar tipe armada kendaraan.
    * Endpoint: GET /fleets
    */
-  async getFleets() {
-    return fetchWithAuth('/fleets');
+  async getFleets(params = {}) {
+    const cleanParams = {};
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        cleanParams[key] = params[key];
+      }
+    });
+    const query = new URLSearchParams(cleanParams).toString();
+    const url = query ? `/fleets?${query}` : '/fleets';
+    return fetchWithAuth(url);
   },
 
   /**
@@ -217,8 +225,16 @@ export const api = {
    * Mengambil seluruh daftar driver aktif.
    * Endpoint: GET /drivers
    */
-  async getDrivers() {
-    return fetchWithAuth('/drivers');
+  async getDrivers(params = {}) {
+    const cleanParams = {};
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        cleanParams[key] = params[key];
+      }
+    });
+    const query = new URLSearchParams(cleanParams).toString();
+    const url = query ? `/drivers?${query}` : '/drivers';
+    return fetchWithAuth(url);
   },
 
   /**

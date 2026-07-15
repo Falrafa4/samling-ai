@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
-from typing import List
+from typing import List, Optional
 
 from app.database.database import get_db
 from app.models.users import User
@@ -14,12 +14,49 @@ from app.utils.security import get_password_hash
 router = APIRouter(tags=["drivers"])
 
 @router.get("/drivers")
-def get_drivers(db: Session = Depends(get_db)):
+def get_drivers(
+    page: Optional[int] = Query(None, description="Nomor halaman"),
+    per_page: Optional[int] = Query(None, description="Jumlah data per halaman"),
+    search: Optional[str] = Query(None),
+    zone_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db)
+):
     """
-    Mengambil seluruh daftar supir armada (User dengan role='driver'). (Memerlukan Autentikasi)
+    Mengambil daftar supir armada (User dengan role='driver') dengan pagination opsional dan filter. (Memerlukan Autentikasi)
     """
-    drivers = db.query(User).options(joinedload(User.fleet)).filter(User.role == "driver").all()
-    data = [DriverResponse.model_validate(d) for d in drivers]
+    query = db.query(User).options(joinedload(User.fleet)).filter(User.role == "driver")
+    
+    if search:
+        query = query.filter(
+            (User.name.ilike(f"%{search}%")) |
+            (User.username.ilike(f"%{search}%")) |
+            (User.whatsapp_number.ilike(f"%{search}%"))
+        )
+        
+    if zone_id is not None:
+        zone = db.query(Zone).filter(Zone.id == zone_id).first()
+        if zone and zone.wilayah:
+            query = query.filter(User.coverage_area == zone.wilayah)
+        else:
+            query = query.filter(User.id == -1)
+            
+    query = query.order_by(User.id.desc())
+    
+    if page is not None and per_page is not None:
+        total = query.count()
+        drivers = query.offset((page - 1) * per_page).limit(per_page).all()
+        items = [DriverResponse.model_validate(d) for d in drivers]
+        data = {
+            "items": items,
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": max(1, -(-total // per_page))
+        }
+    else:
+        drivers = query.all()
+        data = [DriverResponse.model_validate(d) for d in drivers]
+        
     return response_success(data=data, message="Daftar driver berhasil diambil.")
 
 @router.get("/drivers/{id}")

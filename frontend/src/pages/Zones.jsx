@@ -15,9 +15,7 @@ import {
   faFilterCircleXmark,
   faMapPin,
   faLayerGroup,
-  faRoad,
-  faChevronLeft,
-  faChevronRight
+  faRoad
 } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../services/api';
 import Header from '../components/Header';
@@ -25,6 +23,7 @@ import ZoneFormModal from '../components/fragments/ZoneFormModal';
 import ConfirmModal from '../components/fragments/ConfirmModal';
 import FilterModal from '../components/fragments/FilterModal';
 import ZoneDetailModal from '../components/fragments/ZoneDetailModal';
+import Pagination from '../components/fragments/Pagination';
 
 export default function Zones() {
   const [zones, setZones] = useState([]);
@@ -245,17 +244,6 @@ export default function Zones() {
   // Paginasi dan pemfilteran dilakukan di sisi server
   const paginatedZones = zones;
 
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisible = 5;
-    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let end = Math.min(totalPages, start + maxVisible - 1);
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-    for (let i = start; i <= end; i++) pages.push(i);
-    return pages;
-  };
 
   // Helper for risk status styling
   const getRiskBadgeClasses = (status) => {
@@ -452,44 +440,14 @@ export default function Zones() {
               );
             })}
 
-              {totalPages > 1 && (
-                <div className="bg-white border border-slate-200 rounded-xl px-5 py-3 flex flex-col gap-4 md:gap-0 md:flex-row md:items-center justify-between">
-                  <span className="text-[11px] text-slate-500 font-medium">
-                    Halaman {currentPage} dari {totalPages}
-                    <span className="text-slate-300 mx-1">|</span>
-                    {totalItems} wilayah
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-all flex items-center justify-center cursor-pointer"
-                    >
-                      <FontAwesomeIcon icon={faChevronLeft} className="text-[10px]" />
-                    </button>
-                    {getPageNumbers().map(page => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`min-w-8 h-8 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center cursor-pointer ${
-                          page === currentPage
-                            ? 'bg-emerald-600 text-white shadow-sm'
-                            : 'border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-                    <button
-                      disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-all flex items-center justify-center cursor-pointer"
-                    >
-                      <FontAwesomeIcon icon={faChevronRight} className="text-[10px]" />
-                    </button>
-                  </div>
-                </div>
-              )}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                onPageChange={setCurrentPage}
+                itemLabel="wilayah"
+                loading={loading}
+              />
             </>
           ) : (
             <div className="bg-white border border-slate-200 rounded-xl py-20 flex flex-col items-center justify-center text-slate-400">

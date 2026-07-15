@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.database.database import get_db
 from app.models.fleets import Fleet
@@ -11,12 +11,44 @@ from app.utils.response import response_success
 router = APIRouter(tags=["fleets"], dependencies=[Depends(get_current_user)])
 
 @router.get("/fleets")
-def get_all_fleets(db: Session = Depends(get_db)):
+def get_all_fleets(
+    page: Optional[int] = Query(None, description="Nomor halaman"),
+    per_page: Optional[int] = Query(None, description="Jumlah data per halaman"),
+    search: Optional[str] = Query(None),
+    category: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
     """
-    Mengambil semua daftar tipe armada kendaraan DLH Jakarta. (Memerlukan Autentikasi)
+    Mengambil semua daftar tipe armada kendaraan DLH Jakarta dengan pagination opsional dan filter. (Memerlukan Autentikasi)
     """
-    fleets = db.query(Fleet).order_by(Fleet.category.desc(), Fleet.name.asc()).all()
-    data = [FleetResponse.model_validate(f) for f in fleets]
+    query = db.query(Fleet)
+    
+    if search:
+        query = query.filter(
+            (Fleet.name.ilike(f"%{search}%")) |
+            (Fleet.type.ilike(f"%{search}%"))
+        )
+        
+    if category:
+        query = query.filter(Fleet.category == category)
+        
+    query = query.order_by(Fleet.category.desc(), Fleet.name.asc())
+    
+    if page is not None and per_page is not None:
+        total = query.count()
+        fleets = query.offset((page - 1) * per_page).limit(per_page).all()
+        items = [FleetResponse.model_validate(f) for f in fleets]
+        data = {
+            "items": items,
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": max(1, -(-total // per_page))
+        }
+    else:
+        fleets = query.all()
+        data = [FleetResponse.model_validate(f) for f in fleets]
+        
     return response_success(data=data, message="Daftar tipe armada berhasil diambil.")
 
 @router.get("/fleets/{id}")
