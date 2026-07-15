@@ -8,6 +8,7 @@ class CitizenReportCreate(BaseModel):
     report_content: str
     zone_id: int  # Kembali menjadi wajib diisi
     image_path: Optional[str] = None
+    type: Optional[str] = "waste"  # 'waste' atau 'event'
 
 class CitizenReportUpdate(BaseModel):
     zone_id: Optional[int] = None
@@ -22,6 +23,7 @@ class CitizenReportResponse(BaseModel):
     status: str
     is_grouped: bool
     image_path: Optional[str] = None
+    type: str
     created_at: datetime
     zone: Optional[ZoneResponse] = None
 
@@ -32,3 +34,4 @@ class WhatsAppWebhookInput(BaseModel):
     whatsapp_number: str = Field(..., pattern=r"^62\d{9,13}$")
     report_content: str
     zone_id: int  # Warga memilih zona dari chatbot WhatsApp
+    type: Optional[str] = "waste"  # 'waste' atau 'event'

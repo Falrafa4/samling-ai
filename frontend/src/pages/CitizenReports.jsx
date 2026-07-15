@@ -113,6 +113,7 @@ export default function CitizenReports() {
   const [reports, setReports] = useState([]);
   const [zones, setZones] = useState([]);
   const [selectedZoneFilter, setSelectedZoneFilter] = useState("");
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
   const [draggingOverColumn, setDraggingOverColumn] = useState(null);
@@ -236,9 +237,11 @@ export default function CitizenReports() {
     })),
   ];
 
-  const filteredReports = selectedZoneFilter
-    ? reports.filter((r) => r.zone_id === parseInt(selectedZoneFilter, 10))
-    : reports;
+  const filteredReports = reports.filter((r) => {
+    const matchZone = selectedZoneFilter ? r.zone_id === parseInt(selectedZoneFilter, 10) : true;
+    const matchType = selectedTypeFilter ? r.type === selectedTypeFilter : true;
+    return matchZone && matchType;
+  });
 
   const activeColumnReports = filteredReports.filter(
     (r) => r.status === activeTab,
@@ -344,6 +347,15 @@ export default function CitizenReports() {
                     emptyMessage="Wilayah tidak ditemukan"
                   />
                 </div>
+                <select
+                  value={selectedTypeFilter}
+                  onChange={(e) => setSelectedTypeFilter(e.target.value)}
+                  className="px-3 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 bg-white rounded-lg text-xs font-bold transition-colors cursor-pointer outline-none shadow-xs h-[36px]"
+                >
+                  <option value="">Semua Laporan</option>
+                  <option value="waste">🗑️ Sampah</option>
+                  <option value="event">🎫 Event</option>
+                </select>
               </div>
             </div>
           }
@@ -690,18 +702,25 @@ function DesktopCard({
     >
       {/* Zone & AI Grouped Badges */}
       <div className="flex justify-between items-start gap-2 mb-2.5">
-        <span className="inline-flex items-center gap-1.5 text-[9px] font-bold text-slate-500 uppercase tracking-wider truncate max-w-[70%] bg-slate-100 px-2 py-1 rounded-full">
-          <span
-            className="w-1.5 h-1.5 rounded-full shrink-0"
-            style={{
-              backgroundColor:
-                ZONE_COLORS[(report.zone_id || 0) % ZONE_COLORS.length],
-            }}
-          />
-          <span className="truncate">
-            {report.zone?.name || "Wilayah Luar"}
+        <div className="flex flex-wrap gap-1.5 items-center max-w-[70%]">
+          <span className="inline-flex items-center gap-1.5 text-[9px] font-bold text-slate-500 uppercase tracking-wider truncate bg-slate-100 px-2 py-1 rounded-full">
+            <span
+              className="w-1.5 h-1.5 rounded-full shrink-0"
+              style={{
+                backgroundColor:
+                  ZONE_COLORS[(report.zone_id || 0) % ZONE_COLORS.length],
+              }}
+            />
+            <span className="truncate">
+              {report.zone?.name || "Wilayah Luar"}
+            </span>
           </span>
-        </span>
+          <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase border shrink-0 ${
+            report.type === 'event' ? 'text-purple-750 bg-purple-50 border-purple-200' : 'text-slate-600 bg-slate-100 border-slate-200'
+          }`}>
+            {report.type === 'event' ? '🎫 Event' : '🗑️ Sampah'}
+          </span>
+        </div>
         {report.is_grouped && (
           <span className="shrink-0 text-[8px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full flex items-center gap-1">
             <FontAwesomeIcon icon={faLayerGroup} />
@@ -783,18 +802,25 @@ function MobileCard({
     >
       {/* Header: Zone + AI Grouped */}
       <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-500 truncate max-w-[70%] bg-slate-100 px-2 py-0.5 rounded-full">
-          <span
-            className="w-1.5 h-1.5 rounded-full shrink-0"
-            style={{
-              backgroundColor:
-                ZONE_COLORS[(report.zone_id || 0) % ZONE_COLORS.length],
-            }}
-          />
-          <span className="truncate">
-            {report.zone?.name || "Wilayah Luar"}
+        <div className="flex flex-wrap gap-1 items-center max-w-[70%]">
+          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-500 truncate bg-slate-100 px-2 py-0.5 rounded-full">
+            <span
+              className="w-1.5 h-1.5 rounded-full shrink-0"
+              style={{
+                backgroundColor:
+                  ZONE_COLORS[(report.zone_id || 0) % ZONE_COLORS.length],
+              }}
+            />
+            <span className="truncate">
+              {report.zone?.name || "Wilayah Luar"}
+            </span>
           </span>
-        </span>
+          <span className={`text-[7px] font-extrabold px-1 py-0.5 rounded-full uppercase border shrink-0 ${
+            report.type === 'event' ? 'text-purple-750 bg-purple-50 border-purple-200' : 'text-slate-600 bg-slate-100 border-slate-200'
+          }`}>
+            {report.type === 'event' ? '🎫 Event' : '🗑️ Sampah'}
+          </span>
+        </div>
         {report.is_grouped && (
           <span className="shrink-0 text-[7px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.5 rounded-full flex items-center gap-0.5">
             <FontAwesomeIcon icon={faLayerGroup} className="text-[7px]" />

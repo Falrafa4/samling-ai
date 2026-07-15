@@ -272,11 +272,12 @@ def seed_data():
             ),
             CitizenReport(
                 whatsapp_number="6281311112222",
-                report_content="Laporan bak sampah di TPS jebol pada bagian penahan bawah.",
+                report_content="Akan diadakan kerja bakti pembersihan lingkungan warga sekitar area TPS hari Minggu ini.",
                 zone_id=zone1.id,
                 status="Sedang Ditangani",
                 is_grouped=False,
                 image_path=None,
+                type="event",
                 created_at=now - timedelta(days=1)
             ),
             CitizenReport(
@@ -335,11 +336,12 @@ def seed_data():
             ),
             CitizenReport(
                 whatsapp_number="6281211223344",
-                report_content="Lampu penerangan di TPS mati sejak kemarin malam.",
+                report_content="Akan ada acara festival kuliner jajanan tradisional di sekitar area TPS mulai besok pagi.",
                 zone_id=zone5.id,
                 status="Selesai",
                 is_grouped=False,
                 image_path="uploads/placeholder.avif",
+                type="event",
                 created_at=now - timedelta(days=2)
             ),
         ]

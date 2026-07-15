@@ -44,6 +44,7 @@ export default function FleetDispatch() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isSchedulerConfirmOpen, setIsSchedulerConfirmOpen] = useState(false);
 
   // Mini Leaflet Map Refs
   const miniMapContainerRef = useRef(null);
@@ -268,19 +269,34 @@ export default function FleetDispatch() {
     };
   }, [selectedRoute, zones]);
 
-  // Handle Pipeline Trigger Route Scheduler
-  const handleTriggerAIScheduler = async () => {
+  // Handle Pipeline Trigger Route Scheduler (Open Confirm Modal)
+  const handleTriggerAIScheduler = () => {
+    setIsSchedulerConfirmOpen(true);
+  };
+
+  // Actual API Triggering when confirmed
+  const handleConfirmTriggerScheduler = async () => {
+    setIsSchedulerConfirmOpen(false);
     try {
       setTriggering(true);
       setErrorMessage('');
       setSuccessMessage('');
       const res = await api.triggerRouteGeneration();
       if (res.success) {
-        setSuccessMessage('Pipeline optimasi rute AI berhasil dimulai di background. Menyegarkan rute...');
-        // Refresh data after short delay to let scheduler process
-        setTimeout(() => {
-          loadData(false);
-        }, 1500);
+        setSuccessMessage('Pipeline optimasi rute AI berhasil dimulai di background. Menyegarkan data secara otomatis...');
+        
+        // 1. Refetch instan sesaat setelah trigger diterima
+        await loadData(false);
+
+        // 2. Polling database setiap 2 detik sebanyak 4 kali untuk mengambil rute baru hasil kalkulasi AI
+        let pollCount = 0;
+        const intervalId = setInterval(async () => {
+          pollCount += 1;
+          await loadData(false);
+          if (pollCount >= 4) {
+            clearInterval(intervalId);
+          }
+        }, 2000);
       }
     } catch (err) {
       setErrorMessage(err.message || 'Gagal menjalankan scheduler optimasi rute.');
@@ -373,6 +389,19 @@ export default function FleetDispatch() {
         confirmBgColorClass="bg-emerald-600 hover:bg-emerald-500"
         icon={faRoute}
         submitting={dispatching}
+      />
+
+      {/* Confirm Modal untuk Scheduler AI */}
+      <ConfirmModal
+        isOpen={isSchedulerConfirmOpen}
+        onClose={() => setIsSchedulerConfirmOpen(false)}
+        onConfirm={handleConfirmTriggerScheduler}
+        title="Konfirmasi Jalankan Scheduler AI"
+        message="Apakah Anda yakin ingin menjalankan Scheduler AI sekarang? AI akan menganalisis data timbulan sampah dan memperbarui rute optimal supir secara real-time."
+        confirmText="Jalankan"
+        confirmBgColorClass="bg-emerald-600 hover:bg-emerald-500"
+        icon={faCog}
+        submitting={triggering}
       />
 
       {/* Loading Overlay */}

@@ -21,13 +21,22 @@ def create_citizen_report(
     whatsapp_number: str = Form(...),
     report_content: str = Form(...),
     zone_id: int = Form(...),
+    type: str = Form("waste"),  # Default ke 'waste'
     image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
     """
     Terima Laporan Pengaduan Warga Baru (Mendukung upload gambar opsional via form-data).
-    Melakukan deteksi duplikasi dalam 12 jam terakhir di zona yang sama dengan threshold kemiripan teks > 60%.
+    Melakukan deteksi duplikasi dalam 12 jam terakhir di zona yang sama dengan tipe yang sama.
     """
+    # Validasi type harus event atau waste
+    allowed_types = ["waste", "event"]
+    if type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Tipe laporan tidak valid. Pilihan: {', '.join(allowed_types)}"
+        )
+
     # 1. Validasi zone_id ada di database
     zone = db.query(Zone).filter(Zone.id == zone_id).first()
     if not zone:
@@ -36,7 +45,7 @@ def create_citizen_report(
             detail=f"Zone dengan ID {zone_id} tidak terdaftar di sistem."
         )
 
-    # 2. Ambil laporan di zona yang sama dalam 12 jam terakhir
+    # 2. Ambil laporan di zona yang sama dalam 12 jam terakhir dengan tipe yang sama
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     twelve_hours_ago = now - timedelta(hours=12)
     
@@ -44,6 +53,7 @@ def create_citizen_report(
         db.query(CitizenReport)
         .filter(
             CitizenReport.zone_id == zone_id,
+            CitizenReport.type == type,
             CitizenReport.created_at >= twelve_hours_ago
         )
         .all()
@@ -105,6 +115,7 @@ def create_citizen_report(
         zone_id=zone_id,
         status="Baru",
         is_grouped=is_duplicate,
+        type=type,
         image_path=image_path
     )
     db.add(new_report)
@@ -132,11 +143,12 @@ def create_citizen_report(
 def get_citizen_reports(
     zone_id: Optional[int] = None,
     status: Optional[str] = None,
+    type: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """
     Mengambil daftar laporan pengaduan warga (Memerlukan Autentikasi).
-    Mendukung pemfilteran berdasarkan zone_id dan status untuk visualisasi Kanban Board.
+    Mendukung pemfilteran berdasarkan zone_id, status, dan type untuk visualisasi Kanban Board.
     Menerapkan Eager Loading pada relasi zone untuk performa kueri yang optimal.
     """
     query = db.query(CitizenReport).options(joinedload(CitizenReport.zone))
@@ -145,6 +157,8 @@ def get_citizen_reports(
         query = query.filter(CitizenReport.zone_id == zone_id)
     if status is not None:
         query = query.filter(CitizenReport.status == status)
+    if type is not None:
+        query = query.filter(CitizenReport.type == type)
         
     reports = query.order_by(CitizenReport.created_at.desc()).all()
     
@@ -262,7 +276,7 @@ def whatsapp_webhook(webhook_in: WhatsAppWebhookInput, db: Session = Depends(get
             detail=f"Zone dengan ID {webhook_in.zone_id} tidak terdaftar di sistem."
         )
 
-    # 2. Ambil laporan di zona yang sama dalam 12 jam terakhir
+    # 2. Ambil laporan di zona yang sama dalam 12 jam terakhir dengan tipe yang sama
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     twelve_hours_ago = now - timedelta(hours=12)
     
@@ -270,6 +284,7 @@ def whatsapp_webhook(webhook_in: WhatsAppWebhookInput, db: Session = Depends(get
         db.query(CitizenReport)
         .filter(
             CitizenReport.zone_id == webhook_in.zone_id,
+            CitizenReport.type == webhook_in.type,
             CitizenReport.created_at >= twelve_hours_ago
         )
         .all()
@@ -291,6 +306,7 @@ def whatsapp_webhook(webhook_in: WhatsAppWebhookInput, db: Session = Depends(get
         report_content=webhook_in.report_content,
         zone_id=webhook_in.zone_id,
         status="Baru",
+        type=webhook_in.type or "waste",
         is_grouped=is_duplicate
     )
     db.add(new_report)
