@@ -9,6 +9,7 @@ from app.ai.scheduler.feature_engineer import collect_daily_data
 from app.ai.scheduler.forecast_scheduler import forecast_all_tps
 from app.ai.scheduler.route_scheduler import generate_routes
 from app.ai.scheduler.retrain_scheduler import retrain_model
+from app.ai.scheduler.citizen_report_scheduler import process_citizen_reports
 
 
 def run_daily_pipeline():
@@ -73,10 +74,21 @@ def start_scheduler(blocking: bool = True):
         replace_existing=True,
     )
 
+    # Citizen Report Processing (runs frequently)
+    scheduler.add_job(
+        process_citizen_reports,
+        trigger=CronTrigger.from_crontab(
+            getattr(settings, "SCHEDULER_CITIZEN_REPORTS_CRON", "* * * * *") # Default to every minute
+        ),
+        id="citizen_report_processing",
+        replace_existing=True,
+    )
+
     print(f"Scheduler started ({'blocking' if blocking else 'background'}). Jobs:")
     print(f"daily_pipeline        — {settings.SCHEDULER_DAILY_PIPELINE_CRON}")
     print(f"route_recommendation  — {settings.SCHEDULER_ROUTE_RECOMMENDATION_CRON}")
     print(f"weekly_retrain        — {settings.SCHEDULER_WEEKLY_RETRAIN_CRON}")
+    print(f"citizen_reports       — {getattr(settings, 'SCHEDULER_CITIZEN_REPORTS_CRON', '* * * * *')}")
 
     scheduler.start()
     return scheduler
