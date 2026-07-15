@@ -156,6 +156,7 @@ export default function FleetDispatch() {
       const stops = JSON.parse(selectedRoute.route_json || '[]');
       const tpsStops = stops.filter(s => s.type === 'TPS');
       const latlngs = tpsStops.map(s => [s.latitude, s.longitude]);
+      const finishStop = stops.find(s => s.type === 'Finish');
 
       const driver = selectedRoute.driver;
       if (driver && driver.depot_latitude && driver.depot_longitude) {
@@ -183,6 +184,30 @@ export default function FleetDispatch() {
 
         // Prepend depot to latlngs
         latlngs.unshift([depotLat, depotLng]);
+      }
+
+      // Add Finish marker (TPST Bantar Gebang)
+      if (finishStop && finishStop.latitude && finishStop.longitude) {
+        const finishMarker = L.marker([finishStop.latitude, finishStop.longitude], {
+          icon: L.divIcon({
+            className: 'custom-finish-marker',
+            html: `
+              <div class="w-8 h-8 rounded-full bg-red-600 border border-white text-white flex items-center justify-center shadow-md">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M256 0c17.7 0 32 14.3 32 32V66.7C390.2 81.3 470.7 161.8 485.3 264H512c17.7 0 32 14.3 32 32s-14.3 32-32 32H485.3C470.7 430.2 390.2 510.7 288 525.3V552c0 17.7-14.3 32-32 32s-32-14.3-32-32V525.3C121.8 510.7 41.3 430.2 26.7 328H0c-17.7 0-32-14.3-32-32s14.3-32 32-32H26.7C41.3 161.8 121.8 81.3 224 66.7V32c0-17.7 14.3-32 32-32zM128 288a128 128 0 1 0 256 0 128 128 0 1 0 -256 0z"/>
+                </svg>
+              </div>
+            `,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+          })
+        }).addTo(miniMapRef.current);
+        
+        finishMarker.bindTooltip(`<b>Tujuan Akhir: ${finishStop.name}</b>`, { direction: 'top', offset: [0, -10] });
+        mapMarkersRef.current.push(finishMarker);
+
+        // Append finish to latlngs
+        latlngs.push([finishStop.latitude, finishStop.longitude]);
       }
 
       // Add custom numbered markers for TPS stops

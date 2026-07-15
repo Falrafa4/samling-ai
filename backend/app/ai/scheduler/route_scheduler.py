@@ -373,7 +373,12 @@ def assign_routes_for_area(
                 "latitude": stop["latitude"],
                 "longitude": stop["longitude"],
             })
-        final_route.append({"type": "Finish", "name": FINISH_POINT["name"]})
+        final_route.append({
+            "type": "Finish",
+            "name": FINISH_POINT["name"],
+            "latitude": FINISH_POINT["latitude"],
+            "longitude": FINISH_POINT["longitude"]
+        })
         
         routes.append((current_driver["id"], final_route))
 
