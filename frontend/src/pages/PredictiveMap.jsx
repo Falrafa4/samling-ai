@@ -34,6 +34,18 @@ export default function PredictiveMap() {
     Offline: true
   });
   const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedBasemap, setSelectedBasemap] = useState('Carto');
+  const [selectedRegions, setSelectedRegions] = useState({
+    'KAB. KEPULAUAN SERIBU': true,
+    'KOTA ADM. JAKARTA PUSAT': true,
+    'KOTA ADM. JAKARTA UTARA': true,
+    'KOTA ADM. JAKARTA BARAT': true,
+    'KOTA ADM. JAKARTA SELATAN': true,
+    'KOTA ADM. JAKARTA TIMUR': true
+  });
+
+  // Tile layer management
+  const tileLayerRef = useRef(null);
 
   // API States
   const [zones, setZones] = useState([]);
@@ -88,13 +100,6 @@ export default function PredictiveMap() {
         scrollWheelZoom: true
       }).setView([-6.1944, 106.7672], 13);
 
-      L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-        {
-          attribution: `© <a href='https://carto.com/'>Carto</a>`,
-        },
-      ).addTo(mapRef.current);
-
       // Pindahkan zoom control ke pojok kanan bawah agar rapi
       L.control.zoom({
         position: 'bottomright'
@@ -108,6 +113,32 @@ export default function PredictiveMap() {
       }
     };
   }, []);
+
+  // Sync Base Tile Layer based on selected basemap radio button
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove old layer
+    if (tileLayerRef.current) {
+      mapRef.current.removeLayer(tileLayerRef.current);
+      tileLayerRef.current = null;
+    }
+
+    let url = "";
+    let attribution = "";
+
+    if (selectedBasemap === 'Carto') {
+      url =
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+      attribution = "© OpenStreetMap contributors";
+    } else {
+      // JakartaSatu light gray canvas layer
+      url = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+      attribution = "© Esri | Jakarta Satu";
+    }
+
+    tileLayerRef.current = L.tileLayer(url, { attribution }).addTo(mapRef.current);
+  }, [selectedBasemap]);
 
   // Force map to invalidate size when loading is finished
   useEffect(() => {
@@ -131,11 +162,38 @@ export default function PredictiveMap() {
     }
     markersRef.current = [];
 
-    // Filter berdasarkan Tampilan Area Normal dan Status Lainnya
+    // Filter berdasarkan Tampilan Area Normal, Status Lainnya, dan Kabupaten/Kota
     const filteredZones = zones.filter((z) => {
+      // 1. Filter status
       const sensor = sensorData.find((s) => s.zone_id === z.id && s.sensor_type?.startsWith('Ultrasonic'));
       const status = sensor ? z.risk_status : 'Offline';
-      return selectedStatuses[status] === true;
+      if (selectedStatuses[status] !== true) {
+        return false;
+      }
+
+      // 2. Filter wilayah/kabupaten/kota
+      const normZone = z.wilayah.toLowerCase().replace("kota adm. ", "").replace("kab. adm. ", "").trim();
+      
+      if (selectedRegions['KAB. KEPULAUAN SERIBU'] && (normZone.includes('kepulauan seribu') || normZone.includes('pulau seribu'))) {
+        return true;
+      }
+      if (selectedRegions['KOTA ADM. JAKARTA PUSAT'] && normZone.includes('jakarta pusat')) {
+        return true;
+      }
+      if (selectedRegions['KOTA ADM. JAKARTA UTARA'] && normZone.includes('jakarta utara')) {
+        return true;
+      }
+      if (selectedRegions['KOTA ADM. JAKARTA BARAT'] && normZone.includes('jakarta barat')) {
+        return true;
+      }
+      if (selectedRegions['KOTA ADM. JAKARTA SELATAN'] && normZone.includes('jakarta selatan')) {
+        return true;
+      }
+      if (selectedRegions['KOTA ADM. JAKARTA TIMUR'] && normZone.includes('jakarta timur')) {
+        return true;
+      }
+      
+      return false;
     });
 
     // Buat ikon kustom Leaflet menggunakan Tailwind CSS
@@ -250,7 +308,7 @@ export default function PredictiveMap() {
       const group = L.featureGroup(markersRef.current);
       mapRef.current.fitBounds(group.getBounds().pad(0.15));
     }
-  }, [zones, sensorData, drivers, selectedStatuses]);
+  }, [zones, sensorData, drivers, selectedStatuses, selectedRegions]);
 
   // Recenter map focus to primary bounds
   const handleRecenter = () => {
@@ -402,15 +460,65 @@ export default function PredictiveMap() {
           </div>
         </div>
 
-        {/* Floating Controls — right side */}
-        <div className="absolute top-4 right-4 z-[1010] flex flex-col gap-2">
+        {/* Floating Controls & Legend Ref Filter Panel — right side */}
+        <div className="absolute top-4 right-4 z-[1010] flex flex-col gap-3 items-end">
+          {/* Recenter Button */}
           <button
             onClick={handleRecenter}
-            className="w-11 h-11 rounded-2xl bg-white/90 backdrop-blur-md shadow-soft active:scale-90 transition-all duration-200 ease-out flex items-center justify-center text-slate-500 hover:text-emerald-600 cursor-pointer"
+            className="w-11 h-11 rounded-2xl bg-white/90 backdrop-blur-md shadow-soft active:scale-90 transition-all duration-200 ease-out flex items-center justify-center text-slate-500 hover:text-emerald-600 cursor-pointer shrink-0"
             title="Pusatkan Peta"
           >
             <FontAwesomeIcon icon={faLocationCrosshairs} className="transition-transform duration-200 hover:rotate-45" />
           </button>
+
+          {/* Legend Control Box matching legend-ref.png */}
+          <div className="w-56 bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-md p-4 text-[10px] text-slate-700 font-sans">
+            {/* Basemap Selection */}
+            <div className="space-y-2 mb-3 pb-3 border-b border-slate-100 flex flex-col">
+              <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] font-bold text-emerald-600 uppercase tracking-wide">
+                <input
+                  type="radio"
+                  name="basemap"
+                  checked={selectedBasemap === 'Carto'}
+                  onChange={() => setSelectedBasemap('Carto')}
+                  className="w-4 h-4 accent-blue-600 cursor-pointer"
+                />
+                <span>Carto</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] font-bold text-emerald-600 uppercase tracking-wide">
+                <input
+                  type="radio"
+                  name="basemap"
+                  checked={selectedBasemap === 'jakartasatu'}
+                  onChange={() => setSelectedBasemap('jakartasatu')}
+                  className="w-4 h-4 accent-blue-600 cursor-pointer"
+                />
+                <span>jakartasatu</span>
+              </label>
+            </div>
+
+            {/* Region Overlays Selection */}
+            <div className="space-y-2 flex flex-col">
+              {[
+                'KAB. KEPULAUAN SERIBU',
+                'KOTA ADM. JAKARTA PUSAT',
+                'KOTA ADM. JAKARTA UTARA',
+                'KOTA ADM. JAKARTA BARAT',
+                'KOTA ADM. JAKARTA SELATAN',
+                'KOTA ADM. JAKARTA TIMUR'
+              ].map((region) => (
+                <label key={region} className="flex items-center gap-2 cursor-pointer select-none text-[11px] font-bold text-emerald-600 uppercase tracking-wide">
+                  <input
+                    type="checkbox"
+                    checked={selectedRegions[region]}
+                    onChange={(e) => setSelectedRegions(prev => ({ ...prev, [region]: e.target.checked }))}
+                    className="w-4 h-4 rounded accent-blue-650 cursor-pointer"
+                  />
+                  <span>{region}</span>
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Floating Summary Overlay */}

@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     UPLOAD_FOLDER: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # Default 24 jam (1440 menit)
     ALGORITHM: str = "HS256"
+    LLM_API_KEY: str
 
     # Scheduler configurations (standard crontab expressions)
     SCHEDULER_DAILY_PIPELINE_CRON: str = "0 7 * * *"
