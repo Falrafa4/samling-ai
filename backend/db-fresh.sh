@@ -1,11 +1,24 @@
 #!/bin/bash
 echo "Menghapus database lama..."
-rm -rf samling.db
+if [ -d ".venv" ]; then
+    PYTHONPATH=. .venv/bin/python app/database/clear_db.py
+else
+    PYTHONPATH=. python3 app/database/clear_db.py
+fi
 
 echo "Membuat database baru..."
-PYTHONPATH=. .venv/bin/alembic upgrade head
+if [ -d ".venv" ]; then
+    PYTHONPATH=. .venv/bin/alembic upgrade head
+else
+    PYTHONPATH=. alembic upgrade head
+fi
 
 echo "Menjalankan seed data..."
-PYTHONPATH=. .venv/bin/python app/database/seed.py
-PYTHONPATH=. .venv/bin/python app/database/seed_historical_waste_data.py
+if [ -d ".venv" ]; then
+    PYTHONPATH=. .venv/bin/python app/database/seed.py
+    PYTHONPATH=. .venv/bin/python app/database/seed_historical_waste_data.py
+else
+    PYTHONPATH=. python3 app/database/seed.py
+    PYTHONPATH=. python3 app/database/seed_historical_waste_data.py
+fi
 echo "✅ Database fresh & seeded dengan sukses!"
