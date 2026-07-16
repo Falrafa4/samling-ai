@@ -487,6 +487,32 @@ export const api = {
     return fetchWithAuth(`/volume-predictions/accuracy-trend?days=${days}`);
   },
 
+  /**
+   * Mengambil data analitik runtun waktu perbandingan volume vs prediksi.
+   * Endpoint: GET /volume-predictions/{zone_id}/analytics
+   */
+  async getVolumeAnalytics(zoneId) {
+    return fetchWithAuth(`/volume-predictions/${zoneId}/analytics`);
+  },
+
+  /**
+   * Mengambil informasi performa model latih ML secara makro.
+   * Endpoint: GET /volume-predictions/model-info
+   */
+  async getMLModelInfo() {
+    return fetchWithAuth('/volume-predictions/model-info');
+  },
+
+  /**
+   * Memicu simulasi pelatihan ulang model ML.
+   * Endpoint: POST /volume-predictions/retrain
+   */
+  async retrainMLModel() {
+    return fetchWithAuth('/volume-predictions/retrain', {
+      method: 'POST',
+    });
+  },
+
   // ─── Event Management ───────────────────────────────────────
 
   /**
@@ -549,6 +575,19 @@ export const api = {
   async deleteEvent(id) {
     return fetchWithAuth(`/events/${id}`, {
       method: 'DELETE',
+    });
+  },
+
+  /**
+   * Mengimpor daftar event dari file CSV.
+   * Endpoint: POST /events/import
+   */
+  async importEvents(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return fetchWithAuth('/events/import', {
+      method: 'POST',
+      body: formData,
     });
   }
 };

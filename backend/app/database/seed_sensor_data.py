@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from app.database.database import SessionLocal
 from app.models.zones import Zone
 from app.models.sensor_data import SensorData
+from app.models.volume_predictions import VolumePrediction
 from app.utils.timezone import get_jakarta_now
 
 
@@ -20,13 +21,14 @@ def seed_sensor_data():
     db = SessionLocal()
     try:
         print("=" * 60)
-        print("Memulai proses seeding data sensor (simulasi 7 hari)...")
+        print("Memulai proses seeding data sensor & prediksi (simulasi 7 hari)...")
         print("=" * 60)
 
-        # Clear existing sensor data
+        # Clear existing sensor data and predictions
         deleted_count = db.query(SensorData).delete()
+        deleted_pred_count = db.query(VolumePrediction).delete()
         db.commit()
-        print(f"✓ Data sensor lama berhasil dibersihkan ({deleted_count} records).")
+        print(f"✓ Data sensor lama ({deleted_count} records) dan prediksi lama ({deleted_pred_count} records) berhasil dibersihkan.")
 
         # Get all zones
         all_zones = db.query(Zone).order_by(Zone.id).all()
@@ -91,6 +93,7 @@ def seed_sensor_data():
         hours_between_readings = 24 // readings_per_day  # 6 hours
 
         sensor_records = []
+        prediction_records = []
         random.seed(42)  # For reproducibility
 
         # Helper function to generate realistic fill pattern
@@ -148,6 +151,34 @@ def seed_sensor_data():
                 
                 # Generate readings for each day
                 for day in range(days):
+                    # Buat satu data prediksi historis harian untuk TPS ini pada jam 07:00 pagi
+                    prediction_time = (now - timedelta(days=(days - 1 - day))).replace(hour=7, minute=0, second=0, microsecond=0)
+                    day_fills = fill_pattern[day * readings_per_day : (day + 1) * readings_per_day]
+                    avg_day_fill = sum(day_fills) / len(day_fills) if day_fills else base_fill
+                    
+                    # Berikan sedikit deviasi (margin of error) tiruan
+                    pred_pct = avg_day_fill + random.uniform(-4, 4)
+                    pred_pct = max(0.0, min(100.0, pred_pct))
+                    
+                    status = "Aman"
+                    if pred_pct >= 80:
+                        status = "Awas"
+                    elif pred_pct >= 50:
+                        status = "Waspada"
+                        
+                    prediction_records.append(
+                        VolumePrediction(
+                            tps_id=zone.id,
+                            kecamatan=zone.kecamatan,
+                            predicted_volume_percentage=round(pred_pct, 2),
+                            prediction_status=status,
+                            priority_rank=random.randint(1, 10),
+                            forecast_batch_id=f"batch_seed_{prediction_time.strftime('%Y%m%d')}",
+                            model_version="1.0.12",
+                            created_at=prediction_time
+                        )
+                    )
+
                     for reading in range(readings_per_day):
                         timestamp = now - timedelta(
                             days=(days - 1 - day),
@@ -218,7 +249,16 @@ def seed_sensor_data():
             db.add_all(batch)
             db.commit()
             total_inserted += len(batch)
-            print(f"  → {total_inserted}/{len(sensor_records)} records tersimpan...")
+            print(f"  → {total_inserted}/{len(sensor_records)} sensor records tersimpan...")
+            
+        print(f"Menyimpan {len(prediction_records)} prediction records ke database...")
+        total_pred_inserted = 0
+        for i in range(0, len(prediction_records), batch_size):
+            batch = prediction_records[i:i + batch_size]
+            db.add_all(batch)
+            db.commit()
+            total_pred_inserted += len(batch)
+            print(f"  → {total_pred_inserted}/{len(prediction_records)} prediction records tersimpan...")
 
         print("=" * 60)
         print(f"✅ Seeding sensor data selesai!")

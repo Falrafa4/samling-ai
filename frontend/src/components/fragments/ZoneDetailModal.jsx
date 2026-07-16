@@ -315,10 +315,6 @@ export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange })
                   <p className="text-xs font-bold text-slate-700 mt-0.5">{zone.jenis_tps || '-'}</p>
                 </div>
               </div>
-              <div className="mt-4">
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Alamat Lengkap</p>
-                <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{zone.alamat || '-'}</p>
-              </div>
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Status Risiko AI & Rute</p>
                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1.5 ${getRiskBadgeClasses(zone.risk_status)}`}>

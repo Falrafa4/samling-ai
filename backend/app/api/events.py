@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import Optional
 import math
@@ -117,3 +117,86 @@ def delete_event(event_id: int, db: Session = Depends(get_db)):
     db.commit()
     
     return response_success(message="Event berhasil dihapus.")
+
+
+@router.post("/events/import")
+def import_events(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """
+    Mengimpor daftar event dari file CSV ke database.
+    Format kolom CSV: name, start_date (YYYY-MM-DD), end_date (YYYY-MM-DD), location, wilayah, kecamatan, urgency_score (0.0-1.0), description
+    """
+    import csv
+    import io
+    from datetime import datetime
+    
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File yang diunggah harus berformat .csv"
+        )
+        
+    try:
+        content = file.file.read().decode("utf-8")
+        csv_reader = csv.DictReader(io.StringIO(content))
+        
+        imported_events = []
+        for row in csv_reader:
+            name = row.get("name")
+            start_date_str = row.get("start_date")
+            end_date_str = row.get("end_date")
+            
+            if not name or not start_date_str or not end_date_str:
+                continue
+                
+            try:
+                start_date = datetime.strptime(start_date_str.strip(), "%Y-%m-%d").date()
+                end_date = datetime.strptime(end_date_str.strip(), "%Y-%m-%d").date()
+            except ValueError:
+                try:
+                    start_date = datetime.strptime(start_date_str.strip(), "%d-%m-%Y").date()
+                    end_date = datetime.strptime(end_date_str.strip(), "%d-%m-%Y").date()
+                except ValueError:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Format tanggal pada baris '{name}' tidak valid. Gunakan format YYYY-MM-DD atau DD-MM-YYYY."
+                    )
+            
+            try:
+                urgency_score = float(row.get("urgency_score", 0.5))
+            except ValueError:
+                urgency_score = 0.5
+            
+            new_event = Event(
+                name=name.strip(),
+                start_date=start_date,
+                end_date=end_date,
+                location=row.get("location", "").strip() if row.get("location") else "",
+                wilayah=row.get("wilayah", "").strip() if row.get("wilayah") else "",
+                kecamatan=row.get("kecamatan", "").strip() if row.get("kecamatan") else "",
+                urgency_score=urgency_score,
+                description=row.get("description", "").strip() if row.get("description") else ""
+            )
+            imported_events.append(new_event)
+            
+        if not imported_events:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Tidak ada data event valid yang diimpor dari file CSV."
+            )
+            
+        db.add_all(imported_events)
+        db.commit()
+        
+        return response_success(
+            data={"imported_count": len(imported_events)},
+            message=f"Berhasil mengimpor {len(imported_events)} event dari file CSV."
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Gagal memproses file CSV: {str(e)}"
+        )

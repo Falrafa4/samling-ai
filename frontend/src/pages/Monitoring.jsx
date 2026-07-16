@@ -272,14 +272,10 @@ export default function Monitoring() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-6 pt-5 border-t border-slate-100">
-                <div className="md:col-span-8">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Alamat Lengkap</p>
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">{activeZone.alamat || '-'}</p>
-                </div>
-                <div className="md:col-span-4 flex flex-col md:items-end justify-center">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide md:text-right mb-1">Status Urgensi AI & Rute</p>
-                  <div className="flex flex-wrap md:justify-end gap-2.5 items-center mt-1">
+              <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">Status Urgensi AI & Rute</p>
+                  <div className="flex flex-wrap gap-2.5 items-center">
                     <span className={`px-3 py-1 rounded-full text-[10px] font-bold border inline-flex items-center gap-1.5 ${getRiskBadgeClasses(activeZone.risk_status)}`}>
                       <FontAwesomeIcon icon={getRiskIcon(activeZone.risk_status)} />
                       {activeZone.risk_status}

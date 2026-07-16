@@ -25,7 +25,6 @@ export default function ZoneFormModal({
     kecamatan: '',
     kelurahan: '',
     jenis_tps: '',
-    alamat: '',
     latitude: '',
     longitude: '',
     risk_status: 'Normal'
@@ -40,7 +39,6 @@ export default function ZoneFormModal({
         kecamatan: editingZone.kecamatan || '',
         kelurahan: editingZone.kelurahan || '',
         jenis_tps: editingZone.jenis_tps || '',
-        alamat: editingZone.alamat || '',
         latitude: editingZone.latitude?.toString() || '',
         longitude: editingZone.longitude?.toString() || '',
         risk_status: editingZone.risk_status || 'Normal'
@@ -52,7 +50,6 @@ export default function ZoneFormModal({
         kecamatan: '',
         kelurahan: '',
         jenis_tps: '',
-        alamat: '',
         latitude: '',
         longitude: '',
         risk_status: 'Normal'
@@ -170,17 +167,7 @@ export default function ZoneFormModal({
             </div>
           </div>
 
-          <div>
-            <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Alamat</label>
-            <input
-              type="text"
-              name="alamat"
-              value={formData.alamat}
-              onChange={handleInputChange}
-              placeholder="Jl Belibis IV, RW 01"
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
+
 
           <div className="grid grid-cols-2 gap-2.5">
             <div>

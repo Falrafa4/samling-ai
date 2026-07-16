@@ -155,5 +155,42 @@ Saat server backend FastAPI dijalankan (via Uvicorn), scheduler otomatis berjala
 
 ---
 
+## 📈 Pembaruan Fitur AI & Analitik (Tahap 1 - 4)
+
+Sistem Samling AI kini telah ditingkatkan secara menyeluruh melalui implementasi PRD Fitur AI yang terbagi dalam 4 tahap pengembangan utama:
+
+### 1. Tahap 1: AI Forecast Center & Predictive Heatmap
+* **Dashboard Overview Redesign:** Menyajikan metrik makro berbasis estimasi AI secara terpadu di *Forecast Center*.
+* **Predictive Map Spasial:** Peta interaktif Leaflet.js dengan penanda (*marker*) TPS yang memiliki **efek denyut (*pulsing animation*)** dinamis berdasarkan klasifikasi risiko AI: **Merah** (High Priority $\ge 90\%$), **Kuning** (Warning $\ge 70\%$), **Hijau** (Normal), dan **Abu-abu** (Offline).
+* **Laci Detail Peta:** Menampilkan pembacaan sensor IoT riil terupdate dan status penugasan supir aktif secara instan saat penanda peta diklik.
+
+### 2. Tahap 2: Manajemen Master Data Event Tahunan
+* **Skema & API Master Event:** Model tabel database dan endpoint CRUD `/api/v1/events` untuk mengelola event tahunan di Jakarta.
+* **Kalender Hari Libur Nasional & Keagamaan:** Pengintegrasian event musiman (HUT DKI Jakarta, PRJ, Java Jazz) serta libur nasional keagamaan (Idul Fitri, Idul Adha, Hari Kemerdekaan 2026) melalui seeder `seed_events.py`.
+* **Antarmuka CRUD Event Admin:** Halaman manajemen data master event (`MasterData.jsx`, `EventTable.jsx`, `EventModal.jsx`) yang responsif untuk menambah, mengedit, mencari, dan menghapus event tahunan.
+
+### 3. Tahap 3: Weather Analysis, AI Insight & Risk Assessment
+* **Analisis Korelasi Cuaca & Event (Backend):** Endpoint detail TPS mengalkulasi status akhir pekan, mendeteksi event aktif secara spasial di tingkat kecamatan, serta menarik data curah hujan historis terupdate (`HistoricalWasteData.rainfall_today`).
+* **Kalkulator Pembobotan Risiko:** Menghitung proporsi kontribusi pemicu sampah (Baseline Histori, Libur/Event, Hujan, Akhir Pekan) yang dinormalisasi ke 100% beserta tingkat kepercayaan (*Confidence Level*).
+* **AI Insight Panel (Frontend):** Panel informasi terintegrasi pada modal detail TPS (`ZoneDetailModal.jsx`) yang menampilkan *Largest Driver* (faktor pemicu dominan), indikator cuaca, dan diagram batang proporsi risiko volume sampah.
+
+### 4. Tahap 4: Multi-Line Analytics Chart & AI Model Dashboard
+* **Multi-Line Time Series Chart:** Grafik garis interaktif (`VolumePredictions.jsx` dengan Chart.js) yang membandingkan:
+  1. *Volume Riil Sensor (Biru):* Tren data 7 hari ke belakang.
+  2. *Prediksi AI (Hijau):* Prediksi historis (garis solid) dan 3 hari proyeksi masa depan (garis putus-putus).
+  3. *Kapasitas Maksimal TPS (Merah):* Batas ambang aman statis di angka 100%.
+* **Dropdown Filter Sensor-Only:** Membatasi filter dropdown TPS pada halaman monitoring prediksi hanya untuk TPS yang memiliki sensor IoT terpasang, memastikan sinkronisasi 100% antara grafik dan tabel.
+* **AI Model Dashboard & Retraining Simulator:** Panel visual performa latih ML (MAE, MSE, Akurasi, Epochs) terhubung ke `/model-info`, dilengkapi tombol **Latih Ulang (Retrain)** interaktif yang menyimulasikan komputasi ulang server selama 2 detik dan memperbarui metrik secara real-time.
+
+---
+
+## 🧠 Mekanisme AI Insight & Risk Assessment (Dinamis per TPS)
+Sistem melakukan kalkulasi pembobotan multi-faktor secara real-time untuk menyajikan analisis risiko kontekstual pada setiap TPS:
+1. **Dampak Hari Libur & Event (Format Tanggal Penuh):** Mengevaluasi event aktif berdasarkan kecocokan kecamatan/wilayah TPS (`Event.kecamatan == zone.kecamatan`). Menggunakan format tanggal lengkap (`DD-MM-YYYY`) di database agar pergeseran hari libur keagamaan (seperti Idul Fitri/Idul Adha yang maju ~11 hari per tahun) serta event dinamis terdeteksi secara presisi.
+2. **Dampak Cuaca Hujan:** Menarik data curah hujan historis terbaru (`rainfall_today` pada `HistoricalWasteData`) secara spesifik berdasarkan ID TPS bersangkutan.
+3. **Porsi Kontribusi Risiko:** Menghitung persentase kontribusi dari 4 pemicu (baseline histori, libur/event, curah hujan, akhir pekan) yang dinormalisasi hingga pas 100% untuk menentukan faktor pemicu utama (*Largest Driver*) serta tingkat kepercayaan prediksi (*Confidence Level*) model ML.
+
+---
+
 ## 📄 Dokumentasi Tambahan
 * **[API_SPEC.md](API_SPEC.md)**: Daftar spesifikasi lengkap payload request dan response untuk mempermudah integrasi pengembang frontend dan tim chatbot.
