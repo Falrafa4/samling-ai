@@ -50,38 +50,70 @@ def get_urgency_from_llm(report_content: str, report_type: str) -> float:
     )
     
     try:
+        payload = {
+            "model": GROQ_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": 0.0,
+            "max_tokens": 16
+        }
+
+        # Debug: show minimal metadata (do not print full API key)
+        print(f"Calling Groq: model={GROQ_MODEL} prompt_len={len(user_prompt)}")
+
         response = requests.post(
             GROQ_API_URL,
             headers={
                 "Authorization": f"Bearer {LLM_API_KEY}",
                 "Content-Type": "application/json"
             },
-            json={
-                "model": GROQ_MODEL,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                "temperature": 0.3,
-                "max_tokens": 10
-            },
+            json=payload,
             timeout=30
         )
-        response.raise_for_status()
-        
+
+        # If non-2xx, raise with response attached
+        if response.status_code >= 400:
+            try:
+                err = response.json()
+            except Exception:
+                err = {"raw": response.text[:1000]}
+            raise requests.exceptions.HTTPError(
+                f"{response.status_code} {response.reason}",
+                response=response,
+            )
+
         result = response.json()
-        score_text = result.get("choices", [{}])[0].get("message", {}).get("content", "2.5").strip()
-        
+        score_text = (
+            result.get("choices", [{}])[0]
+            .get("message", {})
+            .get("content", "2.5")
+            .strip()
+        )
+
         # Parse the score, ensuring it's between 0.0 and 5.0
         score = float(score_text)
         score = max(0.0, min(5.0, score))
-        
+
         return score
     except requests.exceptions.HTTPError as http_err:
-        print(f"HTTP error calling Groq API: {http_err}")
-        # Specifically handle 401 Unauthorized
-        if http_err.response.status_code == 401:
-            print("  - The GROQ_API_KEY is likely invalid or has expired.")
+        resp = getattr(http_err, "response", None)
+        if resp is not None:
+            # Try to extract structured error body
+            try:
+                body = resp.json()
+            except Exception:
+                body = resp.text[:1000]
+            print(f"HTTP error calling Groq API: status={resp.status_code} body={body}")
+            if resp.status_code == 401:
+                print("  - The GROQ_API_KEY is likely invalid or has expired.")
+            elif resp.status_code == 400:
+                print("  - Bad request to Groq. Check payload shape (messages).")
+            else:
+                print("  - Groq returned non-2xx status.")
+        else:
+            print(f"HTTP error calling Groq API: {http_err}")
     except Exception as e:
         print(f"Error calling Groq API: {e}")
 
