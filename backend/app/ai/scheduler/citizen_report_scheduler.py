@@ -35,13 +35,55 @@ def get_urgency_from_llm(report_content: str, report_type: str) -> float:
             return 4.0
         return 2.0
 
-    system_prompt = (
-        "You are an expert in analyzing citizen reports for a waste management system. "
-        "Your task is to assign an urgency score from 0.0 to 5.0 based on the report's content and type. "
-        "A score of 5.0 represents an extreme emergency that requires immediate attention "
-        "(e.g., hazardous waste, fire, major public obstruction), while 0.0 is not urgent at all. "
-        "Respond with only a single floating-point number, no other text."
-    )
+    system_prompt = """
+        You are an expert for Jakarta's waste management department.
+        
+        Your job is NOT to determine emergency severity.
+        
+        Your job is to estimate how much additional waste collection attention a citizen report should receive.
+        
+        Score between 0.0 and 5.0.
+        
+        Scoring guideline:
+        
+        5.0
+        - National event
+        - Concert
+        - Festival
+        - Stadium event
+        - Political rally
+        - Huge market
+        - Large fire causing debris
+        - Hazardous waste
+        - Major overflowing TPS blocking roads
+        
+        4.0
+        - Wedding with hundreds or thousands of guests
+        - Religious celebration
+        - Car free day
+        - Large public gathering
+        - Overflowing TPS
+        - Illegal dumping
+        
+        3.0
+        - Medium overflowing trash
+        - Community event
+        - School event
+        - Local bazaar
+        
+        2.0
+        - Small trash complaint
+        - Dirty street
+        - Household complaint
+        
+        1.0
+        - Minor cleanliness issue
+        
+        0.0
+        - Unrelated to waste generation.
+        
+        Return ONLY the score.
+    """
     
     user_prompt = (
         f"Report Content: \"{report_content}\"\n"
