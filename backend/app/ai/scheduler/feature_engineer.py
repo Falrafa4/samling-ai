@@ -240,7 +240,7 @@ def get_zone_population(kecamatan):
 
 
 def get_tps_capacity(tps_id):
-    return TPS_CAPACITY.get(int(tps_id), 5000)
+    return TPS_CAPACITY.get(tps_id, 5000)
 
 
 def get_temporal():
