@@ -13,6 +13,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster';
 import { api } from '../services/api';
+import ZoneDetailModal from '../components/fragments/ZoneDetailModal';
 
 // Fix Leaflet's default icon assets issue in bundlers (Vite)
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -53,6 +54,15 @@ export default function PredictiveMap() {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Detail Modal States (Tahap 1)
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [detailZone, setDetailZone] = useState(null);
+
+  const handleOpenDetail = (zone) => {
+    setDetailZone(zone);
+    setDetailModalOpen(true);
+  };
 
   // Selected Node Details
   const [selectedZone, setSelectedZone] = useState(null);
@@ -155,6 +165,25 @@ export default function PredictiveMap() {
   useEffect(() => {
     if (!mapRef.current || zones.length === 0) return;
 
+    // Bind popupopen listener on map (Tahap 1)
+    const handlePopupOpen = (e) => {
+      const popup = e.popup;
+      const btn = popup.getElement()?.querySelector('[id^="btn-detail-"]');
+      if (btn) {
+        const zoneId = parseInt(btn.id.replace('btn-detail-', ''), 10);
+        const zone = zones.find(z => z.id === zoneId);
+        if (zone) {
+          btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            handleOpenDetail(zone);
+            mapRef.current.closePopup();
+          });
+        }
+      }
+    };
+
+    mapRef.current.on('popupopen', handlePopupOpen);
+
     // Bersihkan cluster group sebelumnya
     if (clusterGroupRef.current) {
       mapRef.current.removeLayer(clusterGroupRef.current);
@@ -242,7 +271,7 @@ export default function PredictiveMap() {
         icon: createMarkerIcon(status)
       });
 
-      // Custom popup HTML
+      // Custom popup HTML (Tahap 1: Tambahkan tombol Lihat Detail)
       const popupContent = `
         <div class="font-sans p-2.5 min-w-44 text-slate-800">
           <div class="flex items-center gap-2 mb-2 pb-1.5 border-b border-slate-100/60">
@@ -251,7 +280,7 @@ export default function PredictiveMap() {
             }"></span>
             <h4 class="font-bold text-xs text-slate-800">${zone.name}</h4>
           </div>
-          <div class="space-y-1 text-[11px]">
+          <div class="space-y-1 text-[11px] mb-3">
             <div class="flex justify-between items-center">
               <span class="text-slate-400">Kapasitas IoT</span>
               <span class="font-semibold text-slate-700">${capacity}</span>
@@ -263,6 +292,12 @@ export default function PredictiveMap() {
               }">${status}</span>
             </div>
           </div>
+          <button class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1 cursor-pointer transition-colors text-[10px]" id="btn-detail-${zone.id}">
+            <span>Lihat Detail</span>
+            <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </button>
         </div>
       `;
 
@@ -308,6 +343,12 @@ export default function PredictiveMap() {
       const group = L.featureGroup(markersRef.current);
       mapRef.current.fitBounds(group.getBounds().pad(0.15));
     }
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.off('popupopen', handlePopupOpen);
+      }
+    };
   }, [zones, sensorData, drivers, selectedStatuses, selectedRegions]);
 
   // Recenter map focus to primary bounds
@@ -607,6 +648,18 @@ export default function PredictiveMap() {
           )}
         </div>
       </div>
+
+      {/* DETAIL MODAL (Tahap 1) */}
+      <ZoneDetailModal
+        isOpen={detailModalOpen}
+        onClose={() => setDetailModalOpen(false)}
+        zone={detailZone}
+        onZoneChange={(updatedZone) => {
+          setDetailZone(updatedZone);
+          // Sync data zones
+          setZones(prev => prev.map(z => z.id === updatedZone.id ? updatedZone : z));
+        }}
+      />
     </div>
   );
 }

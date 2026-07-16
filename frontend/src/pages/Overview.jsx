@@ -357,45 +357,6 @@ export default function Overview() {
 
   const operationalInsight = getOperationalInsight();
 
-  const metrics = [
-    {
-      title: "Prediksi Hari Ini",
-      value: predictionSummary?.upcoming_predictions_7d ?? 0,
-      change: "Dijadwalkan setiap pukul 07.00",
-      status: "AI Forecast",
-      color: "border-blue-400 bg-blue-50 text-blue-700",
-      link: "/admin/predictions",
-      linkLabel: "Lihat Prediksi",
-    },
-    {
-      title: "TPS Prioritas",
-      value: summary?.alert_zones_count ?? 0,
-      change: "Masuk pertimbangan rute 07.30",
-      status: "Prioritas",
-      color: "border-red-400 bg-red-50 text-red-700",
-      link: "/admin/map",
-      linkLabel: "Lihat Peta",
-    },
-    {
-      title: "Rute Hari Ini",
-      value: routeStats.total,
-      change: `${routeStats.pending} pending • ${routeStats.inProgress} berjalan`,
-      status: "Route AI",
-      color: "border-emerald-400 bg-emerald-50 text-emerald-700",
-      link: "/admin/fleet",
-      linkLabel: "Kelola Rute",
-    },
-    {
-      title: "Driver Siap",
-      value: driverStats.available,
-      change: `${driverStats.onDuty} sedang bertugas dari ${driverStats.total} driver`,
-      status: "Armada",
-      color: "border-amber-400 bg-amber-50 text-amber-700",
-      link: "/admin/fleet",
-      linkLabel: "Lihat Driver",
-    },
-  ];
-
   const workflowSteps = [
     {
       time: "07.00",
@@ -461,6 +422,34 @@ export default function Overview() {
     );
   }
 
+  // Dynamic Weather & Event Alert Banner
+  const alertBanner = (() => {
+    const hasCritical = (summary?.tps_predicted_critical_90_count ?? 0) > 0;
+    const hasWarning = (summary?.tps_predicted_warning_critical_count ?? 0) > 0;
+    
+    if (hasCritical) {
+      return {
+        title: "⚠️ Peringatan Kota: Alokasi Rute Kritis Diperlukan",
+        message: `Terdeteksi ${summary.tps_predicted_critical_90_count} TPS kritis dengan volume sampah ≥ 90% hari ini. Pengaruh cuaca hujan dan potensi pembusukan cepat terdeteksi.`,
+        classes: "from-red-50 to-red-100/60 border-red-200 text-red-800 bg-red-100",
+        icon: faTriangleExclamation
+      };
+    } else if (hasWarning) {
+      return {
+        title: "⚠️ Waspada Operasional: Peningkatan Volume Sampah Terdeteksi",
+        message: `Terdapat ${summary.tps_predicted_warning_critical_count} TPS dalam status waspada (Warning) hari ini. Harap persiapkan driver cadangan untuk antisipasi penjemputan.`,
+        classes: "from-amber-50 to-amber-100/60 border-amber-200 text-amber-800 bg-amber-100",
+        icon: faTriangleExclamation
+      };
+    }
+    return {
+      title: "🌤️ Status Kota: Kondisi Operasional Terkendali",
+      message: "Tidak ada indikasi penumpukan sampah kritis atau cuaca buruk hari ini. Rute armada berjalan sesuai jadwal.",
+      classes: "from-emerald-50 to-emerald-100/60 border-emerald-200 text-emerald-855 bg-emerald-50",
+      icon: faCircleCheck
+    };
+  })();
+
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
       <div className="flex-1 overflow-y-auto">
@@ -513,6 +502,31 @@ export default function Overview() {
             </div>
           )}
 
+          {/* Contextual Alert Banner */}
+          <div
+            className={`p-4 bg-gradient-to-r ${alertBanner.classes} border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/70 flex items-center justify-center shrink-0">
+                <FontAwesomeIcon
+                  icon={alertBanner.icon}
+                  className="text-lg"
+                />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-800 leading-snug">
+                  {alertBanner.title}
+                </h4>
+                <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                  {alertBanner.message}
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-bold bg-white/70 px-3 py-1 rounded-full border border-white/80 self-start sm:self-center whitespace-nowrap">
+              {(summary?.tps_predicted_critical_90_count ?? 0) > 0 ? "Tindakan Cepat" : "Normal"}
+            </span>
+          </div>
+
           {/* Dynamic Operational Insight */}
           <div
             className={`p-4 bg-gradient-to-r ${operationalInsight.classes} border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm`}
@@ -540,120 +554,136 @@ export default function Overview() {
 
           {/* KPI Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
-            {metrics.map((card, idx) => (
-              <div
-                key={idx}
-                className="p-5 bg-white border border-slate-200 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
-                onClick={() => navigate(card.link)}
-              >
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                    {card.title}
-                  </p>
-                  <h3 className="text-3xl font-extrabold text-slate-800">
-                    {card.value}
-                  </h3>
-                </div>
-                <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
-                  <div className="flex items-center justify-between gap-3 text-xs">
-                    <span className="text-slate-500">{card.change}</span>
-                    <span
-                      className={`px-2 py-0.5 rounded font-bold uppercase text-[9px] border whitespace-nowrap ${card.color}`}
-                    >
-                      {card.status}
-                    </span>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(card.link);
-                    }}
-                    className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer"
-                  >
-                    {card.linkLabel} <span>→</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Operational Timeline */}
-          <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+            {/* Card 1: TPS Diprediksi */}
+            <div
+              className="p-5 bg-white border border-slate-200 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+              onClick={() => navigate("/admin/predictions")}
+            >
               <div>
-                <h3 className="text-sm sm:text-md font-bold text-slate-800">
-                  Alur Operasional Harian: Prediksi → Rute → Driver
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Siklus pagi untuk mengubah prediksi volume sampah menjadi
-                  aksi pengangkutan TPS prioritas.
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  TPS Diprediksi
                 </p>
+                <h3 className="text-3xl font-extrabold text-slate-800">
+                  {summary?.tps_predicted_warning_critical_count ?? 0}
+                </h3>
               </div>
-              <button
-                onClick={() => navigate("/admin/fleet")}
-                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors"
-              >
-                Kelola Rute Driver
-                <FontAwesomeIcon icon={faArrowRight} className="text-[10px]" />
-              </button>
+              <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-slate-500">Target penjemputan hari ini</span>
+                  <span className="px-2 py-0.5 rounded font-bold uppercase text-[9px] border bg-blue-50 border-blue-400 text-blue-700 whitespace-nowrap">
+                    AI Forecast
+                  </span>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate("/admin/predictions");
+                  }}
+                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  Lihat Prediksi <span>→</span>
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {workflowSteps.map((step, idx) => (
-                <div
-                  key={step.title}
-                  className="relative p-4 bg-slate-50 border border-slate-200 rounded-xl"
-                >
-                  {idx < workflowSteps.length - 1 && (
-                    <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-0.5 bg-slate-200" />
+            {/* Card 2: Total TPS Critical */}
+            <div
+              className="p-5 bg-white border border-slate-200 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+              onClick={() => navigate("/admin/map")}
+            >
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Total TPS Critical
+                </p>
+                <div className="flex items-center">
+                  <h3 className="text-3xl font-extrabold text-slate-800">
+                    {summary?.tps_predicted_critical_90_count ?? 0}
+                  </h3>
+                  {(summary?.tps_predicted_critical_90_count ?? 0) > 0 && (
+                    <span className="flex h-3 w-3 relative ml-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
                   )}
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${
-                        step.color === "blue"
-                          ? "bg-blue-50 text-blue-700 border-blue-200"
-                          : step.color === "emerald"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : "bg-amber-50 text-amber-700 border-amber-200"
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={step.icon} />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        {step.time}
-                      </span>
-                      <h4 className="text-xs font-bold text-slate-800 mt-1">
-                        {step.title}
-                      </h4>
-                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
-                        {step.description}
-                      </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <span className="px-2 py-1 rounded-md bg-white border border-slate-200 text-[10px] font-bold text-slate-700">
-                          {step.metric}
-                        </span>
-                        <span className="px-2 py-1 rounded-md bg-white border border-slate-200 text-[10px] font-bold text-slate-500">
-                          {step.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              ))}
+              </div>
+              <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-slate-500">Butuh dispatch armada segera</span>
+                  <span className="px-2 py-0.5 rounded font-bold uppercase text-[9px] border bg-red-50 border-red-400 text-red-700 whitespace-nowrap">
+                    Critical
+                  </span>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate("/admin/map");
+                  }}
+                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  Lihat Peta <span>→</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Card 3 & 4: Top 10 TPS Perlu Diambil */}
+            <div className="p-5 bg-white border border-slate-200 rounded-xl xl:col-span-2 flex flex-col justify-between shadow-sm min-h-[160px]">
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                  Top 10 TPS Perlu Diambil Hari Ini
+                </p>
+                <div className="overflow-x-auto max-h-[110px] overflow-y-auto pr-1">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-slate-400 font-bold">
+                        <th className="py-1">Nama TPS</th>
+                        <th className="py-1">Kecamatan</th>
+                        <th className="py-1 text-right">Prediksi (%)</th>
+                        <th className="py-1 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50 text-slate-700">
+                      {summary?.top_10_critical_predictions?.length > 0 ? (
+                        summary.top_10_critical_predictions.map((item, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                            <td className="py-1 text-slate-800 font-medium truncate max-w-[120px]">{item.tps_name}</td>
+                            <td className="py-1 text-slate-500 truncate max-w-[90px]">{item.kecamatan}</td>
+                            <td className="py-1 text-right font-bold text-slate-800">{Math.round(item.predicted_volume_percentage)}%</td>
+                            <td className="py-1 text-center">
+                              <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
+                                item.prediction_status === 'CRITICAL' 
+                                  ? 'bg-red-50 text-red-700 border border-red-200' 
+                                  : 'bg-amber-50 text-amber-700 border border-amber-200'
+                              }`}>
+                                {item.prediction_status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="text-center py-4 text-slate-400 text-[10px]">
+                            Tidak ada TPS kritis terdeteksi untuk hari ini.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* 2-Column Split: Grafik Prediksi & Rute Terbaru */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* AI Prediction Chart */}
-            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col justify-between shadow-sm min-h-[380px]">
+          {/* Primary Split: Grafik Prediksi & Alur Operasional */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Sisi Kiri (8 Kolom): AI Prediction Chart */}
+            <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col justify-between shadow-sm min-h-[380px]">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 shrink-0">
                 <div>
-                  <h3 className="text-sm sm:text-md font-bold text-slate-800">
-                    Prediksi Kepenuhan TPS Hari Ini
+                  <h3 className="text-sm sm:text-md font-bold text-slate-800 uppercase tracking-tight">
+                    PREDIKSI KEPENUHAN TPS & RUTE REKOMENDASI HARI INI
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 mt-1">
                     Prediksi pukul 07.00 berbasis historis, sensor IoT, cuaca,
                     event, dan pola wilayah. Grafik menampilkan riwayat prediksi
                     terakhir untuk TPS terpilih.
@@ -721,13 +751,76 @@ export default function Overview() {
               )}
             </div>
 
-            {/* Latest Route Recommendations */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col shadow-sm">
+            {/* Sisi Kanan (4 Kolom): Alur Operasional Harian */}
+            <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col justify-between shadow-sm min-h-[380px]">
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <h3 className="text-sm font-bold text-slate-800">
+                    Alur Operasional Harian
+                  </h3>
+                  <button
+                    onClick={() => navigate("/admin/fleet")}
+                    className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    Kelola Rute
+                    <FontAwesomeIcon icon={faArrowRight} className="text-[8px]" />
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 mb-4">
+                  Siklus pagi untuk mengubah prediksi volume sampah menjadi aksi pengangkutan TPS prioritas.
+                </p>
+                <div className="space-y-4">
+                  {workflowSteps.map((step) => (
+                    <div
+                      key={step.title}
+                      className="p-3 bg-slate-50 border border-slate-100 rounded-lg"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border text-xs ${
+                            step.color === "blue"
+                              ? "bg-blue-50 text-blue-700 border-blue-200"
+                              : step.color === "emerald"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                : "bg-amber-50 text-amber-700 border-amber-200"
+                          }`}
+                        >
+                          <FontAwesomeIcon icon={step.icon} />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                            {step.time}
+                          </span>
+                          <h4 className="text-xs font-bold text-slate-800 mt-0.5">
+                            {step.title}
+                          </h4>
+                          <p className="text-[9px] text-slate-500 mt-0.5 leading-relaxed truncate">
+                            {step.description}
+                          </p>
+                          <div className="mt-2 flex gap-1.5">
+                            <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[8px] font-bold text-slate-700">
+                              {step.metric}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[8px] font-bold text-slate-500">
+                              {step.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Layout Section: Rute Hari Ini & Driver Siap */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Rute Hari Ini (8 Kolom) */}
+            <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col shadow-sm">
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
-                  <h3 className="text-md font-bold text-slate-800">
-                    Rute Rekomendasi Hari Ini
-                  </h3>
+                  <h3 className="text-sm font-bold text-slate-800">RUTE HARI INI</h3>
                   <p className="text-xs text-slate-500 mt-1">
                     Dibuat pukul 07.30 dari hasil prediksi volume TPS.
                   </p>
@@ -827,6 +920,55 @@ export default function Overview() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Driver Siap (Online) (4 Kolom) */}
+            <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col shadow-sm">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800">DRIVER SIAP (ONLINE)</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Supir armada yang saat ini online dan siap menerima dispatch tugas.
+                  </p>
+                </div>
+                <div className="w-9 h-9 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                  <FontAwesomeIcon icon={faTruck} />
+                </div>
+              </div>
+
+              <div className="flex-1 space-y-3 overflow-y-auto pr-1 max-h-[320px]">
+                {drivers.filter((d) => d.status === "Available").length > 0 ? (
+                  drivers
+                    .filter((d) => d.status === "Available")
+                    .map((driver) => (
+                      <div
+                        key={driver.id}
+                        className="p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-amber-200 hover:bg-amber-50/30 transition-colors flex items-center justify-between"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-700 truncate">{driver.name}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5 truncate">
+                            {driver.phone || "-"}
+                          </p>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full text-[8px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap animate-pulse">
+                          Ready
+                        </span>
+                      </div>
+                    ))
+                ) : (
+                  <div className="h-full min-h-[220px] bg-slate-50 border border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center p-6 text-center text-slate-400">
+                    <FontAwesomeIcon
+                      icon={faTriangleExclamation}
+                      className="text-3xl mb-2 text-slate-300"
+                    />
+                    <p className="text-xs font-bold text-slate-700">Tidak ada Driver Siap</p>
+                    <p className="text-[10px] mt-2 text-slate-500">
+                      Semua driver sedang bertugas atau offline.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

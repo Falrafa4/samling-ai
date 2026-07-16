@@ -6,6 +6,7 @@ from app.database.database import get_db
 from app.models.zones import Zone
 from app.models.sensor_data import SensorData
 from app.models.citizen_reports import CitizenReport
+from app.models.volume_predictions import VolumePrediction
 from app.api.deps import get_current_user
 from app.utils.response import response_success
 
@@ -40,10 +41,66 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     # 3. Hitung total baris laporan di citizen_reports
     total_citizen_reports = db.query(CitizenReport).count()
 
+    # 4. Tambahan Fitur AI Forecast Center (Tahap 1)
+    # Cari batch_id prediksi terakhir
+    latest_batch_id = (
+        db.query(VolumePrediction.forecast_batch_id)
+        .order_by(VolumePrediction.created_at.desc())
+        .limit(1)
+        .scalar()
+    )
+
+    tps_predicted_warning_critical_count = 0
+    tps_predicted_critical_90_count = 0
+    top_10_critical_predictions = []
+
+    if latest_batch_id:
+        # Hitung TPS diprediksi WARNING atau CRITICAL (atau Waspada/Awas dari data seed)
+        tps_predicted_warning_critical_count = (
+            db.query(VolumePrediction)
+            .filter(
+                VolumePrediction.forecast_batch_id == latest_batch_id,
+                VolumePrediction.prediction_status.in_(["WARNING", "CRITICAL", "Waspada", "Awas"])
+            )
+            .count()
+        )
+
+        # Hitung TPS berstatus Critical (>= 90%)
+        tps_predicted_critical_90_count = (
+            db.query(VolumePrediction)
+            .filter(
+                VolumePrediction.forecast_batch_id == latest_batch_id,
+                VolumePrediction.predicted_volume_percentage >= 90.0
+            )
+            .count()
+        )
+
+        # Top 10 TPS dengan proyeksi volume sampah tertinggi
+        top_10_preds = (
+            db.query(VolumePrediction, Zone.name.label("zone_name"))
+            .join(Zone, Zone.id == VolumePrediction.tps_id)
+            .filter(VolumePrediction.forecast_batch_id == latest_batch_id)
+            .order_by(VolumePrediction.predicted_volume_percentage.desc())
+            .limit(10)
+            .all()
+        )
+
+        for pred, zone_name in top_10_preds:
+            top_10_critical_predictions.append({
+                "tps_id": pred.tps_id,
+                "tps_name": zone_name or f"TPS ID {pred.tps_id}",
+                "kecamatan": pred.kecamatan,
+                "predicted_volume_percentage": round(pred.predicted_volume_percentage, 2),
+                "prediction_status": pred.prediction_status
+            })
+
     summary_data = {
         "alert_zones_count": alert_zones_count,
         "average_fill_percentage": round(float(average_fill_percentage), 2),
-        "total_citizen_reports": total_citizen_reports
+        "total_citizen_reports": total_citizen_reports,
+        "tps_predicted_warning_critical_count": tps_predicted_warning_critical_count,
+        "tps_predicted_critical_90_count": tps_predicted_critical_90_count,
+        "top_10_critical_predictions": top_10_critical_predictions
     }
 
     return response_success(
