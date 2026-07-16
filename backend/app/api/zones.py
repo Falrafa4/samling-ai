@@ -41,7 +41,7 @@ def get_zones(
     if jenis_tps:
         query = query.filter(Zone.jenis_tps == jenis_tps)
         
-    # Sort: TPS with sensor monitoring first, then by risk_status (High Priority -> Warning -> Normal)
+    # Sort: by risk_status (High Priority -> Warning -> Normal) first, then sensor presence
     has_sensor = exists().where(SensorData.zone_id == Zone.id)
     risk_priority = case(
         (Zone.risk_status == "High Priority", 1),
@@ -49,10 +49,10 @@ def get_zones(
         (Zone.risk_status == "Normal", 3),
         else_=4
     )
-    query = query.order_by(has_sensor.desc(), risk_priority.asc())
+    query = query.order_by(risk_priority.asc(), has_sensor.desc())
 
     if page is not None and limit is not None:
-        total = query.count()
+        total = query.order_by(None).count()
         pages = math.ceil(total / limit) if limit > 0 else 0
         offset = (page - 1) * limit
         zones = query.offset(offset).limit(limit).all()

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faPlus,
@@ -63,6 +63,7 @@ export default function Zones() {
   const [allZones, setAllZones] = useState([]); // Untuk cascading filter dropdown
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const ITEMS_PER_PAGE = 10;
+  const fetchIdRef = useRef(0);
 
   // Count active filters
   const activeFilterCount = [filters.wilayah, filters.kecamatan, filters.kelurahan, filters.jenis_tps].filter(Boolean).length;
@@ -82,6 +83,7 @@ export default function Zones() {
 
   // Fetch paginated zones from server
   async function fetchZones() {
+    const thisFetch = ++fetchIdRef.current;
     try {
       setLoading(true);
       const res = await api.getZones({
@@ -93,15 +95,17 @@ export default function Zones() {
         kelurahan: filters.kelurahan,
         jenis_tps: filters.jenis_tps
       });
+      if (thisFetch !== fetchIdRef.current) return;
       if (res.success) {
         setZones(res.data.data || []);
         setTotalItems(res.data.total || 0);
         setTotalPages(res.data.pages || 1);
       }
     } catch (err) {
+      if (thisFetch !== fetchIdRef.current) return;
       setErrorMessage(err.message || 'Gagal memuat data wilayah.');
     } finally {
-      setLoading(false);
+      if (thisFetch === fetchIdRef.current) setLoading(false);
     }
   }
 
