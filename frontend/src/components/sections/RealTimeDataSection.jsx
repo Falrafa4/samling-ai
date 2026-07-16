@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt, faTruck, faWind, faCalendarAlt, faMapPin } from '@fortawesome/free-solid-svg-icons';
 import { useState, useEffect, useRef } from 'react';
+import { api } from '../../services/api';
 
 // Smooth counting up animation for numbers as they enter viewport
 function CountUp({ target, duration = 1200, formatter = (v) => Math.floor(v).toLocaleString('id-ID') }) {
@@ -78,39 +79,76 @@ function AnimatedDigit({ value, label }) {
 }
 
 export default function RealTimeDataSection() {
-  const [countdown, setCountdown] = useState({ days: 5, hours: 12, minutes: 30, seconds: 0 });
+  const [summary, setSummary] = useState({
+    event_alert: {
+      name: "Hari Raya Lebaran",
+      increase: "+15%",
+      target_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000 + 12 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString()
+    },
+    volume_sampah: {
+      value: 7421,
+      trend: "+2.4%"
+    },
+    truk_beroperasi: {
+      value: 695,
+      trend: "-1.2%"
+    },
+    udara_terbaik: {
+      value: 42.0,
+      status: "Baik",
+      location: "Jakarta Selatan (Jagakarsa)"
+    },
+    udara_terburuk: {
+      value: 115.0,
+      status: "Tidak Sehat",
+      location: "Jakarta Timur (Cipayung)"
+    }
+  });
 
-  // Ticking countdown effect (every second)
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  // Ambil data ringkasan landing page dari API
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        let { days, hours, minutes, seconds } = prev;
-        if (seconds > 0) {
-          seconds--;
-        } else {
-          seconds = 59;
-          if (minutes > 0) {
-            minutes--;
-          } else {
-            minutes = 59;
-            if (hours > 0) {
-              hours--;
-            } else {
-              hours = 23;
-              if (days > 0) {
-                days--;
-              } else {
-                // Countdown reached 0, reset to dummy target
-                return { days: 5, hours: 12, minutes: 30, seconds: 0 };
-              }
-            }
-          }
+    let isMounted = true;
+    api.getLandingSummary()
+      .then(res => {
+        if (isMounted && res.success && res.data) {
+          setSummary(res.data);
         }
-        return { days, hours, minutes, seconds };
+      })
+      .catch(err => {
+        console.error("Gagal memuat ringkasan real-time:", err);
       });
-    }, 1000);
-    return () => clearInterval(timer);
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const calculateTimeLeft = (targetDateStr) => {
+    const difference = +new Date(targetDateStr) - +new Date();
+    let timeLeft = { days: 0, hours: 0, minutes: 0, seconds: 0 };
+
+    if (difference > 0) {
+      timeLeft = {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60)
+      };
+    }
+    return timeLeft;
+  };
+
+  // Efek timer countdown yang akurat
+  useEffect(() => {
+    setCountdown(calculateTimeLeft(summary.event_alert.target_date));
+
+    const timer = setInterval(() => {
+      setCountdown(calculateTimeLeft(summary.event_alert.target_date));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [summary.event_alert.target_date]);
 
   return (
     <section id="data" className="py-24 bg-neutral-secondary-medium">
@@ -142,8 +180,8 @@ export default function RealTimeDataSection() {
                 </div>
                 <span className="uppercase tracking-wider font-bold text-sm text-white/90">AI Predictive Alert</span>
               </div>
-              <h3 className="text-2xl font-bold mb-2 text-white">Prediksi Lonjakan Sampah Event Terdekat: <br/><span className="text-amber-200 font-extrabold">Hari Raya Lebaran</span></h3>
-              <p className="text-white/90">Estimasi kenaikan <span className="font-bold text-amber-200 bg-amber-400/15 border border-amber-400/20 px-2 py-0.5 rounded shadow-sm backdrop-blur-sm">+15% Volume Sampah</span>. Armada tambahan disiagakan.</p>
+              <h3 className="text-2xl font-bold mb-2 text-white">Prediksi Lonjakan Sampah Event Terdekat: <br/><span className="text-amber-200 font-extrabold">{summary.event_alert.name}</span></h3>
+              <p className="text-white/90">Estimasi kenaikan <span className="font-bold text-amber-200 bg-amber-400/15 border border-amber-400/20 px-2 py-0.5 rounded shadow-sm backdrop-blur-sm">{summary.event_alert.increase} Volume Sampah</span>. Armada tambahan disiagakan.</p>
             </div>
             
             <div className="relative z-10 bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 sm:p-6 text-center min-w-0 w-full sm:min-w-[320px] sm:w-auto">
@@ -173,10 +211,12 @@ export default function RealTimeDataSection() {
               <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Hari Ini</span>
             </div>
             <h4 className="text-gray-500 text-sm font-bold mb-1">Volume Sampah (TPST)</h4>
-            <div className="text-3xl font-bold text-heading"><CountUp target={7421} /> <span className="text-lg font-normal text-gray-500">Ton</span></div>
-            <div className="text-xs text-red-500 mt-2 font-medium flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
-              +2.4% dari kemarin
+            <div className="text-3xl font-bold text-heading"><CountUp target={summary.volume_sampah.value} /> <span className="text-lg font-normal text-gray-500">Ton</span></div>
+            <div className={`text-xs mt-2 font-medium flex items-center gap-1 ${summary.volume_sampah.trend.startsWith('-') ? 'text-green-500' : 'text-red-500'}`}>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={summary.volume_sampah.trend.startsWith('-') ? "M19 14l-7 7m0 0l-7-7m7 7V3" : "M5 10l7-7m0 0l7 7m-7-7v18"}></path>
+              </svg>
+              {summary.volume_sampah.trend} dari kemarin
             </div>
           </div>
 
@@ -189,10 +229,12 @@ export default function RealTimeDataSection() {
               <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Hari Ini</span>
             </div>
             <h4 className="text-gray-500 text-sm font-bold mb-1">Total Truk Beroperasi</h4>
-            <div className="text-3xl font-bold text-heading"><CountUp target={695} /> <span className="text-lg font-normal text-gray-500">Unit</span></div>
-            <div className="text-xs text-green-500 mt-2 font-medium flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
-              -1.2% dari kemarin
+            <div className="text-3xl font-bold text-heading"><CountUp target={summary.truk_beroperasi.value} /> <span className="text-lg font-normal text-gray-500">Unit</span></div>
+            <div className={`text-xs mt-2 font-medium flex items-center gap-1 ${summary.truk_beroperasi.trend.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={summary.truk_beroperasi.trend.startsWith('-') ? "M5 10l7-7m0 0l7 7m-7-7v18" : "M19 14l-7 7m0 0l-7-7m7 7V3"}></path>
+              </svg>
+              {summary.truk_beroperasi.trend} dari kemarin
             </div>
           </div>
 
@@ -205,9 +247,9 @@ export default function RealTimeDataSection() {
               <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Live ISPU</span>
             </div>
             <h4 className="text-gray-500 text-sm font-bold mb-1">Udara Terbaik (ISPU)</h4>
-            <div className="text-3xl font-bold text-heading text-green-500"><CountUp target={42} /> <span className="text-lg font-normal text-gray-500">/ Baik</span></div>
+            <div className="text-3xl font-bold text-heading text-green-500"><CountUp target={summary.udara_terbaik.value} /> <span className="text-lg font-normal text-gray-500">/ {summary.udara_terbaik.status}</span></div>
             <div className="text-xs text-gray-600 mt-2 font-medium">
-              <FontAwesomeIcon icon={faMapPin} className="text-gray-400 mr-1.5" /> Jakarta Selatan (Jagakarsa)
+              <FontAwesomeIcon icon={faMapPin} className="text-gray-400 mr-1.5" /> {summary.udara_terbaik.location}
             </div>
           </div>
 
@@ -220,9 +262,9 @@ export default function RealTimeDataSection() {
               <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Live ISPU</span>
             </div>
             <h4 className="text-gray-500 text-sm font-bold mb-1">Udara Terburuk (ISPU)</h4>
-            <div className="text-3xl font-bold text-heading text-red-500"><CountUp target={115} /> <span className="text-lg font-normal text-gray-500">/ Tidak Sehat</span></div>
+            <div className="text-3xl font-bold text-heading text-red-500"><CountUp target={summary.udara_terburuk.value} /> <span className="text-lg font-normal text-gray-500">/ {summary.udara_terburuk.status}</span></div>
             <div className="text-xs text-gray-600 mt-2 font-medium">
-              <FontAwesomeIcon icon={faMapPin} className="text-gray-400 mr-1.5" /> Jakarta Timur (Cipayung)
+              <FontAwesomeIcon icon={faMapPin} className="text-gray-400 mr-1.5" /> {summary.udara_terburuk.location}
             </div>
           </div>
 

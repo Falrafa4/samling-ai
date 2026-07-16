@@ -90,6 +90,23 @@ export const api = {
   },
 
   /**
+   * Mengambil data ringkasan metrik untuk halaman Landing Page.
+   * Endpoint: GET /landing/summary (Public Endpoint, tanpa autentikasi)
+   */
+  async getLandingSummary() {
+    const response = await fetch(`${BASE_URL}/landing/summary`);
+    const result = await response.json().catch(() => ({
+      success: false,
+      message: 'Gagal memproses respon dari server.',
+    }));
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Terjadi kesalahan saat mengambil data landing page.');
+    }
+    return result;
+  },
+
+  /**
    * Mengambil seluruh daftar wilayah TPS untuk dipetakan.
    * Endpoint: GET /zones
    */
