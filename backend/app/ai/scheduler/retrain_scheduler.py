@@ -1,12 +1,15 @@
 import joblib
 import pandas as pd
+import math
 import os
+import json
 
 from sqlalchemy.orm import Session
 from app.database.database import SessionLocal
 
 from xgboost import XGBRegressor
 from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, root_mean_squared_error, r2_score
 
 from app.models.historical_waste_data import HistoricalWasteData
 
@@ -14,7 +17,6 @@ from app.models.historical_waste_data import HistoricalWasteData
 MODEL_PATH = os.path.join(
     os.path.dirname(__file__),
     "..",
-    "ai",
     "models",
     "waste_volume",
     "forecast_waste_volume_model.pkl"
@@ -23,10 +25,15 @@ MODEL_PATH = os.path.join(
 ENCODER_PATH = os.path.join(
     os.path.dirname(__file__),
     "..",
-    "ai",
     "models",
     "waste_volume",
     "label_encoders.pkl"
+)
+
+DETAILS_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "..",
+    "model_details.json"
 )
 
 
@@ -44,6 +51,8 @@ def retrain_model():
     if len(df) < 100:
         print("Not enough data for retraining.")
         return
+
+    df = df.dropna()
 
     # -------------------------
     # Feature Engineering
@@ -94,9 +103,55 @@ def retrain_model():
 
     model.fit(X, y)
 
+    y_pred = model.predict(X)
+
+    results = pd.DataFrame({
+        "MAE": [mean_absolute_error(y, y_pred)],
+        "MAPE": [mean_absolute_percentage_error(y, y_pred)],
+        "RMSE": [root_mean_squared_error(y, y_pred)],
+        "R2": [r2_score(y, y_pred)]
+    })
+
+    importance = pd.DataFrame({
+        "Feature": feature_cols,
+        "Importance": model.feature_importances_
+    })
+
     print("Saving model...")
 
     joblib.dump(model, MODEL_PATH)
     joblib.dump(encoders, ENCODER_PATH)
+
+    print("Updating model...")
+
+    model_details = {}
+
+    # Hyperparameters
+    model_details["hyperparameters"] = {
+        k: (None if isinstance(v, float) and math.isnan(v) else v)
+        for k, v in model.get_params().items()
+    }
+
+    # Performance Metrics
+    model_details["performance_metrics"] = {
+        "MAE": round(float(results.iloc[0]["MAE"]), 5),
+        "MAPE": round(float(results.iloc[0]["MAPE"]), 5),
+        "RMSE": round(float(results.iloc[0]["RMSE"]), 5),
+        "R2": round(float(results.iloc[0]["R2"]), 5),
+    }
+
+    # Feature Importance
+    importance_df = pd.DataFrame({
+        "Feature": importance["Feature"],
+        "Importance": importance["Importance"]
+    }).sort_values(
+        by="Importance",
+        ascending=False
+    ).reset_index(drop=True)
+
+    model_details["feature_importance"] = importance_df.to_dict(orient="records")
+
+    with open(DETAILS_PATH, "w") as f:
+        json.dump(model_details, f, indent=4, allow_nan=False)
 
     print("Retraining completed.")
