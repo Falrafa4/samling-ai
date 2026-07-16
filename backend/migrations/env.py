@@ -29,6 +29,7 @@ from app.models.volume_predictions import VolumePrediction
 from app.models.users import User
 from app.models.fleets import Fleet
 from app.models.historical_waste_data import HistoricalWasteData
+from app.models.events import Event
 
 target_metadata = Base.metadata
 
@@ -91,3 +92,4 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
+

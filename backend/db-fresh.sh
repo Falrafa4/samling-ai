@@ -16,10 +16,12 @@ fi
 echo "Menjalankan seed data..."
 if [ -d ".venv" ]; then
     PYTHONPATH=. .venv/bin/python app/database/seed.py
+    PYTHONPATH=. .venv/bin/python app/database/seed_events.py
     PYTHONPATH=. .venv/bin/python app/database/seed_sensor_data.py
     PYTHONPATH=. .venv/bin/python app/database/seed_historical_waste_data.py
 else
     PYTHONPATH=. python3 app/database/seed.py
+    PYTHONPATH=. python3 app/database/seed_events.py
     PYTHONPATH=. python3 app/database/seed_sensor_data.py
     PYTHONPATH=. python3 app/database/seed_historical_waste_data.py
 fi

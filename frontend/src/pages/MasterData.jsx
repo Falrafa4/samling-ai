@@ -9,19 +9,22 @@ import MasterFilters from '../components/fragments/MasterFilters';
 import DriverTable from '../components/fragments/DriverTable';
 import FleetTable from '../components/fragments/FleetTable';
 import SensorTable from '../components/fragments/SensorTable';
+import EventTable from '../components/fragments/EventTable';
 import DriverModal from '../components/fragments/DriverModal';
 import FleetModal from '../components/fragments/FleetModal';
 import SensorModal from '../components/fragments/SensorModal';
+import EventModal from '../components/fragments/EventModal';
 import ConfirmModal from '../components/fragments/ConfirmModal';
 import Pagination from '../components/fragments/Pagination';
 
 export default function MasterData() {
-  const [activeTab, setActiveTab] = useState('driver'); // 'driver', 'fleet', or 'sensor'
+  const [activeTab, setActiveTab] = useState('driver'); // 'driver', 'fleet', 'sensor', or 'event'
 
   // Data States
   const [drivers, setDrivers] = useState([]);
   const [fleets, setFleets] = useState([]);
   const [sensors, setSensors] = useState([]);
+  const [events, setEvents] = useState([]);
   const [zones, setZones] = useState([]);
 
   // Loading & Message States
@@ -54,6 +57,12 @@ export default function MasterData() {
   const [fleetTotal, setFleetTotal] = useState(0);
   const [fleetPerPage] = useState(10);
 
+  // Event Pagination States
+  const [eventPage, setEventPage] = useState(1);
+  const [eventTotalPages, setEventTotalPages] = useState(1);
+  const [eventTotal, setEventTotal] = useState(0);
+  const [eventPerPage] = useState(10);
+
   // Driver Modals State
   const [isDriverModalOpen, setIsDriverModalOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
@@ -65,6 +74,10 @@ export default function MasterData() {
   // Sensor Modals State
   const [isSensorModalOpen, setIsSensorModalOpen] = useState(false);
   const [selectedSensor, setSelectedSensor] = useState(null);
+
+  // Event Modals State
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   // Delete Confirmation State
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -150,16 +163,39 @@ export default function MasterData() {
     }
   }, [sensorPerPage]);
 
+  const fetchEvents = useCallback(async (page, search) => {
+    try {
+      setLoading(true);
+      setErrorMessage('');
+      const res = await api.getEvents({
+        page,
+        per_page: eventPerPage,
+        search
+      });
+      if (res.success) {
+        setEvents(res.data.items || []);
+        setEventTotal(res.data.total || 0);
+        setEventTotalPages(res.data.total_pages || 1);
+      }
+    } catch (err) {
+      setErrorMessage(err.message || 'Gagal memuat data event.');
+    } finally {
+      setLoading(false);
+    }
+  }, [eventPerPage]);
+
   const fetchMetadataCounts = useCallback(async () => {
     try {
-      const [driversRes, fleetsRes, sensorsRes] = await Promise.all([
+      const [driversRes, fleetsRes, sensorsRes, eventsRes] = await Promise.all([
         api.getDrivers({ page: 1, per_page: 1 }),
         api.getFleets({ page: 1, per_page: 1 }),
-        api.getSensorData({ page: 1, per_page: 1 })
+        api.getSensorData({ page: 1, per_page: 1 }),
+        api.getEvents({ page: 1, per_page: 1 })
       ]);
       if (driversRes.success) setDriverTotal(driversRes.data.total || 0);
       if (fleetsRes.success) setFleetTotal(fleetsRes.data.total || 0);
       if (sensorsRes.success) setSensorTotal(sensorsRes.data.total || 0);
+      if (eventsRes.success) setEventTotal(eventsRes.data.total || 0);
     } catch {
       // Fail silently
     }
@@ -189,6 +225,7 @@ export default function MasterData() {
     setDriverPage(1);
     setFleetPage(1);
     setSensorPage(1);
+    setEventPage(1);
 
     if (activeTab === 'driver') {
       fetchDrivers(1, '', '');
@@ -196,8 +233,10 @@ export default function MasterData() {
       fetchFleets(1, '', '');
     } else if (activeTab === 'sensor') {
       fetchSensors(1, '', '', '');
+    } else if (activeTab === 'event') {
+      fetchEvents(1, '');
     }
-  }, [activeTab, fetchDrivers, fetchFleets, fetchSensors]);
+  }, [activeTab, fetchDrivers, fetchFleets, fetchSensors, fetchEvents]);
 
   // Driver Page / Filter Change Effect
   useEffect(() => {
@@ -220,11 +259,19 @@ export default function MasterData() {
     }
   }, [activeTab, sensorPage, debouncedSearchQuery, selectedZoneFilter, selectedSensorTypeFilter, fetchSensors]);
 
+  // Event Page / Filter Change Effect
+  useEffect(() => {
+    if (activeTab === 'event') {
+      fetchEvents(eventPage, debouncedSearchQuery);
+    }
+  }, [activeTab, eventPage, debouncedSearchQuery, fetchEvents]);
+
   const handleSearchChange = (val) => {
     setSearchQuery(val);
     setDriverPage(1);
     setFleetPage(1);
     setSensorPage(1);
+    setEventPage(1);
   };
 
   const handleZoneFilterChange = (val) => {
@@ -252,6 +299,8 @@ export default function MasterData() {
       fetchFleets(fleetPage, debouncedSearchQuery, selectedCategoryFilter);
     } else if (activeTab === 'sensor') {
       fetchSensors(sensorPage, debouncedSearchQuery, selectedZoneFilter, selectedSensorTypeFilter);
+    } else if (activeTab === 'event') {
+      fetchEvents(eventPage, debouncedSearchQuery);
     }
   };
 
@@ -319,6 +368,25 @@ export default function MasterData() {
     }
   };
 
+  // EVENT CRUD Handlers
+  const handleSaveEvent = async (payload) => {
+    if (selectedEvent) {
+      const res = await api.updateEvent(selectedEvent.id, payload);
+      if (res.success) {
+        triggerSuccessMsg('Data event berhasil diperbarui.');
+        fetchEvents(eventPage, debouncedSearchQuery);
+        fetchMetadataCounts();
+      }
+    } else {
+      const res = await api.createEvent(payload);
+      if (res.success) {
+        triggerSuccessMsg('Event baru berhasil ditambahkan.');
+        fetchEvents(eventPage, debouncedSearchQuery);
+        fetchMetadataCounts();
+      }
+    }
+  };
+
   // DELETE CONFIRM Handler
   const handleDeleteConfirm = async () => {
     if (!confirmDeleteId) return;
@@ -340,11 +408,18 @@ export default function MasterData() {
           fetchMetadataCounts();
           fetchStaticData();
         }
-      } else {
+      } else if (activeTab === 'sensor') {
         const res = await api.deleteSensorData(confirmDeleteId);
         if (res.success) {
           triggerSuccessMsg('Sensor berhasil dicopot dari sistem.');
           fetchSensors(sensorPage, debouncedSearchQuery, selectedZoneFilter, selectedSensorTypeFilter);
+          fetchMetadataCounts();
+        }
+      } else if (activeTab === 'event') {
+        const res = await api.deleteEvent(confirmDeleteId);
+        if (res.success) {
+          triggerSuccessMsg('Event berhasil dihapus dari sistem.');
+          fetchEvents(eventPage, debouncedSearchQuery);
           fetchMetadataCounts();
         }
       }
@@ -360,6 +435,7 @@ export default function MasterData() {
   const filteredDrivers = drivers;
   const filteredFleets = fleets;
   const filteredSensors = sensors;
+  const filteredEvents = events;
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
@@ -387,6 +463,7 @@ export default function MasterData() {
           driverCount={driverTotal}
           fleetCount={fleetTotal}
           sensorCount={sensorTotal}
+          eventCount={eventTotal}
           onAdd={() => {
             if (activeTab === 'driver') {
               setSelectedDriver(null);
@@ -394,9 +471,12 @@ export default function MasterData() {
             } else if (activeTab === 'fleet') {
               setSelectedFleet(null);
               setIsFleetModalOpen(true);
-            } else {
+            } else if (activeTab === 'sensor') {
               setSelectedSensor(null);
               setIsSensorModalOpen(true);
+            } else if (activeTab === 'event') {
+              setSelectedEvent(null);
+              setIsEventModalOpen(true);
             }
           }}
         />
@@ -436,12 +516,22 @@ export default function MasterData() {
               onDelete={(id) => setConfirmDeleteId(id)}
               loading={loading}
             />
-          ) : (
+          ) : activeTab === 'sensor' ? (
             <SensorTable
               sensors={filteredSensors}
               onEdit={(sensor) => {
                 setSelectedSensor(sensor);
                 setIsSensorModalOpen(true);
+              }}
+              onDelete={(id) => setConfirmDeleteId(id)}
+              loading={loading}
+            />
+          ) : (
+            <EventTable
+              events={filteredEvents}
+              onEdit={(event) => {
+                setSelectedEvent(event);
+                setIsEventModalOpen(true);
               }}
               onDelete={(id) => setConfirmDeleteId(id)}
               loading={loading}
@@ -480,6 +570,17 @@ export default function MasterData() {
               loading={loading}
             />
           )}
+
+          {activeTab === 'event' && (
+            <Pagination
+              currentPage={eventPage}
+              totalPages={eventTotalPages}
+              totalItems={eventTotal}
+              onPageChange={setEventPage}
+              itemLabel="event"
+              loading={loading}
+            />
+          )}
         </div>
       </div>
 
@@ -506,6 +607,13 @@ export default function MasterData() {
         onSave={handleSaveSensor}
       />
 
+      <EventModal
+        isOpen={isEventModalOpen}
+        onClose={() => setIsEventModalOpen(false)}
+        event={selectedEvent}
+        onSave={handleSaveEvent}
+      />
+
       <ConfirmModal
         isOpen={confirmDeleteId !== null}
         onClose={() => setConfirmDeleteId(null)}
@@ -515,14 +623,18 @@ export default function MasterData() {
             ? 'Hapus Akun Driver'
             : activeTab === 'fleet'
             ? 'Hapus Tipe Armada'
-            : 'Copot Sensor IoT'
+            : activeTab === 'sensor'
+            ? 'Copot Sensor IoT'
+            : 'Hapus Master Event'
         }
         message={
           activeTab === 'driver'
             ? 'Apakah Anda yakin ingin menghapus akun driver ini? Supir ini tidak akan dapat login kembali ke aplikasi driver.'
             : activeTab === 'fleet'
             ? 'Apakah Anda yakin ingin menghapus tipe armada ini? Penugasan armada pada driver terkait akan dibatalkan otomatis.'
-            : 'Apakah Anda yakin ingin mencopot sensor ini dari TPS? Seluruh pembacaan telemetri aktif untuk sensor ini akan hilang.'
+            : activeTab === 'sensor'
+            ? 'Apakah Anda yakin ingin mencopot sensor ini dari TPS? Seluruh pembacaan telemetri aktif untuk sensor ini akan hilang.'
+            : 'Apakah Anda yakin ingin menghapus data event tahunan ini? Event ini tidak akan lagi masuk dalam kalkulasi analisis risiko.'
         }
         confirmText="Ya, Hapus"
         cancelText="Batal"

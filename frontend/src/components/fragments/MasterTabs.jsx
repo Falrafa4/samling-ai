@@ -1,13 +1,15 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMicrochip, faPlus, faUser, faTruck } from '@fortawesome/free-solid-svg-icons';
+import { faMicrochip, faPlus, faUser, faTruck, faCalendarDays } from '@fortawesome/free-solid-svg-icons';
 
-export default function MasterTabs({ activeTab, onTabChange, driverCount, fleetCount, sensorCount, onAdd }) {
+export default function MasterTabs({ activeTab, onTabChange, driverCount, fleetCount, sensorCount, eventCount, onAdd }) {
   const getAddBtnText = () => {
     switch (activeTab) {
       case 'driver':
         return 'Registrasi Driver';
       case 'fleet':
         return 'Tambah Armada';
+      case 'event':
+        return 'Tambah Event';
       default:
         return 'Pasang Sensor';
     }
@@ -15,10 +17,10 @@ export default function MasterTabs({ activeTab, onTabChange, driverCount, fleetC
 
   return (
     <div className="sticky top-5 z-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-      <div className="flex bg-slate-100 p-1 rounded-[0.6rem] w-fit">
+      <div className="flex bg-slate-100 p-1 rounded-[0.6rem] w-fit overflow-x-auto">
         <button
           onClick={() => onTabChange('driver')}
-          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
             activeTab === 'driver'
               ? 'bg-white text-emerald-600 shadow-xs'
               : 'text-slate-500 hover:text-slate-800'
@@ -29,7 +31,7 @@ export default function MasterTabs({ activeTab, onTabChange, driverCount, fleetC
         </button>
         <button
           onClick={() => onTabChange('fleet')}
-          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
             activeTab === 'fleet'
               ? 'bg-white text-emerald-600 shadow-xs'
               : 'text-slate-500 hover:text-slate-800'
@@ -40,7 +42,7 @@ export default function MasterTabs({ activeTab, onTabChange, driverCount, fleetC
         </button>
         <button
           onClick={() => onTabChange('sensor')}
-          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
             activeTab === 'sensor'
               ? 'bg-white text-emerald-600 shadow-xs'
               : 'text-slate-500 hover:text-slate-800'
@@ -48,6 +50,17 @@ export default function MasterTabs({ activeTab, onTabChange, driverCount, fleetC
         >
           <FontAwesomeIcon icon={faMicrochip} />
           <span>Sensor ({sensorCount})</span>
+        </button>
+        <button
+          onClick={() => onTabChange('event')}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+            activeTab === 'event'
+              ? 'bg-white text-emerald-600 shadow-xs'
+              : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <FontAwesomeIcon icon={faCalendarDays} />
+          <span>Event ({eventCount})</span>
         </button>
       </div>
 

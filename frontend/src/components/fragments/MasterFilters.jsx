@@ -19,12 +19,17 @@ export default function MasterFilters({
   const getPlaceholderText = () => {
     if (activeTab === 'driver') return 'Cari nama, username atau WhatsApp...';
     if (activeTab === 'fleet') return 'Cari nama armada atau jenis kendaraan...';
+    if (activeTab === 'event') return 'Cari nama event...';
     return 'Cari jenis sensor atau nama TPS...';
   };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
-      <div className={activeTab === 'sensor' ? "sm:col-span-6 relative" : "sm:col-span-8 relative"}>
+      <div className={
+        activeTab === 'sensor' ? "sm:col-span-6 relative" : 
+        activeTab === 'event' ? "sm:col-span-12 relative" : 
+        "sm:col-span-8 relative"
+      }>
         <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
           <FontAwesomeIcon icon={faSearch} className="text-xs" />
         </span>
@@ -37,7 +42,7 @@ export default function MasterFilters({
         />
       </div>
 
-      {activeTab !== 'fleet' ? (
+      {activeTab !== 'fleet' && activeTab !== 'event' && (
         <div className="sm:col-span-3">
           <SearchableSelect
             options={zoneOptions}
@@ -48,7 +53,9 @@ export default function MasterFilters({
             emptyMessage="Tidak ada wilayah ditemukan"
           />
         </div>
-      ) : (
+      )}
+
+      {activeTab === 'fleet' && (
         <div className="sm:col-span-4 relative">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
             <FontAwesomeIcon icon={faFolderOpen} className="text-xs" />

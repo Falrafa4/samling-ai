@@ -16,6 +16,7 @@ from app.api.route_recommendations import router as route_recommendations_router
 from app.api.dashboard import router as dashboard_router
 from app.api.fleets import router as fleets_router
 from app.api.landing import router as landing_router
+from app.api.events import router as events_router
 from app.admin import setup_admin
 from app.ai.scheduler.scheduler import start_scheduler
 
@@ -92,3 +93,4 @@ app.include_router(route_recommendations_router, prefix="/api/v1")
 app.include_router(fleets_router, prefix="/api/v1")
 app.include_router(dashboard_router, prefix="/api/v1")
 app.include_router(landing_router, prefix="/api/v1")
+app.include_router(events_router, prefix="/api/v1")

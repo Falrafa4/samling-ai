@@ -485,5 +485,70 @@ export const api = {
    */
   async getAccuracyTrend(days = 30) {
     return fetchWithAuth(`/volume-predictions/accuracy-trend?days=${days}`);
+  },
+
+  // ─── Event Management ───────────────────────────────────────
+
+  /**
+   * Mengambil daftar event tahunan dengan pagination dan pencarian.
+   * Endpoint: GET /events
+   */
+  async getEvents({ page, per_page, search } = {}) {
+    let url = '/events';
+    const params = [];
+    if (page !== undefined && page !== null) params.push(`page=${page}`);
+    if (per_page !== undefined && per_page !== null) params.push(`per_page=${per_page}`);
+    if (search) params.push(`search=${encodeURIComponent(search)}`);
+    
+    if (params.length > 0) {
+      url += `?${params.join('&')}`;
+    }
+    return fetchWithAuth(url);
+  },
+
+  /**
+   * Mengambil detail satu event berdasarkan ID.
+   * Endpoint: GET /events/{id}
+   */
+  async getEvent(id) {
+    return fetchWithAuth(`/events/${id}`);
+  },
+
+  /**
+   * Menambahkan event baru.
+   * Endpoint: POST /events
+   */
+  async createEvent(data) {
+    return fetchWithAuth('/events', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Mengupdate data event.
+   * Endpoint: PUT /events/{id}
+   */
+  async updateEvent(id, data) {
+    return fetchWithAuth(`/events/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  /**
+   * Menghapus data event.
+   * Endpoint: DELETE /events/{id}
+   */
+  async deleteEvent(id) {
+    return fetchWithAuth(`/events/${id}`, {
+      method: 'DELETE',
+    });
   }
 };
