@@ -17,7 +17,7 @@ from app.ai.scheduler.feature_engineer import (
 
 LLM_API_KEY = os.getenv("LLM_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "llama3-8b-8192"
+GROQ_MODEL = "llama-3.1-8b-instant"
 
 def get_urgency_from_llm(report_content: str, report_type: str) -> float:
     """
