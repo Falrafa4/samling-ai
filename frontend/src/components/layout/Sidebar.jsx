@@ -26,7 +26,7 @@ export default function Sidebar({ onLogout }) {
       label: "Wilayah dan Monitoring",
       icon: faMicrochip,
     },
-    { path: "/admin/predictions", label: "Prediksi AI", icon: faBrain },
+    { path: "/admin/predictions", label: "Prediksi Volume", icon: faBrain },
     { path: "/admin/data", label: "Kelola Data", icon: faDatabase },
     { path: "/admin/fleet", label: "Manajemen Rute", icon: faTruck },
     { path: "/admin/reports", label: "Laporan Warga", icon: faCommentDots },

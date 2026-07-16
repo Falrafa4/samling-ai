@@ -487,6 +487,32 @@ export const api = {
     return fetchWithAuth(`/volume-predictions/accuracy-trend?days=${days}`);
   },
 
+  /**
+   * Mengambil data analitik runtun waktu perbandingan volume vs prediksi.
+   * Endpoint: GET /volume-predictions/{zone_id}/analytics
+   */
+  async getVolumeAnalytics(zoneId) {
+    return fetchWithAuth(`/volume-predictions/${zoneId}/analytics`);
+  },
+
+  /**
+   * Mengambil informasi performa model latih ML secara makro.
+   * Endpoint: GET /volume-predictions/model-info
+   */
+  async getMLModelInfo() {
+    return fetchWithAuth('/volume-predictions/model-info');
+  },
+
+  /**
+   * Memicu simulasi pelatihan ulang model ML.
+   * Endpoint: POST /volume-predictions/retrain
+   */
+  async retrainMLModel() {
+    return fetchWithAuth('/volume-predictions/retrain', {
+      method: 'POST',
+    });
+  },
+
   // ─── Event Management ───────────────────────────────────────
 
   /**
