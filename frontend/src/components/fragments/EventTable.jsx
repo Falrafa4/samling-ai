@@ -1,7 +1,47 @@
+import { useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faTrash, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faPen, faTrash, faSpinner, faFileImport } from '@fortawesome/free-solid-svg-icons';
+import { api } from '../../services/api';
 
-export default function EventTable({ events, onEdit, onDelete, loading }) {
+export default function EventTable({ events, onEdit, onDelete, loading, onImportSuccess }) {
+  const fileInputRef = useRef(null);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState('');
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      setImportError('Berkas harus berformat .csv');
+      return;
+    }
+
+    try {
+      setImporting(true);
+      setImportError('');
+      const res = await api.importEvents(file);
+      if (res.success) {
+        if (onImportSuccess) {
+          onImportSuccess(res.message || 'Data event berhasil diimpor!');
+        }
+      }
+    } catch (err) {
+      setImportError(err.message || 'Gagal mengimpor data event.');
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   if (loading) {
     return (
       <div className="py-24 flex flex-col items-center justify-center text-slate-400 gap-2">
@@ -42,19 +82,60 @@ export default function EventTable({ events, onEdit, onDelete, loading }) {
   };
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-100 no-scrollbar">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">
-            <th className="px-6 py-3.5">Nama Event</th>
-            <th className="px-6 py-3.5">Tanggal Pelaksanaan</th>
-            <th className="px-6 py-3.5">Lokasi</th>
-            <th className="px-6 py-3.5">Wilayah / Kecamatan</th>
-            <th className="px-6 py-3.5">Urgency Score</th>
-            <th className="px-6 py-3.5 text-right">Aksi</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
+    <div className="space-y-4">
+      {/* Import CSV Table Actions Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50 border border-slate-200/60 p-4 rounded-xl">
+        <div>
+          <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <FontAwesomeIcon icon={faFileImport} className="text-emerald-600" />
+            Impor Data Event Secara Kolektif
+          </h4>
+          <p className="text-[10px] text-slate-400 font-medium mt-0.5 leading-relaxed">
+            Unggah file CSV dengan kolom header wajib: <code>name</code>, <code>start_date</code> (YYYY-MM-DD), <code>end_date</code> (YYYY-MM-DD), beserta kolom opsional lainnya.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".csv"
+            className="hidden"
+          />
+          <button
+            onClick={triggerFileInput}
+            disabled={importing}
+            className="px-3.5 py-1.5 bg-emerald-650 border-emerald-650 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          >
+            {importing ? (
+              <FontAwesomeIcon icon={faSpinner} className="animate-spin text-[10px]" />
+            ) : (
+              <FontAwesomeIcon icon={faFileImport} className="text-[10px]" />
+            )}
+            <span>{importing ? 'Mengimpor...' : 'Import CSV'}</span>
+          </button>
+        </div>
+      </div>
+
+      {importError && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-lg">
+          {importError}
+        </div>
+      )}
+
+      <div className="overflow-x-auto rounded-lg border border-slate-100 no-scrollbar">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">
+              <th className="px-6 py-3.5">Nama Event</th>
+              <th className="px-6 py-3.5">Tanggal Pelaksanaan</th>
+              <th className="px-6 py-3.5">Lokasi</th>
+              <th className="px-6 py-3.5">Wilayah / Kecamatan</th>
+              <th className="px-6 py-3.5">Urgency Score</th>
+              <th className="px-6 py-3.5 text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
           {events.length > 0 ? (
             events.map((event) => (
               <tr key={event.id} className="hover:bg-slate-50/50 transition-colors">
@@ -108,6 +189,7 @@ export default function EventTable({ events, onEdit, onDelete, loading }) {
           )}
         </tbody>
       </table>
+    </div>
     </div>
   );
 }

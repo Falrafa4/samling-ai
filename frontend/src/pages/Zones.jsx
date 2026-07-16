@@ -14,8 +14,7 @@ import {
   faFilter,
   faFilterCircleXmark,
   faMapPin,
-  faLayerGroup,
-  faRoad
+  faLayerGroup
 } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../services/api';
 import Header from '../components/Header';
@@ -180,7 +179,6 @@ export default function Zones() {
         kecamatan: formData.kecamatan,
         kelurahan: formData.kelurahan,
         jenis_tps: formData.jenis_tps,
-        alamat: formData.alamat,
         latitude: parseFloat(formData.latitude),
         longitude: parseFloat(formData.longitude),
         risk_status: formData.risk_status
@@ -399,12 +397,6 @@ export default function Zones() {
                             </span>
                           )}
                         </div>
-                        {zone.alamat && (
-                          <p className="text-[11px] text-slate-400 mt-1.5 truncate flex items-center gap-1" title={zone.alamat}>
-                            <FontAwesomeIcon icon={faRoad} className="text-slate-300 text-[9px] shrink-0" />
-                            <span className="truncate">{zone.alamat}</span>
-                          </p>
-                        )}
                       </div>
 
                       <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-3 md:gap-2 shrink-0 pt-3 md:pt-0 border-t border-slate-100 md:border-none">

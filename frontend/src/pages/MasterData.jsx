@@ -535,6 +535,11 @@ export default function MasterData() {
               }}
               onDelete={(id) => setConfirmDeleteId(id)}
               loading={loading}
+              onImportSuccess={(msg) => {
+                triggerSuccessMsg(msg);
+                fetchEvents(eventPage, debouncedSearchQuery);
+                fetchMetadataCounts();
+              }}
             />
           )}
 

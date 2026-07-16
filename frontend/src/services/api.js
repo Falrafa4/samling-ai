@@ -576,5 +576,18 @@ export const api = {
     return fetchWithAuth(`/events/${id}`, {
       method: 'DELETE',
     });
+  },
+
+  /**
+   * Mengimpor daftar event dari file CSV.
+   * Endpoint: POST /events/import
+   */
+  async importEvents(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return fetchWithAuth('/events/import', {
+      method: 'POST',
+      body: formData,
+    });
   }
 };
