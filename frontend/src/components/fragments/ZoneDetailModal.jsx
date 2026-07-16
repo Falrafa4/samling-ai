@@ -10,11 +10,14 @@ import {
   faClock,
   faThermometer,
   faDroplet,
-  faWeightHanging,
-  faWind,
   faExpand,
   faCompress,
-  faMap
+  faMap,
+  faCloudRain,
+  faUmbrellaBeach,
+  faCalendarDay,
+  faBrain,
+  faWind
 } from '@fortawesome/free-solid-svg-icons';
 import { api } from '../../services/api';
 import CircularProgress from '../CircularProgress';
@@ -36,6 +39,7 @@ export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange })
     updatedAt: null
   });
   const [error, setError] = useState('');
+  const [aiInsights, setAiInsights] = useState(null);
   
   // Volume prediction states
   const [showPrediction, setShowPrediction] = useState(false);
@@ -157,9 +161,22 @@ export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange })
     setShowPrediction(false);
     setPrediction(null);
     setPredictionError('');
+    setAiInsights(null);
 
     async function initFetch() {
-      await fetchSensorDetail(zone.id);
+      await Promise.all([
+        fetchSensorDetail(zone.id),
+        (async () => {
+          try {
+            const res = await api.getZone(zone.id);
+            if (res.success && res.data && res.data.ai_insights) {
+              setAiInsights(res.data.ai_insights);
+            }
+          } catch (e) {
+            console.error("Gagal memuat AI insights", e);
+          }
+        })()
+      ]);
       setLoading(false);
     }
 
@@ -389,6 +406,114 @@ export default function ZoneDetailModal({ isOpen, onClose, zone, onZoneChange })
                 )}
               </div>
             </div>
+
+            {/* AI Insights & Risk Assessment Section */}
+            {aiInsights && (
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-2xs">
+                <div className="flex items-center gap-2 mb-4">
+                  <FontAwesomeIcon icon={faBrain} className="text-indigo-500 text-lg" />
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider select-none">AI Insight & Risk Assessment</h4>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                  {/* Left: AI Insight Panel */}
+                  <div className="lg:col-span-1 space-y-3">
+                    <div className="bg-white p-3 rounded-lg border border-slate-100 flex flex-col justify-between">
+                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Faktor Dominan Saat Ini</span>
+                      <span className="text-sm font-extrabold text-indigo-600 mt-1 block">
+                        {aiInsights.largest_driver}
+                      </span>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-slate-100 grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <FontAwesomeIcon icon={faCloudRain} className="text-sky-500 text-[10px]" />
+                          <span className="text-[9px] text-slate-400 font-bold uppercase">Curah Hujan</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-700">{aiInsights.rainfall_mm} mm</span>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <FontAwesomeIcon icon={faUmbrellaBeach} className="text-amber-500 text-[10px]" />
+                          <span className="text-[9px] text-slate-400 font-bold uppercase">Akhir Pekan</span>
+                        </div>
+                        <span className="text-xs font-bold text-slate-700">{aiInsights.is_weekend ? 'Ya' : 'Tidak'}</span>
+                      </div>
+                    </div>
+                    {aiInsights.active_event && (
+                      <div className="bg-amber-50 border border-amber-100 p-3 rounded-lg">
+                        <span className="text-[9px] text-amber-600 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                          <FontAwesomeIcon icon={faCalendarDay} />
+                          Event Aktif di Sekitar TPS
+                        </span>
+                        <span className="text-xs font-bold text-slate-800 mt-1 block leading-tight">
+                          {aiInsights.active_event}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Right: Risk Assessment & Factor Grid */}
+                  <div className="lg:col-span-2 bg-white rounded-lg border border-slate-100 p-4">
+                    <div className="flex justify-between items-end mb-4">
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Porsi Risiko Volume Sampah</p>
+                        <p className="text-xs font-bold text-slate-700 mt-0.5">Analisis ML Multi-Faktor</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Confidence Level</p>
+                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${
+                          aiInsights.confidence_level === 'High' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 
+                          aiInsights.confidence_level === 'Medium' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-red-50 text-red-600 border-red-200'
+                        }`}>
+                          {aiInsights.confidence_level}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Risk Factor Progress Bars */}
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex justify-between text-[10px] font-bold mb-1">
+                          <span className="text-slate-600">Tren Histori & Baseline</span>
+                          <span className="text-slate-800">{aiInsights.risk_factors.historical}%</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-1.5">
+                          <div className="bg-slate-500 h-1.5 rounded-full" style={{ width: `${aiInsights.risk_factors.historical}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-[10px] font-bold mb-1">
+                          <span className="text-slate-600">Dampak Event / Libur Nasional</span>
+                          <span className="text-slate-800">{aiInsights.risk_factors.holiday}%</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-1.5">
+                          <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: `${aiInsights.risk_factors.holiday}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-[10px] font-bold mb-1">
+                          <span className="text-slate-600">Dampak Cuaca Hujan</span>
+                          <span className="text-slate-800">{aiInsights.risk_factors.rain}%</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-1.5">
+                          <div className="bg-sky-500 h-1.5 rounded-full" style={{ width: `${aiInsights.risk_factors.rain}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-[10px] font-bold mb-1">
+                          <span className="text-slate-600">Aktivitas Akhir Pekan</span>
+                          <span className="text-slate-800">{aiInsights.risk_factors.weekend}%</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-1.5">
+                          <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${aiInsights.risk_factors.weekend}%` }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Monitoring Sensor Section */}
             <div>

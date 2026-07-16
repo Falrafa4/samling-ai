@@ -23,6 +23,15 @@ class ZoneUpdate(BaseModel):
     longitude: Optional[float] = None
     risk_status: Optional[str] = None
 
+class AIInsight(BaseModel):
+    largest_driver: str
+    rainfall_mm: float
+    is_weekend: bool
+    is_holiday: bool
+    active_event: Optional[str] = None
+    risk_factors: dict
+    confidence_level: str
+
 class ZoneResponse(BaseModel):
     id: int
     name: str
@@ -34,6 +43,7 @@ class ZoneResponse(BaseModel):
     latitude: float
     longitude: float
     risk_status: str
+    ai_insights: Optional[AIInsight] = None
 
     class Config:
         from_attributes = True

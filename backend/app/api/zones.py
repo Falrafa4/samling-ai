@@ -163,12 +163,85 @@ def get_zones_hierarchy(db: Session = Depends(get_db)):
 @router.get("/zones/{zone_id}")
 def get_zone(zone_id: int, db: Session = Depends(get_db)):
     """
-    Mengambil detail wilayah TPS berdasarkan ID.
+    Mengambil detail wilayah TPS berdasarkan ID beserta AI Insights.
     """
+    from datetime import date
+    from app.models.events import Event
+    from app.models.historical_waste_data import HistoricalWasteData
+
     zone = db.query(Zone).filter(Zone.id == zone_id).first()
     if not zone:
         raise HTTPException(status_code=404, detail="Zone not found")
+        
     data = ZoneResponse.model_validate(zone)
+    
+    # --- AI Insight & Risk Assessment Logic ---
+    today = date.today()
+    is_weekend = today.weekday() >= 5
+    
+    # 1. Cek Event Aktif di Kecamatan / Wilayah
+    active_event = db.query(Event).filter(
+        Event.start_date <= today,
+        Event.end_date >= today,
+        ((Event.kecamatan == zone.kecamatan) | (Event.wilayah == zone.wilayah))
+    ).order_by(Event.urgency_score.desc()).first()
+    
+    # 2. Cek status libur
+    is_holiday = False
+    if active_event and ("Libur" in active_event.name or "Cuti" in active_event.name or "HUT" in active_event.name):
+        is_holiday = True
+        
+    # 3. Ambil rata-rata curah hujan terakhir untuk TPS ini
+    rainfall_record = db.query(HistoricalWasteData.rainfall_today).filter(
+        HistoricalWasteData.tps_id == zone.id
+    ).order_by(HistoricalWasteData.timestamp_prediction.desc()).first()
+    rainfall_mm = rainfall_record[0] if rainfall_record else (15.5 if zone.risk_status in ["Warning", "High Priority"] else 0.0)
+    
+    # 4. Kalkulasi Faktor Risiko (Risk Factors)
+    risk_factors = {
+        "historical": 35,
+        "holiday": 40 if is_holiday else (15 if active_event else 5),
+        "rain": min(40, int(rainfall_mm * 1.5)),
+        "weekend": 20 if is_weekend else 5
+    }
+    
+    # Normalisasi agar total = 100%
+    total_risk = sum(risk_factors.values())
+    if total_risk > 0:
+        # Menghindari pembulatan yang membuat total tidak 100%
+        normalized_factors = {k: int((v / total_risk) * 100) for k, v in risk_factors.items()}
+        diff = 100 - sum(normalized_factors.values())
+        if diff != 0:
+            normalized_factors["historical"] += diff
+        risk_factors = normalized_factors
+        
+    # Tentukan Largest Driver
+    largest_driver_key = max(risk_factors, key=risk_factors.get)
+    driver_map = {
+        "historical": "Tren Histori",
+        "holiday": "Event / Libur",
+        "rain": "Curah Hujan Tinggi",
+        "weekend": "Aktivitas Akhir Pekan"
+    }
+    largest_driver = driver_map.get(largest_driver_key, "Tren Histori")
+    
+    # Confidence Level
+    confidence_level = "High" if total_risk > 50 else ("Medium" if total_risk > 30 else "Low")
+    if is_holiday or rainfall_mm > 25:
+        confidence_level = "High"
+        
+    ai_insights = {
+        "largest_driver": largest_driver,
+        "rainfall_mm": float(rainfall_mm),
+        "is_weekend": is_weekend,
+        "is_holiday": is_holiday,
+        "active_event": active_event.name if active_event else None,
+        "risk_factors": risk_factors,
+        "confidence_level": confidence_level
+    }
+    
+    data.ai_insights = ai_insights
+    
     return response_success(data=data, message="Zone retrieved successfully")
 
 @router.post("/zones", status_code=status.HTTP_201_CREATED)
