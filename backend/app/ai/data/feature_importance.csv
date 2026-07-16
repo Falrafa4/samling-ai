@@ -1,0 +1,13 @@
+,Feature,Importance
+3,zone_population,0.4833253
+11,current_fill_percentage,0.2668232
+0,kecamatan,0.114812724
+10,event_urgency_score,0.04993473
+7,is_holiday,0.038833655
+5,day_of_week,0.03828015
+9,rainfall_today,0.0060742595
+1,tps_id,0.00049521227
+4,tps_capacity_kg,0.0004939584
+8,daily_growth_rate,0.0004932552
+2,tps_type,0.00043355956
+6,is_weekend,0.0

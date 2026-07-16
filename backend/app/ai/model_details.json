@@ -1,0 +1,167 @@
+{
+    "hyperparameters": {
+        "objective": "reg:squarederror",
+        "base_score": null,
+        "booster": null,
+        "callbacks": null,
+        "colsample_bylevel": null,
+        "colsample_bynode": null,
+        "colsample_bytree": 1.0,
+        "device": null,
+        "early_stopping_rounds": 50,
+        "enable_categorical": true,
+        "eval_metric": "mae",
+        "feature_types": null,
+        "feature_weights": null,
+        "gamma": null,
+        "grow_policy": null,
+        "importance_type": null,
+        "interaction_constraints": null,
+        "learning_rate": 0.05,
+        "max_bin": null,
+        "max_cat_threshold": null,
+        "max_cat_to_onehot": null,
+        "max_delta_step": null,
+        "max_depth": 6,
+        "max_leaves": null,
+        "min_child_weight": 1,
+        "missing": null,
+        "monotone_constraints": null,
+        "multi_strategy": null,
+        "n_estimators": 500,
+        "n_jobs": -1,
+        "num_parallel_tree": null,
+        "random_state": 42,
+        "reg_alpha": null,
+        "reg_lambda": null,
+        "sampling_method": null,
+        "scale_pos_weight": null,
+        "subsample": 0.8,
+        "tree_method": "hist",
+        "validate_parameters": null,
+        "verbosity": null
+    },
+    "performance_metrics": {
+        "MAE": 8.10053,
+        "MAPE": 0.11758,
+        "RMSE": 10.10653,
+        "R2": 0.82097,
+        "Best CV Score": 8.11768
+    },
+    "feature_importance": [
+        {
+            "Feature": "zone_population",
+            "Importance": 0.4833253
+        },
+        {
+            "Feature": "current_fill_percentage",
+            "Importance": 0.2668232
+        },
+        {
+            "Feature": "kecamatan",
+            "Importance": 0.114812724
+        },
+        {
+            "Feature": "event_urgency_score",
+            "Importance": 0.04993473
+        },
+        {
+            "Feature": "is_holiday",
+            "Importance": 0.038833655
+        },
+        {
+            "Feature": "day_of_week",
+            "Importance": 0.03828015
+        },
+        {
+            "Feature": "rainfall_today",
+            "Importance": 0.0060742595
+        },
+        {
+            "Feature": "tps_id",
+            "Importance": 0.00049521227
+        },
+        {
+            "Feature": "tps_capacity_kg",
+            "Importance": 0.0004939584
+        },
+        {
+            "Feature": "daily_growth_rate",
+            "Importance": 0.0004932552
+        },
+        {
+            "Feature": "tps_type",
+            "Importance": 0.00043355956
+        },
+        {
+            "Feature": "is_weekend",
+            "Importance": 0.0
+        }
+    ],
+    "dataset_records": 704886,
+    "dataset_TPS": 1291,
+    "dataset_coverage": [
+        "Kramat Jati",
+        "Cakung",
+        "Makasar",
+        "Jatinegara",
+        "Kebayoran Lama",
+        "Gambir",
+        "Kelapa Gading",
+        "Cilincing",
+        "Duren Sawit",
+        "Taman Sari",
+        "Cengkareng",
+        "Matraman",
+        "Pasar Minggu",
+        "Cempaka Putih",
+        "Kebayoran Baru",
+        "Cipayung",
+        "Penjaringan",
+        "Kemayoran",
+        "Tambora",
+        "Pademangan",
+        "Setiabudi",
+        "Grogol Petamburan",
+        "Tanjung Priok",
+        "Tanah Abang",
+        "Pasar Rebo",
+        "Pancoran",
+        "Jagakarsa",
+        "Pulogadung",
+        "Koja",
+        "Mampang Prapatan",
+        "Kebon Jeruk",
+        "Kalideres",
+        "Senen",
+        "Johar Baru",
+        "Pesanggrahan",
+        "Palmerah",
+        "Kembangan",
+        "Cilandak",
+        "Ciracas",
+        "Menteng",
+        "Tebet",
+        "Sawah Besar"
+    ],
+    "time_range": "2025-01-01 06:00:00 - 2026-06-30 06:00:00",
+    "dataset_features": [
+        "kecamatan",
+        "tps_id",
+        "tps_type",
+        "zone_population",
+        "tps_capacity_kg",
+        "day_of_week",
+        "is_weekend",
+        "is_holiday",
+        "daily_growth_rate",
+        "rainfall_today",
+        "event_urgency_score",
+        "current_fill_percentage",
+        "timestamp_prediction"
+    ],
+    "dataset_label": "target_fill_percentage",
+    "training_time": "14m 37s",
+    "inference_time": "0.05s / TPS",
+    "forecast_time": "3.2s"
+}
