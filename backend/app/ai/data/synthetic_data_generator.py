@@ -4,8 +4,8 @@ import numpy as np
 from datetime import datetime, timedelta
 import random
 
-# Pastikan API FastAPI kamu menyala, atau gunakan dummy zones jika API mati
-API_URL = "http://127.0.0.1:8000/api/v1/zones"
+# Source of truth for TPS list (includes newly added TPS)
+API_URL = "https://api-samling.naufalrafa.my.id/api/v1/zones"
 
 START_DATE = datetime(2025, 1, 1, 6, 0, 0)
 END_DATE = datetime(2026, 6, 30, 6, 0, 0)
@@ -58,22 +58,66 @@ ZONE_POPULATION = {
 }
 
 try:
-    response = requests.get(API_URL)
+    response = requests.get(API_URL, timeout=30)
     response.raise_for_status()
-    zones = response.json()["data"]
+    payload = response.json()
+    # Accept both shapes: {"data":[...]} or raw list
+    zones = payload.get("data", payload) if isinstance(payload, dict) else payload
 except Exception as e:
-    print(f"Gagal mengambil data API: {e}. Pastikan backend menyala.")
-    zones = [] # Fallback
+    raise RuntimeError(f"Gagal mengambil data zones dari API: {e}")
+
+# Pre-fetch and cache precipitation by kecamatan
+print("Caching precipitation by kecamatan...")
+rainfall_cache = {}
+start_date_only = START_DATE.date()
+seen_kecamatan = set()
+
+for zone in zones:
+    kecamatan = zone.get("kecamatan")
+    if not kecamatan or kecamatan in seen_kecamatan:
+        continue
+    seen_kecamatan.add(kecamatan)
+    
+    try:
+        lat = zone.get("latitude", zone.get("lat"))
+        lon = zone.get("longitude", zone.get("lon"))
+        if lat is not None and lon is not None:
+            resp = requests.get(
+                "https://archive-api.open-meteo.com/v1/era5",
+                params={
+                    "latitude": lat,
+                    "longitude": lon,
+                    "daily": "precipitation_sum",
+                    "start_date": START_DATE.date().isoformat(),
+                    "end_date": END_DATE.date().isoformat(),
+                    "timezone": "Asia/Bangkok"
+                },
+                timeout=20,
+            )
+            resp.raise_for_status()
+            pdata = resp.json()
+            rainfall_cache[kecamatan] = pdata.get("daily", {}).get("precipitation_sum", [])
+            print(f"  Cached: {kecamatan}")
+        else:
+            rainfall_cache[kecamatan] = None
+    except Exception as e:
+        print(f"  Warning: failed to fetch precipitation for {kecamatan}: {e}")
+        rainfall_cache[kecamatan] = None
+
+print(f"Precipitation cache ready. Generating synthetic data...\n")
 
 records = []
 
 for zone in zones:
-    kecamatan = zone["kecamatan"]
-    tps_id = zone["id"]
-    tps_type = zone["jenis_tps"]
+    kecamatan = zone.get("kecamatan")
+    tps_id = zone.get("id")
+    tps_type = zone.get("jenis_tps")
 
-    # Berikan populasi logis untuk TPS
-    zone_population = ZONE_POPULATION[kecamatan]
+    if not kecamatan or tps_id is None:
+        continue
+
+    # Berikan populasi logis untuk TPS (fallback jika kecamatan baru)
+    zone_population = ZONE_POPULATION.get(kecamatan, 250000)
 
     # Sesuaikan kapasitas TPS
     if tps_type == "Tipe 1":
@@ -88,28 +132,8 @@ for zone in zones:
     current_date = START_DATE
     current_fill = np.random.uniform(5, 20) # Awal tahun TPS kosong
 
-    # Pre-fetch historical precipitation for the whole date range for this zone
-    precipitation_list = None
-    start_date_only = START_DATE.date()
-    try:
-        resp = requests.get(
-            "https://archive-api.open-meteo.com/v1/era5",
-            params={
-                "latitude": zone.get("latitude", zone.get("lat", None)),
-                "longitude": zone.get("longitude", zone.get("lon", None)),
-                "daily": "precipitation_sum",
-                "start_date": START_DATE.date().isoformat(),
-                "end_date": END_DATE.date().isoformat(),
-                "timezone": "Asia/Bangkok"
-            },
-            timeout=20,
-        )
-        resp.raise_for_status()
-        pdata = resp.json()
-        precipitation_list = pdata.get("daily", {}).get("precipitation_sum", [])
-    except Exception as e:
-        print(f"Warning: failed to fetch historical precipitation for zone {tps_id}: {e}")
-        precipitation_list = None
+    # Use cached precipitation for this kecamatan
+    precipitation_list = rainfall_cache.get(kecamatan)
 
     while current_date <= END_DATE:
         day_of_week = current_date.weekday()

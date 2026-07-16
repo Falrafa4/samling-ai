@@ -86,10 +86,15 @@ def seed_data():
 
         zones_data = []
         for tps in tps_list:
+            kecamatan_raw = tps.get("kecamatan", "")
+            if not kecamatan_raw or not kecamatan_raw.strip():
+                print(f"    - Skipping TPS '{tps.get('name', 'N/A')}' due to empty 'kecamatan'.")
+                continue
+
             zone = Zone(
                 name=tps["name"],
                 wilayah=normalize_wilayah(tps.get("wilayah", "")),
-                kecamatan=normalize_kecamatan(tps.get("kecamatan", "")),
+                kecamatan=normalize_kecamatan(kecamatan_raw),
                 kelurahan=tps.get("kelurahan", "").strip().title(),
                 jenis_tps=tps.get("jenis_tps", "").strip().title(),
                 alamat=tps.get("alamat", "").strip(),
