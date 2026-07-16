@@ -52,3 +52,4 @@ uvloop==0.22.1
 watchfiles==1.2.0
 websockets==16.1
 WTForms==3.2.2
+xgboost
