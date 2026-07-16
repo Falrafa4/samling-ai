@@ -157,7 +157,6 @@ def save_predictions(db: Session, ranked_predictions):
 
 
 def forecast_all_tps():
-
     db = SessionLocal()
 
     print("Loading model...")
@@ -192,3 +191,40 @@ def forecast_all_tps():
     # Route recommendation is handled by the scheduler runner.
     db.close()
     print("Finished forecasting and closed DB.")
+
+
+def forecast_tps(tps_id: str):
+    db = SessionLocal()
+    try:
+        print("Loading model...")
+        model = load_model()
+        encoders = load_encoders()
+
+        row = (
+            db.query(HistoricalWasteData)
+            .filter(HistoricalWasteData.tps_id == str(tps_id))
+            .order_by(HistoricalWasteData.timestamp_prediction.desc())
+            .first()
+        )
+        if not row:
+            print(f"No historical data found for TPS {tps_id}.")
+            return None
+
+        X = prepare_features([row], encoders)
+        pred = float(predict(model, X)[0])
+
+        batch_id = f"citizen_{get_jakarta_now():%Y%m%d_%H%M%S}"
+        obj = VolumePrediction(
+            forecast_batch_id=batch_id,
+            kecamatan=row.kecamatan,
+            tps_id=row.tps_id,
+            predicted_volume_percentage=pred,
+            priority_rank=0,
+            prediction_status=get_prediction_status(pred),
+            model_version=MODEL_VERSION,
+        )
+        db.add(obj)
+        db.commit()
+        return obj
+    finally:
+        db.close()

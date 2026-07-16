@@ -14,6 +14,7 @@ from app.ai.scheduler.feature_engineer import (
     get_current_fill,
     get_temporal
 )
+from app.ai.scheduler.forecast_scheduler import forecast_tps
 
 LLM_API_KEY = os.getenv("LLM_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -268,6 +269,17 @@ def process_citizen_reports():
 
         db.commit()
         print(f"Finished processing {processed_count} citizen reports.")
+
+        if processed_count > 0:
+            print("\nRe-forecasting affected TPS...")
+            affected = set(str(r.zone_id) for r in reports)
+            for tps_id in affected:
+                try:
+                    print(f"Forecasting TPS {tps_id}...")
+                    forecast_tps(tps_id)
+                except Exception as e:
+                    print(f"WARN forecast failed for TPS {tps_id}: {e}")
+            print("Done re-forecasting affected TPS.")
     
     except Exception as e:
         print(f"An error occurred during citizen report processing: {e}")
