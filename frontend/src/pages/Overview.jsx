@@ -5,11 +5,15 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTriangleExclamation,
   faCircleCheck,
-  faCloudSun,
-  faFileExport,
   faCalendarDays,
   faSpinner,
   faMapMarkerAlt,
+  faRoute,
+  faBrain,
+  faTruck,
+  faClock,
+  faChartLine,
+  faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { api } from "../services/api";
 import Header from "../components/Header";
@@ -19,45 +23,107 @@ import SearchableSelect from "../components/fragments/SearchableSelect";
 Chart.register(...registerables);
 
 export default function Overview() {
+  const navigate = useNavigate();
   const [adminUser] = useLocalStorage("admin_user", null);
-  const [activeDateFilter, setActiveDateFilter] = useState("besok");
+  const [activeDateFilter, setActiveDateFilter] = useState("hariIni");
 
   // API States
   const [summary, setSummary] = useState(null);
+  const [predictionSummary, setPredictionSummary] = useState(null);
   const [zones, setZones] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [latestRoutes, setLatestRoutes] = useState([]);
   const [selectedZoneId, setSelectedZoneId] = useState("");
   const [projections, setProjections] = useState([]);
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingProjections, setLoadingProjections] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const zoneOptions = [
-    { value: "", label: "Semua Wilayah" },
-    ...zones.map((zone) => ({
-      value: zone.id,
-      label: zone.name,
-    })),
-  ];
+
+  const zoneOptions = zones.map((zone) => ({
+    value: zone.id,
+    label: zone.name,
+  }));
 
   // Chart Refs
   const chartRef = useRef(null);
   const chartInstanceRef = useRef(null);
 
-  // Fetch summary & zones on mount
+  // Fetch dashboard data on mount
   useEffect(() => {
     async function initData() {
       try {
         setLoadingSummary(true);
-        const [summaryRes, zonesRes] = await Promise.all([
+        setErrorMessage("");
+
+        const [
+          summaryResult,
+          zonesResult,
+          predictionSummaryResult,
+          routesResult,
+          driversResult,
+          sensorDataResult,
+        ] = await Promise.allSettled([
           api.getDashboardSummary(),
           api.getZones(),
+          api.getPredictionsSummary(),
+          api.getLatestRouteRecommendation(),
+          api.getDrivers(),
+          api.getLatestSensorData(),
         ]);
 
-        if (summaryRes.success) {
-          setSummary(summaryRes.data);
+        if (
+          summaryResult.status === "fulfilled" &&
+          summaryResult.value.success
+        ) {
+          setSummary(summaryResult.value.data);
         }
-        if (zonesRes.success && zonesRes.data.length > 0) {
-          setZones(zonesRes.data);
-          setSelectedZoneId(zonesRes.data[0].id); // Default to first zone
+
+        let sensorZoneIds = new Set();
+        if (
+          sensorDataResult.status === "fulfilled" &&
+          sensorDataResult.value.success
+        ) {
+          const sensorRecords = sensorDataResult.value.data || [];
+          sensorRecords.forEach((record) => {
+            if (record.zone_id) {
+              sensorZoneIds.add(record.zone_id);
+            }
+          });
+        }
+
+        if (zonesResult.status === "fulfilled" && zonesResult.value.success) {
+          const zoneList = zonesResult.value.data || [];
+          // Filter zones that have IoT sensors
+          const filteredZones = sensorZoneIds.size > 0 
+            ? zoneList.filter((zone) => sensorZoneIds.has(zone.id))
+            : zoneList;
+
+          setZones(filteredZones);
+          if (filteredZones.length > 0) {
+            setSelectedZoneId(filteredZones[0].id);
+          }
+        }
+
+        if (
+          predictionSummaryResult.status === "fulfilled" &&
+          predictionSummaryResult.value.success
+        ) {
+          setPredictionSummary(predictionSummaryResult.value.data);
+        }
+
+        if (routesResult.status === "fulfilled" && routesResult.value.success) {
+          setLatestRoutes(routesResult.value.data || []);
+        } else {
+          // Endpoint route terbaru mengembalikan 404 saat belum ada batch rute.
+          // Kondisi ini valid untuk dashboard dan ditampilkan sebagai empty state.
+          setLatestRoutes([]);
+        }
+
+        if (
+          driversResult.status === "fulfilled" &&
+          driversResult.value.success
+        ) {
+          setDrivers(driversResult.value.data || []);
         }
       } catch (err) {
         setErrorMessage(
@@ -86,7 +152,8 @@ export default function Overview() {
           setProjections(res.data || []);
         }
       } catch (err) {
-        console.error("Gagal memuat proyeksi AI:", err);
+        console.error("Gagal memuat prediksi AI:", err);
+        setProjections([]);
       } finally {
         setLoadingProjections(false);
       }
@@ -103,17 +170,20 @@ export default function Overview() {
       chartInstanceRef.current.destroy();
     }
 
-    // Parse labels and values
     const labels = projections.map((item) => {
-      const date = new Date(item.target_time);
+      const date = new Date(item.target_time || item.created_at);
       return date.toLocaleDateString("id-ID", {
         weekday: "short",
         day: "numeric",
         month: "short",
       });
     });
-    const dataValues = projections.map((item) => item.predicted_volume);
-    const confidenceValues = projections.map((item) => item.confidence_score);
+    const dataValues = projections.map(
+      (item) => item.predicted_volume ?? item.predicted_volume_percentage ?? 0,
+    );
+    const confidenceValues = projections.map(
+      (item) => item.confidence_score ?? 0,
+    );
 
     const ctx = chartRef.current.getContext("2d");
     chartInstanceRef.current = new Chart(ctx, {
@@ -122,9 +192,9 @@ export default function Overview() {
         labels,
         datasets: [
           {
-            label: "Estimasi Volume Sampah (m³)",
+            label: "Prediksi Kepenuhan TPS (%)",
             data: dataValues,
-            borderColor: "#10b981", // Emerald 500
+            borderColor: "#10b981",
             backgroundColor: "rgba(16, 185, 129, 0.08)",
             fill: true,
             tension: 0.35,
@@ -146,15 +216,15 @@ export default function Overview() {
           },
           tooltip: {
             padding: 12,
-            backgroundColor: "rgba(15, 23, 42, 0.9)", // Slate 900
+            backgroundColor: "rgba(15, 23, 42, 0.9)",
             titleFont: { size: 12, weight: "bold" },
             bodyFont: { size: 12 },
             callbacks: {
               label: function (context) {
                 const confidence = confidenceValues[context.dataIndex] || 0;
                 return [
-                  ` Volume: ${context.parsed.y} m³`,
-                  ` Akurasi AI: ${Math.round(confidence * 100)}%`,
+                  ` Kepenuhan: ${Math.round(context.parsed.y)}%`,
+                  ` Confidence AI: ${Math.round(confidence * 100)}%`,
                 ];
               },
             },
@@ -171,13 +241,14 @@ export default function Overview() {
           },
           y: {
             beginAtZero: true,
+            suggestedMax: 100,
             grid: {
-              color: "rgba(226, 232, 240, 0.6)", // Slate 200/60
+              color: "rgba(226, 232, 240, 0.6)",
             },
             ticks: {
               font: { size: 10 },
               callback: function (value) {
-                return value + " m³";
+                return value + "%";
               },
             },
           },
@@ -193,43 +264,188 @@ export default function Overview() {
     };
   }, [projections]);
 
-  const navigate = useNavigate();
+  const routeStats = latestRoutes.reduce(
+    (acc, route) => {
+      acc.total += 1;
+      acc.totalStops += route.total_stops || 0;
+      if (route.status === "Pending") acc.pending += 1;
+      if (route.status === "In Progress") acc.inProgress += 1;
+      if (route.status === "Completed") acc.completed += 1;
+      return acc;
+    },
+    { total: 0, totalStops: 0, pending: 0, inProgress: 0, completed: 0 },
+  );
+
+  const driverStats = drivers.reduce(
+    (acc, driver) => {
+      acc.total += 1;
+      if (driver.status === "Available") acc.available += 1;
+      if (driver.status === "On Duty") acc.onDuty += 1;
+      if (driver.status === "Offline") acc.offline += 1;
+      return acc;
+    },
+    { total: 0, available: 0, onDuty: 0, offline: 0 },
+  );
+
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const predictionTime = 7 * 60;
+  const routeGenerationTime = 7 * 60 + 30;
+
+  const getOperationalInsight = () => {
+    const criticalZones = summary?.alert_zones_count ?? 0;
+
+    if (currentMinutes < predictionTime) {
+      return {
+        title: "Menunggu Prediksi Volume Harian Pukul 07.00",
+        description:
+          "AI akan membaca data historis, sensor IoT, pola wilayah, cuaca, dan event untuk menentukan prioritas TPS hari ini.",
+        status: "Pra-prediksi",
+        icon: faClock,
+        classes:
+          "from-slate-50 to-slate-100/70 border-slate-200 text-slate-700 bg-slate-100",
+      };
+    }
+
+    if (currentMinutes < routeGenerationTime) {
+      return {
+        title: "Prediksi Volume Hari Ini Telah Masuk Fase Operasional",
+        description:
+          "Hasil prediksi pukul 07.00 menjadi dasar scheduler untuk membuat route recommendation pukul 07.30.",
+        status: "Menunggu Rute 07.30",
+        icon: faBrain,
+        classes:
+          "from-amber-50 to-amber-100/60 border-amber-200 text-amber-800 bg-amber-100",
+      };
+    }
+
+    if (routeStats.total > 0) {
+      return {
+        title: `${routeStats.total} Rute Rekomendasi Hari Ini Siap Ditindaklanjuti`,
+        description: `${routeStats.totalStops} TPS prioritas telah masuk rute hasil prediksi volume. ${routeStats.pending} pending, ${routeStats.inProgress} sedang berjalan, ${routeStats.completed} selesai.`,
+        status:
+          routeStats.inProgress > 0
+            ? "Driver Bergerak"
+            : routeStats.pending > 0
+              ? "Siap Dispatch"
+              : "Terkendali",
+        icon: faRoute,
+        classes:
+          routeStats.pending > 0
+            ? "from-amber-50 to-amber-100/60 border-amber-200 text-amber-800 bg-amber-100"
+            : "from-emerald-50 to-emerald-100/60 border-emerald-200 text-emerald-800 bg-emerald-100",
+      };
+    }
+
+    return {
+      title:
+        criticalZones > 0
+          ? "TPS Prioritas Terdeteksi, Rute Belum Digenerate"
+          : "Menunggu Route Recommendation Hari Ini",
+      description:
+        criticalZones > 0
+          ? `${criticalZones} TPS masuk status warning/kritis. Jalankan scheduler AI untuk mengubah prediksi volume menjadi rute pengangkutan.`
+          : "Prediksi volume tersedia sebagai dasar pengambilan keputusan. Route recommendation dijadwalkan pukul 07.30 atau dapat dijalankan manual di Fleet Dispatch.",
+      status: criticalZones > 0 ? "Perlu Aksi" : "Standby",
+      icon: criticalZones > 0 ? faTriangleExclamation : faClock,
+      classes:
+        criticalZones > 0
+          ? "from-red-50 to-red-100/60 border-red-200 text-red-800 bg-red-100"
+          : "from-slate-50 to-slate-100/70 border-slate-200 text-slate-700 bg-slate-100",
+    };
+  };
+
+  const operationalInsight = getOperationalInsight();
 
   const metrics = [
     {
-      title: "Laporan Warga Aktif",
-      value: summary?.total_citizen_reports ?? "0",
-      change: "Menunggu konfirmasi admin",
-      status: "Aduan Baru",
-      color: "border-amber-400 bg-amber-50 text-amber-700",
-      link: "/admin/reports",
-      linkLabel: "Lihat Laporan",
+      title: "Prediksi Hari Ini",
+      value: predictionSummary?.upcoming_predictions_7d ?? 0,
+      change: "Dijadwalkan setiap pukul 07.00",
+      status: "AI Forecast",
+      color: "border-blue-400 bg-blue-50 text-blue-700",
+      link: "/admin/predictions",
+      linkLabel: "Lihat Prediksi",
     },
     {
-      title: "TPS Status Kritis",
-      value: summary?.alert_zones_count ?? "0",
-      change: `Total terdaftar ${zones.length} wilayah TPS`,
-      status: "Urgensi Tinggi",
+      title: "TPS Prioritas",
+      value: summary?.alert_zones_count ?? 0,
+      change: "Masuk pertimbangan rute 07.30",
+      status: "Prioritas",
       color: "border-red-400 bg-red-50 text-red-700",
       link: "/admin/map",
       linkLabel: "Lihat Peta",
     },
     {
-      title: "Rata-rata Kapasitas TPS",
-      value: `${Math.round(summary?.average_fill_percentage ?? 0)}%`,
-      change: "Akumulasi dari sensor IoT aktif",
-      status: "Real-time",
+      title: "Rute Hari Ini",
+      value: routeStats.total,
+      change: `${routeStats.pending} pending • ${routeStats.inProgress} berjalan`,
+      status: "Route AI",
       color: "border-emerald-400 bg-emerald-50 text-emerald-700",
-      link: "/admin/monitoring",
-      linkLabel: "Lihat Monitoring",
+      link: "/admin/fleet",
+      linkLabel: "Kelola Rute",
+    },
+    {
+      title: "Driver Siap",
+      value: driverStats.available,
+      change: `${driverStats.onDuty} sedang bertugas dari ${driverStats.total} driver`,
+      status: "Armada",
+      color: "border-amber-400 bg-amber-50 text-amber-700",
+      link: "/admin/fleet",
+      linkLabel: "Lihat Driver",
+    },
+  ];
+
+  const workflowSteps = [
+    {
+      time: "07.00",
+      title: "Prediksi Volume",
+      description:
+        "AI menghitung kepenuhan TPS hari ini dari historis, sensor, cuaca, dan pola wilayah.",
+      icon: faBrain,
+      metric: `${predictionSummary?.total_predictions ?? 0} total prediksi`,
+      status: `${Math.round((predictionSummary?.avg_confidence_score ?? 0) * 100)}% confidence`,
+      color: "blue",
+    },
+    {
+      time: "07.30",
+      title: "Generate Rute",
+      description:
+        "Scheduler mengubah TPS prioritas menjadi urutan rute pengangkutan optimal.",
+      icon: faRoute,
+      metric: `${routeStats.total} rute aktif`,
+      status: `${routeStats.totalStops} TPS stop`,
+      color: "emerald",
+    },
+    {
+      time: "Setelah 07.30",
+      title: "Dispatch Driver",
+      description:
+        "Admin meninjau rute dan mengirim manifes tugas ke driver yang tersedia.",
+      icon: faTruck,
+      metric: `${driverStats.available} driver siap`,
+      status: `${driverStats.onDuty} on duty`,
+      color: "amber",
     },
   ];
 
   const dateFilters = [
     { id: "hariIni", label: "Hari Ini" },
     { id: "besok", label: "Besok" },
-    // { id: "7hari", label: "7 Hari Ke Depan" },
   ];
+
+  const getRouteStatusClasses = (status) => {
+    switch (status) {
+      case "Completed":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "In Progress":
+        return "bg-blue-50 text-blue-700 border-blue-200";
+      case "Pending":
+        return "bg-amber-50 text-amber-700 border-amber-200";
+      default:
+        return "bg-slate-100 text-slate-600 border-slate-200";
+    }
+  };
 
   if (loadingSummary) {
     return (
@@ -239,7 +455,7 @@ export default function Overview() {
           className="text-3xl animate-spin text-emerald-500 mb-3"
         />
         <p className="text-sm font-semibold">
-          Memuat metrik dashboard utama...
+          Memuat command center prediksi harian...
         </p>
       </div>
     );
@@ -247,12 +463,10 @@ export default function Overview() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
-      {/* Scrollable wrapper — header + content scroll together */}
       <div className="flex-1 overflow-y-auto">
-        {/* Top Header / Action Bar */}
         <Header
           title={`Selamat Datang, ${adminUser?.name || "Admin"}`}
-          subtitle="Berikut ringkasan situasi darurat sampah kota hari ini."
+          subtitle="Pantau prediksi volume TPS pukul 07.00 dan kesiapan route recommendation pukul 07.30."
           rightContent={
             <div className="bg-slate-100 p-1 rounded-lg hidden md:flex items-center gap-1 border border-slate-200 w-full sm:w-auto overflow-x-auto">
               {dateFilters.map((filter) => (
@@ -288,41 +502,49 @@ export default function Overview() {
           ))}
         </div>
 
-        {/* Main Grid Content */}
         <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
           {errorMessage && (
             <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl">
-              <FontAwesomeIcon icon={faTriangleExclamation} className="mr-1.5" /> {errorMessage}
+              <FontAwesomeIcon
+                icon={faTriangleExclamation}
+                className="mr-1.5"
+              />{" "}
+              {errorMessage}
             </div>
           )}
 
-          {/* Contextual Alert Banner */}
-          <div className="p-4 bg-gradient-to-r from-amber-50 to-amber-100/50 border border-amber-200 rounded-xl flex items-center justify-between shadow-sm">
+          {/* Dynamic Operational Insight */}
+          <div
+            className={`p-4 bg-gradient-to-r ${operationalInsight.classes} border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm`}
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
-                <FontAwesomeIcon icon={faCloudSun} className="text-lg" />
+              <div className="w-10 h-10 rounded-full bg-white/70 flex items-center justify-center shrink-0">
+                <FontAwesomeIcon
+                  icon={operationalInsight.icon}
+                  className="text-lg"
+                />
               </div>
               <div>
                 <h4 className="text-sm font-bold text-slate-800 leading-snug">
-                  Peringatan Cuaca Ekstrem (Hujan Deras Diprediksi Sore Ini)
+                  {operationalInsight.title}
                 </h4>
-                <p className="text-xs text-slate-600">
-                  Prediksi AI Amadeus: Kecepatan penumpukan sampah di wilayah
-                  TPS 02 Bratang dapat meningkat hingga 35%.
+                <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                  {operationalInsight.description}
                 </p>
               </div>
             </div>
-            <span className="text-xs font-bold text-amber-800 bg-amber-200/50 px-3 py-1 rounded-full border border-amber-300">
-              Risiko Sedang
+            <span className="text-xs font-bold bg-white/70 px-3 py-1 rounded-full border border-white/80 self-start sm:self-center whitespace-nowrap">
+              {operationalInsight.status}
             </span>
           </div>
 
           {/* KPI Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
             {metrics.map((card, idx) => (
               <div
                 key={idx}
-                className="p-6 bg-white border border-slate-200 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+                className="p-5 bg-white border border-slate-200 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+                onClick={() => navigate(card.link)}
               >
                 <div>
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
@@ -333,16 +555,19 @@ export default function Overview() {
                   </h3>
                 </div>
                 <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between gap-3 text-xs">
                     <span className="text-slate-500">{card.change}</span>
                     <span
-                      className={`px-2 py-0.5 rounded font-bold uppercase text-[9px] border ${card.color}`}
+                      className={`px-2 py-0.5 rounded font-bold uppercase text-[9px] border whitespace-nowrap ${card.color}`}
                     >
                       {card.status}
                     </span>
                   </div>
                   <button
-                    onClick={() => navigate(card.link)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(card.link);
+                    }}
                     className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     {card.linkLabel} <span>→</span>
@@ -352,22 +577,89 @@ export default function Overview() {
             ))}
           </div>
 
-          {/* 2-Column Split: Grafik Proyeksi & Aktivitas Terbaru */}
+          {/* Operational Timeline */}
+          <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <div>
+                <h3 className="text-sm sm:text-md font-bold text-slate-800">
+                  Alur Operasional Harian: Prediksi → Rute → Driver
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Siklus pagi untuk mengubah prediksi volume sampah menjadi
+                  aksi pengangkutan TPS prioritas.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate("/admin/fleet")}
+                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors"
+              >
+                Kelola Rute Driver
+                <FontAwesomeIcon icon={faArrowRight} className="text-[10px]" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {workflowSteps.map((step, idx) => (
+                <div
+                  key={step.title}
+                  className="relative p-4 bg-slate-50 border border-slate-200 rounded-xl"
+                >
+                  {idx < workflowSteps.length - 1 && (
+                    <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-0.5 bg-slate-200" />
+                  )}
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${
+                        step.color === "blue"
+                          ? "bg-blue-50 text-blue-700 border-blue-200"
+                          : step.color === "emerald"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}
+                    >
+                      <FontAwesomeIcon icon={step.icon} />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        {step.time}
+                      </span>
+                      <h4 className="text-xs font-bold text-slate-800 mt-1">
+                        {step.title}
+                      </h4>
+                      <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+                        {step.description}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="px-2 py-1 rounded-md bg-white border border-slate-200 text-[10px] font-bold text-slate-700">
+                          {step.metric}
+                        </span>
+                        <span className="px-2 py-1 rounded-md bg-white border border-slate-200 text-[10px] font-bold text-slate-500">
+                          {step.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 2-Column Split: Grafik Prediksi & Rute Terbaru */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* AI Projections (Line Chart) */}
+            {/* AI Prediction Chart */}
             <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col justify-between shadow-sm min-h-[380px]">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 shrink-0">
                 <div>
                   <h3 className="text-sm sm:text-md font-bold text-slate-800">
-                    Proyeksi Estimasi Volume Sampah (7 Hari Ke Depan)
+                    Prediksi Kepenuhan TPS Hari Ini
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Hasil prediksi algoritma AI Amadeus berdasarkan kalender
-                    event
+                    Prediksi pukul 07.00 berbasis historis, sensor IoT, cuaca,
+                    event, dan pola wilayah. Grafik menampilkan riwayat prediksi
+                    terakhir untuk TPS terpilih.
                   </p>
                 </div>
 
-                {/* Dropdown Pemilihan Wilayah TPS */}
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <span className="text-xs font-semibold text-slate-400 whitespace-nowrap">
                     Pilih TPS:
@@ -376,14 +668,13 @@ export default function Overview() {
                     options={zoneOptions}
                     value={selectedZoneId}
                     onChange={(value) => setSelectedZoneId(value)}
-                    placeholder="Semua Wilayah TPS"
+                    placeholder="Pilih Wilayah TPS"
                     icon={faMapMarkerAlt}
                     emptyMessage="Tidak ada wilayah ditemukan"
                   />
                 </div>
               </div>
 
-              {/* Line Chart Viewport */}
               <div className="flex-1 min-h-[220px] relative">
                 {loadingProjections ? (
                   <div className="absolute inset-0 bg-white/60 flex items-center justify-center text-slate-500 z-10">
@@ -392,7 +683,7 @@ export default function Overview() {
                       className="animate-spin text-xl text-emerald-500 mr-2"
                     />
                     <span className="text-xs font-medium">
-                      Memuat proyeksi AI...
+                      Memuat prediksi AI...
                     </span>
                   </div>
                 ) : null}
@@ -406,81 +697,167 @@ export default function Overview() {
                       className="text-4xl mb-3 text-slate-300"
                     />
                     <p className="text-xs font-semibold">
-                      Tidak Ada Proyeksi AI Tersedia
+                      Belum Ada Prediksi untuk TPS Ini
                     </p>
                     <p className="text-[10px] mt-2 text-slate-500 text-center">
-                      TPS belum memiliki data historis yang cukup untuk
-                      menghasilkan prediksi. Pastikan sensor IoT aktif dan
-                      terkoneksi.
-                    </p>
-                    <p className="text-[10px] mt-2 text-slate-500 text-center">
-                      Jika masalah berlanjut, hubungi tim teknis untuk bantuan
-                      lebih lanjut.
+                      Prediksi harian dijalankan pukul 07.00. Pastikan sensor
+                      IoT dan data historis TPS tersedia.
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Chart Legend */}
               {projections.length > 0 && (
-                <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
+                <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-slate-500">
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 bg-emerald-500 rounded-full"></span>{" "}
-                    Estimasi Volume Sampah
+                    Prediksi Kepenuhan TPS (%)
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-3 h-3 bg-slate-400 rounded-full"></span>{" "}
-                    Akurasi Prediksi AI
+                    Confidence Prediksi AI
                   </span>
                 </div>
               )}
             </div>
 
-            {/* Aktivitas Terbaru & Driver Response Tracker */}
+            {/* Latest Route Recommendations */}
             <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col shadow-sm">
-              <h3 className="text-md font-bold text-slate-800 mb-4">
-                Aktivitas &amp; Respons Driver
-              </h3>
-              <div className="flex-1 space-y-4 overflow-y-auto pr-1">
-                {/* Driver 1 */}
-                <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
-                    <FontAwesomeIcon icon={faCircleCheck} className="text-xs" />
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="text-xs font-bold text-slate-700">
-                      Driver Budi Utomo - Siap Bertugas
-                    </p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">
-                      Konfirmasi manifes rute TPS 01 berhasil ditugaskan ke
-                      driver.
-                    </p>
-                    <span className="text-[9px] font-semibold text-slate-400 block mt-1">
-                      2 menit yang lalu
-                    </span>
-                  </div>
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <h3 className="text-md font-bold text-slate-800">
+                    Rute Rekomendasi Hari Ini
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Dibuat pukul 07.30 dari hasil prediksi volume TPS.
+                  </p>
                 </div>
+                <div className="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                  <FontAwesomeIcon icon={faRoute} />
+                </div>
+              </div>
 
-                {/* Driver 2 */}
-                <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                  <div className="w-8 h-8 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0">
-                    <FontAwesomeIcon
-                      icon={faTriangleExclamation}
-                      className="text-xs"
-                    />
-                  </div>
-                  <div className="overflow-hidden">
+              <div className="flex-1 space-y-3 overflow-y-auto pr-1 max-h-[320px]">
+                {latestRoutes.length > 0 ? (
+                  latestRoutes.slice(0, 5).map((route) => (
+                    <div
+                      key={route.id}
+                      className="p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/30 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-700">
+                            Rute #{route.id} ·{" "}
+                            {route.coverage_area || "Semua Wilayah"}
+                          </p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            {route.total_stops || 0} TPS stop • Driver:{" "}
+                            <span className="font-semibold text-slate-700">
+                              {route.driver?.name || "Belum ditugaskan"}
+                            </span>
+                          </p>
+                        </div>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase border whitespace-nowrap ${getRouteStatusClasses(
+                            route.status,
+                          )}`}
+                        >
+                          {route.status}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => navigate("/admin/fleet")}
+                        className="mt-3 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
+                      >
+                        Kelola Rute
+                        <FontAwesomeIcon
+                          icon={faArrowRight}
+                          className="text-[9px]"
+                        />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="h-full min-h-[220px] bg-slate-50 border border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center p-6 text-center">
+                    <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 mb-3">
+                      <FontAwesomeIcon icon={faClock} />
+                    </div>
                     <p className="text-xs font-bold text-slate-700">
-                      Driver Joko - Belum Merespon
+                      Belum Ada Rute Rekomendasi
                     </p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">
-                      Sudah 15 menit sejak manifes dikirim. Menunggu konfirmasi.
+                    <p className="text-[10px] mt-2 text-slate-500 leading-relaxed">
+                      Scheduler route recommendation dijadwalkan pukul 07.30
+                      setelah prediksi volume pukul 07.00 selesai.
                     </p>
-                    <span className="text-[9px] font-semibold text-slate-400 block mt-1">
-                      15 menit yang lalu
-                    </span>
+                    <button
+                      onClick={() => navigate("/admin/fleet")}
+                      className="mt-4 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold cursor-pointer"
+                    >
+                      Buka Fleet Dispatch
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {latestRoutes.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-lg font-extrabold text-amber-600">
+                      {routeStats.pending}
+                    </p>
+                    <p className="text-[9px] font-semibold text-slate-400 uppercase">
+                      Pending
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-extrabold text-blue-600">
+                      {routeStats.inProgress}
+                    </p>
+                    <p className="text-[9px] font-semibold text-slate-400 uppercase">
+                      Berjalan
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-extrabold text-emerald-600">
+                      {routeStats.completed}
+                    </p>
+                    <p className="text-[9px] font-semibold text-slate-400 uppercase">
+                      Selesai
+                    </p>
                   </div>
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* Small supporting signal */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-white border border-slate-200 rounded-xl flex items-center gap-3 shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                <FontAwesomeIcon icon={faChartLine} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-800">
+                  Rata-rata Kepenuhan TPS:{" "}
+                  {Math.round(summary?.average_fill_percentage ?? 0)}%
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  Data sensor terbaru digunakan sebagai konteks prediksi harian.
+                </p>
+              </div>
+            </div>
+            <div className="p-4 bg-white border border-slate-200 rounded-xl flex items-center gap-3 shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                <FontAwesomeIcon icon={faCircleCheck} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-800">
+                  {summary?.total_citizen_reports ?? 0} laporan warga tercatat
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  Laporan warga menjadi sinyal tambahan untuk validasi prioritas
+                  wilayah.
+                </p>
               </div>
             </div>
           </div>
