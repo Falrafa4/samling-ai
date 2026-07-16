@@ -15,7 +15,7 @@ from app.ai.scheduler.feature_engineer import (
     get_temporal
 )
 
-LLM_API_KEY = os.getenv("GROQ_API_KEY")
+LLM_API_KEY = os.getenv("LLM_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama3-8b-8192"
 
