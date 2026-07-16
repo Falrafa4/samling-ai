@@ -17,4 +17,5 @@ class HistoricalWasteData(Base):
     rainfall_today = Column(Float)
     event_urgency_score = Column(Float)
     current_fill_percentage = Column(Float)
+    target_fill_percentage = Column(Float)
     timestamp_prediction = Column(DateTime)

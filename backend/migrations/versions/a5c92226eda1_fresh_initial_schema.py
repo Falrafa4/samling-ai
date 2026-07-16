@@ -51,6 +51,7 @@ def upgrade() -> None:
     sa.Column('rainfall_today', sa.Float(), nullable=True),
     sa.Column('event_urgency_score', sa.Float(), nullable=True),
     sa.Column('current_fill_percentage', sa.Float(), nullable=True),
+    sa.Column('target_fill_percentage', sa.Float(), nullable=True),
     sa.Column('timestamp_prediction', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )

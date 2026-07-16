@@ -50,6 +50,7 @@ def seed_data():
                     rainfall_today=float(row['rainfall_today']),
                     event_urgency_score=float(row['event_urgency_score']),
                     current_fill_percentage=float(row['current_fill_percentage']),
+                    target_fill_percentage=float(row['target_fill_percentage']),
                     timestamp_prediction=timestamp_dt
                 )
                 batch.append(data)

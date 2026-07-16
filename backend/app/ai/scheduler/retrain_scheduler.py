@@ -5,7 +5,7 @@ import os
 from sqlalchemy.orm import Session
 from app.database.database import SessionLocal
 
-from sklearn.ensemble import GradientBoostingRegressor
+from xgboost import XGBRegressor
 from sklearn.preprocessing import LabelEncoder
 
 from app.models.historical_waste_data import HistoricalWasteData
@@ -16,6 +16,7 @@ MODEL_PATH = os.path.join(
     "..",
     "ai",
     "models",
+    "waste_volume",
     "forecast_waste_volume_model.pkl"
 )
 
@@ -24,6 +25,7 @@ ENCODER_PATH = os.path.join(
     "..",
     "ai",
     "models",
+    "waste_volume",
     "label_encoders.pkl"
 )
 
@@ -79,13 +81,15 @@ def retrain_model():
 
     print("Training model...")
 
-    # Best params: {'learning_rate': 0.05, 'max_depth': 5, 'n_estimators': 200, 'subsample': 0.8}
-    model = GradientBoostingRegressor(
+    # Best params: XGBoost: {'subsample': 0.8, 'n_estimators': 500, 'min_child_weight': 1, 'max_depth': 6, 'learning_rate': 0.05, 'colsample_bytree': 1.0}
+    model = XGBRegressor(
+        n_estimators=500,
+        max_depth=6,
         learning_rate=0.05,
-        max_depth=5,
-        n_estimators=200,
         subsample=0.8,
-        random_state=42,
+        min_child_weight=1,
+        colsample_bytree=1.0,
+        random_state=42
     )
 
     model.fit(X, y)
