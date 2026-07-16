@@ -94,9 +94,10 @@ export default function Overview() {
         if (zonesResult.status === "fulfilled" && zonesResult.value.success) {
           const zoneList = zonesResult.value.data || [];
           // Filter zones that have IoT sensors
-          const filteredZones = sensorZoneIds.size > 0 
-            ? zoneList.filter((zone) => sensorZoneIds.has(zone.id))
-            : zoneList;
+          const filteredZones =
+            sensorZoneIds.size > 0
+              ? zoneList.filter((zone) => sensorZoneIds.has(zone.id))
+              : zoneList;
 
           setZones(filteredZones);
           if (filteredZones.length > 0) {
@@ -426,27 +427,31 @@ export default function Overview() {
   const alertBanner = (() => {
     const hasCritical = (summary?.tps_predicted_critical_90_count ?? 0) > 0;
     const hasWarning = (summary?.tps_predicted_warning_critical_count ?? 0) > 0;
-    
+
     if (hasCritical) {
       return {
         title: "⚠️ Peringatan Kota: Alokasi Rute Kritis Diperlukan",
         message: `Terdeteksi ${summary.tps_predicted_critical_90_count} TPS kritis dengan volume sampah ≥ 90% hari ini. Pengaruh cuaca hujan dan potensi pembusukan cepat terdeteksi.`,
-        classes: "from-red-50 to-red-100/60 border-red-200 text-red-800 bg-red-100",
-        icon: faTriangleExclamation
+        classes:
+          "from-red-50 to-red-100/60 border-red-200 text-red-800 bg-red-100",
+        icon: faTriangleExclamation,
       };
     } else if (hasWarning) {
       return {
         title: "⚠️ Waspada Operasional: Peningkatan Volume Sampah Terdeteksi",
         message: `Terdapat ${summary.tps_predicted_warning_critical_count} TPS dalam status waspada (Warning) hari ini. Harap persiapkan driver cadangan untuk antisipasi penjemputan.`,
-        classes: "from-amber-50 to-amber-100/60 border-amber-200 text-amber-800 bg-amber-100",
-        icon: faTriangleExclamation
+        classes:
+          "from-amber-50 to-amber-100/60 border-amber-200 text-amber-800 bg-amber-100",
+        icon: faTriangleExclamation,
       };
     }
     return {
       title: "🌤️ Status Kota: Kondisi Operasional Terkendali",
-      message: "Tidak ada indikasi penumpukan sampah kritis atau cuaca buruk hari ini. Rute armada berjalan sesuai jadwal.",
-      classes: "from-emerald-50 to-emerald-100/60 border-emerald-200 text-emerald-855 bg-emerald-50",
-      icon: faCircleCheck
+      message:
+        "Tidak ada indikasi penumpukan sampah kritis atau cuaca buruk hari ini. Rute armada berjalan sesuai jadwal.",
+      classes:
+        "from-emerald-50 to-emerald-100/60 border-emerald-200 text-emerald-855 bg-emerald-50",
+      icon: faCircleCheck,
     };
   })();
 
@@ -508,10 +513,7 @@ export default function Overview() {
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/70 flex items-center justify-center shrink-0">
-                <FontAwesomeIcon
-                  icon={alertBanner.icon}
-                  className="text-lg"
-                />
+                <FontAwesomeIcon icon={alertBanner.icon} className="text-lg" />
               </div>
               <div>
                 <h4 className="text-sm font-bold text-slate-800 leading-snug">
@@ -523,12 +525,14 @@ export default function Overview() {
               </div>
             </div>
             <span className="text-xs font-bold bg-white/70 px-3 py-1 rounded-full border border-white/80 self-start sm:self-center whitespace-nowrap">
-              {(summary?.tps_predicted_critical_90_count ?? 0) > 0 ? "Tindakan Cepat" : "Normal"}
+              {(summary?.tps_predicted_critical_90_count ?? 0) > 0
+                ? "Tindakan Cepat"
+                : "Normal"}
             </span>
           </div>
 
           {/* Dynamic Operational Insight */}
-          <div
+          {/* <div
             className={`p-4 bg-gradient-to-r ${operationalInsight.classes} border rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm`}
           >
             <div className="flex items-center gap-3">
@@ -550,26 +554,28 @@ export default function Overview() {
             <span className="text-xs font-bold bg-white/70 px-3 py-1 rounded-full border border-white/80 self-start sm:self-center whitespace-nowrap">
               {operationalInsight.status}
             </span>
-          </div>
+          </div> */}
 
           {/* KPI Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
             {/* Card 1: TPS Diprediksi */}
             <div
-              className="p-5 bg-white border border-slate-200 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+              className="p-10 bg-white border border-slate-200 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
               onClick={() => navigate("/admin/predictions")}
             >
-              <div>
+              <div className="flex-1 flex flex-col justify-center">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                   TPS Diprediksi
                 </p>
-                <h3 className="text-3xl font-extrabold text-slate-800">
+                <h3 className="text-5xl font-extrabold text-slate-800">
                   {summary?.tps_predicted_warning_critical_count ?? 0}
                 </h3>
               </div>
               <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
                 <div className="flex items-center justify-between gap-3 text-xs">
-                  <span className="text-slate-500">Target penjemputan hari ini</span>
+                  <span className="text-slate-500">
+                    Target penjemputan hari ini
+                  </span>
                   <span className="px-2 py-0.5 rounded font-bold uppercase text-[9px] border bg-blue-50 border-blue-400 text-blue-700 whitespace-nowrap">
                     AI Forecast
                   </span>
@@ -588,15 +594,15 @@ export default function Overview() {
 
             {/* Card 2: Total TPS Critical */}
             <div
-              className="p-5 bg-white border border-slate-200 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
+              className="p-10 bg-white border border-slate-200 rounded-xl hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between"
               onClick={() => navigate("/admin/map")}
             >
-              <div>
+              <div className="flex-1 flex flex-col justify-center">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                   Total TPS Critical
                 </p>
                 <div className="flex items-center">
-                  <h3 className="text-3xl font-extrabold text-slate-800">
+                  <h3 className="text-5xl font-extrabold text-slate-800">
                     {summary?.tps_predicted_critical_90_count ?? 0}
                   </h3>
                   {(summary?.tps_predicted_critical_90_count ?? 0) > 0 && (
@@ -609,7 +615,9 @@ export default function Overview() {
               </div>
               <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
                 <div className="flex items-center justify-between gap-3 text-xs">
-                  <span className="text-slate-500">Butuh dispatch armada segera</span>
+                  <span className="text-slate-500">
+                    Butuh dispatch armada segera
+                  </span>
                   <span className="px-2 py-0.5 rounded font-bold uppercase text-[9px] border bg-red-50 border-red-400 text-red-700 whitespace-nowrap">
                     Critical
                   </span>
@@ -626,13 +634,13 @@ export default function Overview() {
               </div>
             </div>
 
-            {/* Card 3 & 4: Top 10 TPS Perlu Diambil */}
-            <div className="p-5 bg-white border border-slate-200 rounded-xl xl:col-span-2 flex flex-col justify-between shadow-sm min-h-[160px]">
+            {/* Card 3 & 4: Top 5 TPS Perlu Diambil */}
+            <div className="p-5 bg-white border border-slate-200 rounded-xl xl:col-span-2 flex flex-col justify-between shadow-sm min-h-60">
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                  Top 10 TPS Perlu Diambil Hari Ini
+                  Top 5 TPS Perlu Diambil Hari Ini
                 </p>
-                <div className="overflow-x-auto max-h-[110px] overflow-y-auto pr-1">
+                <div className="overflow-x-auto pr-1">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="border-b border-slate-100 text-slate-400 font-bold">
@@ -644,17 +652,28 @@ export default function Overview() {
                     </thead>
                     <tbody className="divide-y divide-slate-50 text-slate-700">
                       {summary?.top_10_critical_predictions?.length > 0 ? (
-                        summary.top_10_critical_predictions.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                            <td className="py-1 text-slate-800 font-medium truncate max-w-[120px]">{item.tps_name}</td>
-                            <td className="py-1 text-slate-500 truncate max-w-[90px]">{item.kecamatan}</td>
-                            <td className="py-1 text-right font-bold text-slate-800">{Math.round(item.predicted_volume_percentage)}%</td>
+                        summary.top_10_critical_predictions.slice(0, 5).map((item, idx) => (
+                          <tr
+                            key={idx}
+                            className="hover:bg-slate-50 transition-colors"
+                          >
+                            <td className="py-1 text-slate-800 font-medium truncate max-w-[120px]">
+                              {item.tps_name}
+                            </td>
+                            <td className="py-1 text-slate-500 truncate max-w-[90px]">
+                              {item.kecamatan}
+                            </td>
+                            <td className="py-1 text-right font-bold text-slate-800">
+                              {Math.round(item.predicted_volume_percentage)}%
+                            </td>
                             <td className="py-1 text-center">
-                              <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
-                                item.prediction_status === 'CRITICAL' 
-                                  ? 'bg-red-50 text-red-700 border border-red-200' 
-                                  : 'bg-amber-50 text-amber-700 border border-amber-200'
-                              }`}>
+                              <span
+                                className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
+                                  item.prediction_status === "CRITICAL"
+                                    ? "bg-red-50 text-red-700 border border-red-200"
+                                    : "bg-amber-50 text-amber-700 border border-amber-200"
+                                }`}
+                              >
                                 {item.prediction_status}
                               </span>
                             </td>
@@ -662,7 +681,10 @@ export default function Overview() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="4" className="text-center py-4 text-slate-400 text-[10px]">
+                          <td
+                            colSpan="4"
+                            className="text-center py-4 text-slate-400 text-[10px]"
+                          >
                             Tidak ada TPS kritis terdeteksi untuk hari ini.
                           </td>
                         </tr>
@@ -763,11 +785,15 @@ export default function Overview() {
                     className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     Kelola Rute
-                    <FontAwesomeIcon icon={faArrowRight} className="text-[8px]" />
+                    <FontAwesomeIcon
+                      icon={faArrowRight}
+                      className="text-[8px]"
+                    />
                   </button>
                 </div>
                 <p className="text-xs text-slate-500 mb-4">
-                  Siklus pagi untuk mengubah prediksi volume sampah menjadi aksi pengangkutan TPS prioritas.
+                  Siklus pagi untuk mengubah prediksi volume sampah menjadi aksi
+                  pengangkutan TPS prioritas.
                 </p>
                 <div className="space-y-4">
                   {workflowSteps.map((step) => (
@@ -815,8 +841,7 @@ export default function Overview() {
           </div>
 
           {/* Bottom Layout Section: Rute Hari Ini & Driver Siap */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Rute Hari Ini (8 Kolom) */}
+          {/* <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col shadow-sm">
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
@@ -922,7 +947,6 @@ export default function Overview() {
               )}
             </div>
 
-            {/* Driver Siap (Online) (4 Kolom) */}
             <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col shadow-sm">
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
@@ -970,7 +994,7 @@ export default function Overview() {
                 )}
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Small supporting signal */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
