@@ -13,9 +13,21 @@ from app.schemas.route_recommendations import (
 )
 from app.api.deps import get_current_user
 from app.utils.response import response_success
+from app.ai.scheduler.feature_engineer import collect_daily_data
+from app.ai.scheduler.forecast_scheduler import forecast_all_tps
 from app.ai.scheduler.route_scheduler import generate_routes
 
 router = APIRouter(tags=["route-recommendations"])
+
+def run_full_pipeline():
+    print("[Manual Trigger] Starting full AI Pipeline (Collect data -> Forecast -> Route VRP)...")
+    try:
+        collect_daily_data()
+        forecast_all_tps()
+        generate_routes()
+        print("[Manual Trigger] Full AI Pipeline completed successfully.")
+    except Exception as e:
+        print(f"[Manual Trigger] Error running full AI Pipeline: {e}")
 
 
 def _load_with_driver(db: Session, rec_id: int) -> RouteRecommendation:
@@ -102,14 +114,14 @@ def trigger_route_generation(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Jalankan pipeline rekomendasi rute secara langsung (Admin only).
+    Jalankan seluruh pipeline prediksi & rekomendasi rute secara langsung (Admin only).
     Dijalankan di background sehingga request langsung kembali.
     """
 
-    background_tasks.add_task(generate_routes)
+    background_tasks.add_task(run_full_pipeline)
     return response_success(
         data=None,
-        message="Pipeline rekomendasi rute telah dimulai di background.",
+        message="Pipeline prediksi volume & optimasi rute AI telah dimulai di background.",
     )
 
 @router.get("/route-recommendations/latest")

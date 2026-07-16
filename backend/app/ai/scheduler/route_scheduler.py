@@ -427,16 +427,46 @@ def generate_routes(db: Session | None = None) -> None:
         forecast_rows, forecast_batch_id = result
         print(f"[RouteScheduler] Batch: {forecast_batch_id} | Rows: {len(forecast_rows)}")
 
-        # --- Prevent Duplicates ---
+        # --- Prevent Duplicates & Lock Active Routes ---
         existing_routes = db.query(RouteRecommendation).filter_by(forecast_batch_id=forecast_batch_id).all()
+        active_route_driver_ids = set()
+        active_tps_ids = set()
+        
         if existing_routes:
-            print(f"[RouteScheduler] Deleting {len(existing_routes)} existing routes for batch {forecast_batch_id}.")
-            for route in existing_routes:
-                db.delete(route)
-            db.commit()
+            # Identifikasi rute yang sedang berjalan (In Progress) atau selesai (Completed)
+            locked_routes = [r for r in existing_routes if r.status in ("In Progress", "Completed")]
+            for r in locked_routes:
+                if r.driver_id is not None:
+                    active_route_driver_ids.add(r.driver_id)
+                if r.route_json:
+                    try:
+                        stops = json.loads(r.route_json)
+                        for stop in stops:
+                            if stop.get("type") == "TPS" and "tps_id" in stop:
+                                active_tps_ids.add(stop["tps_id"])
+                    except Exception as e:
+                        print(f"[RouteScheduler] Error parsing locked route_json: {e}")
+            
+            # Hanya hapus rute yang statusnya Pending
+            routes_to_delete = [r for r in existing_routes if r.status not in ("In Progress", "Completed")]
+            if routes_to_delete:
+                print(f"[RouteScheduler] Deleting {len(routes_to_delete)} pending routes for batch {forecast_batch_id}.")
+                for route in routes_to_delete:
+                    db.delete(route)
+                db.commit()
+
+        # Filter out TPS yang sudah dikunci oleh rute berjalan/selesai
+        if active_tps_ids:
+            print(f"[RouteScheduler] Excluding {len(active_tps_ids)} TPS already covered by locked/completed routes.")
+            forecast_rows = [row for row in forecast_rows if row["tps_id"] not in active_tps_ids]
 
         print("[RouteScheduler] Fetching drivers...")
         driver_list = fetch_drivers(db)
+        
+        # Filter supir yang sedang aktif di lapangan
+        if active_route_driver_ids:
+            print(f"[RouteScheduler] Excluding {len(active_route_driver_ids)} drivers currently on duty.")
+            driver_list = [d for d in driver_list if d["id"] not in active_route_driver_ids]
 
         print("[RouteScheduler] Loading depot config...")
         depots = load_depots()

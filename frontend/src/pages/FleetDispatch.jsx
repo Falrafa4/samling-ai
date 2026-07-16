@@ -422,7 +422,13 @@ export default function FleetDispatch() {
         onClose={() => setIsSchedulerConfirmOpen(false)}
         onConfirm={handleConfirmTriggerScheduler}
         title="Konfirmasi Jalankan Scheduler AI"
-        message="Apakah Anda yakin ingin menjalankan Scheduler AI sekarang? AI akan menganalisis data timbulan sampah dan memperbarui rute optimal supir secara real-time."
+        message={
+          routes.filter(r => r.status === 'In Progress').length > 0
+            ? `Apakah Anda yakin ingin menjalankan Scheduler AI sekarang? AI akan memproses ulang prediksi volume sampah dan memperbarui rute optimal supir.
+
+⚠️ Perhatian: Saat ini terdapat ${routes.filter(r => r.status === 'In Progress').length} rute yang sedang berjalan (In Progress). Supir yang sedang aktif di lapangan tidak akan terganggu, dan rute berjalan mereka tetap aman dikunci. Hanya rute berstatus 'Pending' yang akan dikalkulasi ulang.`
+            : "Apakah Anda yakin ingin menjalankan Scheduler AI sekarang? AI akan memproses data sensor IoT, cuaca, event, dan laporan warga untuk menghasilkan rekomendasi rute optimal hari ini."
+        }
         confirmText="Jalankan"
         confirmBgColorClass="bg-emerald-600 hover:bg-emerald-500"
         icon={faCog}
