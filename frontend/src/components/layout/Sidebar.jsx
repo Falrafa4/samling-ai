@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router";
+import { Link, NavLink } from "react-router";
 import { useLocalStorage } from "react-use";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -42,11 +42,17 @@ export default function Sidebar({ onLogout }) {
       <div
         className={`relative flex items-center border-b border-gray-200 transition-all duration-300 ${collapsed ? "justify-center p-4" : "p-5"}`}
       >
-        <img
-          src={collapsed ? "/img/samling-logo-main.webp" : "/img/samling-v1-transparent.webp"}
-          alt="Samling AI"
-          className="h-9 w-auto shrink-0 object-contain"
-        />
+        <Link to="/" className="flex items-center gap-2">
+          <img
+            src={
+              collapsed
+                ? "/img/samling-logo-main.webp"
+                : "/img/samling-v1-transparent.webp"
+            }
+            alt="Samling AI"
+            className="h-9 w-auto shrink-0 object-contain"
+          />
+        </Link>
         {/* Toggle Sidebar */}
         <button
           onClick={() => setCollapsed(!collapsed)}
@@ -64,9 +70,7 @@ export default function Sidebar({ onLogout }) {
             to={item.path}
             className={({ isActive }) =>
               `group flex items-center rounded-lg text-sm font-medium transition-all duration-200 h-11 relative ${
-                collapsed
-                  ? "md:justify-center w-full px-0"
-                  : "gap-3 px-3.5"
+                collapsed ? "md:justify-center w-full px-0" : "gap-3 px-3.5"
               } ${
                 isActive
                   ? "bg-primary-50 text-primary-700"
