@@ -277,14 +277,41 @@ def get_rainfall(zone: Zone):
     )
 
     try:
-        data = requests.get(url, timeout=15).json()
-        rainfall = float(data["daily"]["precipitation_sum"][0])
-        _rainfall_cache[kecamatan] = rainfall
-        print(f"Fetched rainfall for {kecamatan}: {rainfall} mm")
-        return rainfall
+        # Retry once if API returns unexpected structure/status
+        for attempt in range(2):
+            resp = requests.get(url, timeout=15)
+            if resp.status_code != 200:
+                snippet = resp.text[:200].replace("\n", " ")
+                print(f"OpenMeteo non-200 for {kecamatan}: {resp.status_code} resp_snippet={snippet}")
+                if attempt == 0:
+                    continue
+                resp.raise_for_status()
+
+            # Parse JSON safely
+            try:
+                data = resp.json()
+            except Exception as jerr:
+                print(f"Invalid JSON from OpenMeteo for {kecamatan}: {jerr} resp_snippet={resp.text[:200]}")
+                if attempt == 0:
+                    continue
+                raise
+
+            daily = data.get("daily") or {}
+            sums = daily.get("precipitation_sum")
+
+            if isinstance(sums, list) and sums:
+                rainfall = float(sums[0])
+                _rainfall_cache[kecamatan] = rainfall
+                return rainfall
+
+            # Log response for debugging, retry once
+            print(f"OpenMeteo missing precipitation_sum for {kecamatan}: keys={list(data.keys())} resp_snippet={resp.text[:200]}")
+            if attempt == 0:
+                continue
+            raise KeyError("missing daily.precipitation_sum")
     except Exception as e:
         print(f"Could not fetch rainfall for {kecamatan}, using random value. Error: {e}")
-        # Cache the random value to ensure consistency for the same kecamatan in this run
+        # Cache random to keep consistent per kecamatan in this run
         random_rainfall = round(random.uniform(0, 15), 2)
         _rainfall_cache[kecamatan] = random_rainfall
         return random_rainfall
