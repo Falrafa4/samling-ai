@@ -15,18 +15,17 @@ from app.ai.scheduler.feature_engineer import (
     get_temporal
 )
 
-# Use a more secure way to get keys in production, like a secrets manager
-LLM_API_KEY = os.getenv("LLM_API_KEY")
-OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
-OPENROUTER_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
+LLM_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = "llama3-8b-8192"
 
 def get_urgency_from_llm(report_content: str, report_type: str) -> float:
     """
-    Call OpenRouter API to get urgency score from LLM.
+    Call Groq API to get urgency score from LLM.
     Returns a float between 0.0 and 5.0.
     """
     if not LLM_API_KEY:
-        print("Error: OPENROUTER_API_KEY is not set. Using fallback heuristic.")
+        print("Error: GROQ_API_KEY is not set. Using fallback heuristic.")
         # Fallback to heuristic
         if report_type == "event":
             if "darurat" in report_content.lower() or "bahaya" in report_content.lower():
@@ -52,15 +51,13 @@ def get_urgency_from_llm(report_content: str, report_type: str) -> float:
     
     try:
         response = requests.post(
-            OPENROUTER_API_URL,
+            GROQ_API_URL,
             headers={
                 "Authorization": f"Bearer {LLM_API_KEY}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": "https://samling.ai", # Recommended by OpenRouter
-                "X-Title": "Samling.ai" # Recommended by OpenRouter
+                "Content-Type": "application/json"
             },
             json={
-                "model": OPENROUTER_MODEL,
+                "model": GROQ_MODEL,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -81,12 +78,12 @@ def get_urgency_from_llm(report_content: str, report_type: str) -> float:
         
         return score
     except requests.exceptions.HTTPError as http_err:
-        print(f"HTTP error calling LLM API: {http_err}")
+        print(f"HTTP error calling Groq API: {http_err}")
         # Specifically handle 401 Unauthorized
         if http_err.response.status_code == 401:
-            print("  - The OPENROUTER_API_KEY is likely invalid or has expired.")
+            print("  - The GROQ_API_KEY is likely invalid or has expired.")
     except Exception as e:
-        print(f"Error calling LLM API: {e}")
+        print(f"Error calling Groq API: {e}")
 
     # Fallback to heuristic on any exception
     if report_type == "event":
