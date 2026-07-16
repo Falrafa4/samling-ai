@@ -288,6 +288,10 @@ def update_route_status(
         driver = db.query(User).filter(User.id == route.driver_id).first()
         if driver:
             driver.status = "Available"
+    elif status_in.status == "In Progress":
+        driver = db.query(User).filter(User.id == route.driver_id).first()
+        if driver:
+            driver.status = "On Duty"
 
     db.commit()
 
