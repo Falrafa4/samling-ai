@@ -11,6 +11,7 @@ import {
   faChevronLeft,
   faDatabase,
   faBrain,
+  faRobot,
   faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -27,6 +28,7 @@ export default function Sidebar({ onLogout }) {
       icon: faMicrochip,
     },
     { path: "/admin/predictions", label: "Prediksi Volume", icon: faBrain },
+    { path: "/admin/model-ai", label: "Model AI Info", icon: faRobot },
     { path: "/admin/data", label: "Kelola Data", icon: faDatabase },
     { path: "/admin/fleet", label: "Manajemen Rute", icon: faTruck },
     { path: "/admin/reports", label: "Laporan Warga", icon: faCommentDots },

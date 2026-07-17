@@ -657,8 +657,7 @@ export default function VolumePredictions() {
         </div>
 
         {/* ROW 2: Trend & Model Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Accuracy Trend (2 cols) */}
+        {/* <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5 shadow-2xs">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -699,10 +698,8 @@ export default function VolumePredictions() {
             )}
           </div>
 
-          {/* Model Dashboard (3 cols) */}
           <div className="lg:col-span-3 bg-white rounded-xl border border-gray-200 p-5 shadow-2xs flex flex-col justify-between">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Left Block: Metrik */}
               <div className="md:col-span-2">
                 <div className="flex items-center justify-between mb-3">
                   <div>
@@ -775,7 +772,6 @@ export default function VolumePredictions() {
                 )}
               </div>
 
-              {/* Right Block: Meta & Button */}
               <div className="flex flex-col justify-between pt-2 border-t md:border-t-0 md:border-l border-slate-100 md:pl-6">
                 {modelInfo && (
                   <div className="space-y-2 mb-4">
@@ -833,7 +829,7 @@ export default function VolumePredictions() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

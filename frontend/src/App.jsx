@@ -13,6 +13,7 @@ import Zones from './pages/Zones';
 import Monitoring from './pages/Monitoring';
 import MasterData from './pages/MasterData';
 import VolumePredictions from './pages/VolumePredictions';
+import ModelAI from './pages/ModelAI';
 
 // Layout
 import AdminLayout from './components/layout/AdminLayout';
@@ -85,6 +86,7 @@ export default function App() {
             <Route path="reports" element={<CitizenReports />} />
             <Route path="monitoring" element={<Zones />} />
             <Route path="predictions" element={<VolumePredictions />} />
+            <Route path="model-ai" element={<ModelAI />} />
             <Route path="data" element={<MasterData />} />
           </Route>
 

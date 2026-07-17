@@ -513,6 +513,14 @@ export const api = {
     });
   },
 
+  /**
+   * Mengambil detail lengkap model AI (hyperparameters, metrics, feature importance, dataset, scheduler).
+   * Endpoint: GET /model-details
+   */
+  async getModelDetails() {
+    return fetchWithAuth('/model-details');
+  },
+
   // ─── Event Management ───────────────────────────────────────
 
   /**
