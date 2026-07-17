@@ -14,6 +14,10 @@ import {
   faClock,
   faChartLine,
   faArrowRight,
+  faCloudRain,
+  faBolt,
+  faTint,
+  faThermometerFull,
 } from "@fortawesome/free-solid-svg-icons";
 import { api } from "../services/api";
 import Header from "../components/Header";
@@ -38,6 +42,7 @@ export default function Overview() {
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingProjections, setLoadingProjections] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [eventWeather, setEventWeather] = useState(null);
 
   const zoneOptions = zones.map((zone) => ({
     value: zone.id,
@@ -62,6 +67,7 @@ export default function Overview() {
           routesResult,
           driversResult,
           sensorDataResult,
+          eventWeatherResult,
         ] = await Promise.allSettled([
           api.getDashboardSummary(),
           api.getZones(),
@@ -69,6 +75,7 @@ export default function Overview() {
           api.getLatestRouteRecommendation(),
           api.getDrivers(),
           api.getLatestSensorData(),
+          api.getEventWeatherImpact(),
         ]);
 
         if (
@@ -125,6 +132,13 @@ export default function Overview() {
           driversResult.value.success
         ) {
           setDrivers(driversResult.value.data || []);
+        }
+
+        if (
+          eventWeatherResult.status === "fulfilled" &&
+          eventWeatherResult.value.success
+        ) {
+          setEventWeather(eventWeatherResult.value.data);
         }
       } catch (err) {
         setErrorMessage(
@@ -357,39 +371,6 @@ export default function Overview() {
   };
 
   const operationalInsight = getOperationalInsight();
-
-  const workflowSteps = [
-    {
-      time: "07.00",
-      title: "Prediksi Volume",
-      description:
-        "AI menghitung kepenuhan TPS hari ini dari historis, sensor, cuaca, dan pola wilayah.",
-      icon: faBrain,
-      metric: `${predictionSummary?.total_predictions ?? 0} total prediksi`,
-      status: `${Math.round((predictionSummary?.avg_confidence_score ?? 0) * 100)}% confidence`,
-      color: "blue",
-    },
-    {
-      time: "07.30",
-      title: "Generate Rute",
-      description:
-        "Scheduler mengubah TPS prioritas menjadi urutan rute pengangkutan optimal.",
-      icon: faRoute,
-      metric: `${routeStats.total} rute aktif`,
-      status: `${routeStats.totalStops} TPS stop`,
-      color: "emerald",
-    },
-    {
-      time: "Setelah 07.30",
-      title: "Dispatch Driver",
-      description:
-        "Admin meninjau rute dan mengirim manifes tugas ke driver yang tersedia.",
-      icon: faTruck,
-      metric: `${driverStats.available} driver siap`,
-      status: `${driverStats.onDuty} on duty`,
-      color: "amber",
-    },
-  ];
 
   const dateFilters = [
     { id: "hariIni", label: "Hari Ini" },
@@ -773,70 +754,137 @@ export default function Overview() {
               )}
             </div>
 
-            {/* Sisi Kanan (4 Kolom): Alur Operasional Harian */}
-            <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col justify-between shadow-sm min-h-[380px]">
-              <div>
-                <div className="flex items-center justify-between gap-3 mb-2">
-                  <h3 className="text-sm font-bold text-slate-800">
-                    Alur Operasional Harian
-                  </h3>
-                  <button
-                    onClick={() => navigate("/admin/fleet")}
-                    className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer transition-colors"
-                  >
-                    Kelola Rute
-                    <FontAwesomeIcon
-                      icon={faArrowRight}
-                      className="text-[8px]"
-                    />
-                  </button>
-                </div>
-                <p className="text-xs text-slate-500 mb-4">
-                  Siklus pagi untuk mengubah prediksi volume sampah menjadi aksi
-                  pengangkutan TPS prioritas.
-                </p>
-                <div className="space-y-4">
-                  {workflowSteps.map((step) => (
-                    <div
-                      key={step.title}
-                      className="p-3 bg-slate-50 border border-slate-100 rounded-lg"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border text-xs ${
-                            step.color === "blue"
-                              ? "bg-blue-50 text-blue-700 border-blue-200"
-                              : step.color === "emerald"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                : "bg-amber-50 text-amber-700 border-amber-200"
-                          }`}
-                        >
-                          <FontAwesomeIcon icon={step.icon} />
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                            {step.time}
-                          </span>
-                          <h4 className="text-xs font-bold text-slate-800 mt-0.5">
-                            {step.title}
-                          </h4>
-                          <p className="text-[9px] text-slate-500 mt-0.5 leading-relaxed truncate">
-                            {step.description}
-                          </p>
-                          <div className="mt-2 flex gap-1.5">
-                            <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[8px] font-bold text-slate-700">
-                              {step.metric}
-                            </span>
-                            <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[8px] font-bold text-slate-500">
-                              {step.status}
-                            </span>
+            {/* Sisi Kanan (4 Kolom): Event & Weather Impact */}
+            <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col shadow-sm min-h-[380px]">
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <h3 className="text-sm font-bold text-slate-800">
+                  Event & Weather Impact
+                </h3>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                  Hari Ini
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mb-4">
+                Dampak kondisi cuaca dan event terhadap produksi sampah harian.
+              </p>
+
+              {eventWeather ? (
+                <div className="space-y-3">
+                  {/* Ringkasan Cepat */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className={`p-3 rounded-lg border ${
+                      eventWeather.avg_rainfall > 10
+                        ? "bg-blue-50 border-blue-200"
+                        : "bg-slate-50 border-slate-200"
+                    }`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <FontAwesomeIcon icon={faCloudRain} className={`text-xs ${
+                          eventWeather.avg_rainfall > 10 ? "text-blue-600" : "text-slate-400"
+                        }`} />
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">Curah Hujan</span>
+                      </div>
+                      <span className="text-lg font-bold text-slate-800">
+                        {eventWeather.avg_rainfall}
+                      </span>
+                      <span className="text-[10px] text-slate-500 ml-1">mm</span>
+                    </div>
+
+                    <div className={`p-3 rounded-lg border ${
+                      eventWeather.max_event_urgency >= 0.7
+                        ? "bg-amber-50 border-amber-200"
+                        : "bg-slate-50 border-slate-200"
+                    }`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <FontAwesomeIcon icon={faBolt} className={`text-xs ${
+                          eventWeather.max_event_urgency >= 0.7 ? "text-amber-600" : "text-slate-400"
+                        }`} />
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">Urgensi Event</span>
+                      </div>
+                      <span className="text-lg font-bold text-slate-800">
+                        {eventWeather.max_event_urgency}
+                      </span>
+                      <span className="text-[10px] text-slate-500 ml-1">skor</span>
+                    </div>
+                  </div>
+
+                  {/* Stats Kecil */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-center">
+                      <span className="text-[9px] font-bold text-slate-500 uppercase block">TPS Terdampak Hujan</span>
+                      <span className="text-base font-bold text-blue-700">
+                        {eventWeather.tps_affected_by_rain}
+                      </span>
+                      <span className="text-[9px] text-slate-500">/{eventWeather.total_tps}</span>
+                    </div>
+                    <div className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-center">
+                      <span className="text-[9px] font-bold text-slate-500 uppercase block">Event Urgensi</span>
+                      <span className="text-base font-bold text-amber-700">
+                        {eventWeather.tps_high_event_urgency}
+                      </span>
+                      <span className="text-[9px] text-slate-500"> TPS tinggi</span>
+                    </div>
+                    <div className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-center">
+                      <span className="text-[9px] font-bold text-slate-500 uppercase block">Growth Rate</span>
+                      <span className="text-base font-bold text-slate-800">
+                        {eventWeather.avg_daily_growth_rate}
+                      </span>
+                      <span className="text-[9px] text-slate-500">%</span>
+                    </div>
+                  </div>
+
+                  {/* Top 3 Kecamatan by Rainfall */}
+                  {eventWeather.rain_by_kecamatan?.length > 0 && (
+                    <div>
+                      <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                        <FontAwesomeIcon icon={faCloudRain} className="mr-1 text-blue-500" />
+                        Curah Hujan per Kecamatan
+                      </h4>
+                      <div className="space-y-1.5">
+                        {eventWeather.rain_by_kecamatan.slice(0, 4).map((item) => (
+                          <div key={item.kecamatan} className="flex items-center justify-between p-2 bg-slate-50 border border-slate-100 rounded-lg">
+                            <span className="text-[10px] font-bold text-slate-700 truncate">{item.kecamatan}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold text-blue-700">{item.avg_rainfall}mm</span>
+                              <span className="text-[8px] text-slate-400">({item.tps_count} TPS)</span>
+                            </div>
                           </div>
-                        </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Top TPS by Growth Rate */}
+                  {eventWeather.top_growth_tps?.length > 0 && (
+                    <div>
+                      <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                        <FontAwesomeIcon icon={faChartLine} className="mr-1 text-emerald-500" />
+                        TPS Pertumbuhan Tertinggi
+                      </h4>
+                      <div className="space-y-1.5">
+                        {eventWeather.top_growth_tps.slice(0, 3).map((item) => (
+                          <div key={item.tps_id} className="p-2 bg-slate-50 border border-slate-100 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-slate-700 truncate">{item.kecamatan}</span>
+                              <span className="text-[10px] font-bold text-emerald-700">+{item.daily_growth_rate}%/hari</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[8px] text-slate-500">Isi: {item.current_fill_percentage}%</span>
+                              <span className="text-[8px] text-slate-500">Hujan: {item.rainfall_today}mm</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-slate-400">
+                  <div className="text-center">
+                    <FontAwesomeIcon icon={faCloudRain} className="text-2xl mb-2 text-slate-300" />
+                    <p className="text-xs">Memuat data cuaca & event...</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

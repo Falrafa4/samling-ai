@@ -521,6 +521,16 @@ export const api = {
     return fetchWithAuth('/model-details');
   },
 
+  // ─── Event & Weather Impact ──────────────────────────────────
+
+  /**
+   * Mengambil data dampak cuaca dan event terkini.
+   * Endpoint: GET /dashboard/event-weather-impact
+   */
+  async getEventWeatherImpact() {
+    return fetchWithAuth('/dashboard/event-weather-impact');
+  },
+
   // ─── Event Management ───────────────────────────────────────
 
   /**
