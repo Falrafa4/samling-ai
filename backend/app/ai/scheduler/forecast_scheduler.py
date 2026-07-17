@@ -158,39 +158,37 @@ def save_predictions(db: Session, ranked_predictions):
 
 def forecast_all_tps():
     db = SessionLocal()
+    try:
+        print("Loading model...")
 
-    print("Loading model...")
+        model = load_model()
+        encoders = load_encoders()
 
-    model = load_model()
+        print("Fetching latest historical data...")
+        rows = fetch_latest_historical_data(db)
 
-    encoders = load_encoders()
+        if len(rows) == 0:
+            print("No historical data found.")
+            return
 
-    print("Fetching latest historical data...")
+        print("Preparing features...")
+        X = prepare_features(rows, encoders)
 
-    rows = fetch_latest_historical_data(db)
+        print("Running inference...")
+        predictions = predict(model, X)
+        ranked_predictions = assign_priority_rank(rows, predictions)
 
-    if len(rows) == 0:
-        print("No historical data found.")
-        return
+        print("Saving predictions...")
+        save_predictions(db, ranked_predictions)
 
-    print("Preparing features...")
+        print(f"Finished forecasting {len(rows)} TPS.")
 
-    X = prepare_features(rows, encoders)
-
-    print("Running inference...")
-
-    predictions = predict(model, X)
-    ranked_predictions = assign_priority_rank(rows, predictions)
-
-    print("Saving predictions...")
-
-    save_predictions(db, ranked_predictions)
-
-    print(f"Finished forecasting {len(rows)} TPS.")
-
-    # Route recommendation is handled by the scheduler runner.
-    db.close()
-    print("Finished forecasting and closed DB.")
+    except Exception as e:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+        print("Finished forecasting and closed DB.")
 
 
 def forecast_tps(tps_id: str):

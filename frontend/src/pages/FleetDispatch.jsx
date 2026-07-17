@@ -45,6 +45,8 @@ export default function FleetDispatch() {
   const [successMessage, setSuccessMessage] = useState('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isSchedulerConfirmOpen, setIsSchedulerConfirmOpen] = useState(false);
+  const [pollingProgress, setPollingProgress] = useState('');
+  const pollingIntervalRef = useRef(null);
 
   // Mini Leaflet Map Refs
   const miniMapContainerRef = useRef(null);
@@ -93,6 +95,15 @@ export default function FleetDispatch() {
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
   }, []);
 
   // Initialize Leaflet Map
@@ -306,25 +317,38 @@ export default function FleetDispatch() {
       setTriggering(true);
       setErrorMessage('');
       setSuccessMessage('');
+      setPollingProgress('Menjalankan pipeline AI...');
       const res = await api.triggerRouteGeneration();
       if (res.success) {
-        setSuccessMessage('Pipeline optimasi rute AI berhasil dimulai di background. Menyegarkan data secara otomatis...');
-        
-        // 1. Refetch instan sesaat setelah trigger diterima
-        await loadData(false);
+        setSuccessMessage('Pipeline optimasi rute AI berhasil dimulai di background. Menunggu hasil kalkulasi...');
 
-        // 2. Polling database setiap 2 detik sebanyak 4 kali untuk mengambil rute baru hasil kalkulasi AI
+        // Clear any previous polling
+        if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+
+        // Poll up to 20 times at 3-second intervals (60 seconds total)
+        // Stop early if new routes appear
         let pollCount = 0;
-        const intervalId = setInterval(async () => {
+        const maxPolls = 20;
+        const initialRouteCount = routes.length;
+        pollingIntervalRef.current = setInterval(async () => {
           pollCount += 1;
+          setPollingProgress(`Menunggu hasil pipeline... (${pollCount * 3}s)`);
           await loadData(false);
-          if (pollCount >= 4) {
-            clearInterval(intervalId);
+
+          // Check if new routes appeared (different count or new batch)
+          if (routes.length !== initialRouteCount || pollCount >= maxPolls) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+            setPollingProgress('');
+            if (pollCount >= maxPolls) {
+              setSuccessMessage('Pipeline selesai atau masih dalam proses. Data terakhir telah dimuat.');
+            }
           }
-        }, 2000);
+        }, 3000);
       }
     } catch (err) {
       setErrorMessage(err.message || 'Gagal menjalankan scheduler optimasi rute.');
+      setPollingProgress('');
     } finally {
       setTriggering(false);
     }
@@ -580,6 +604,12 @@ export default function FleetDispatch() {
             {successMessage && (
               <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-xl flex items-center gap-1.5">
                 <FontAwesomeIcon icon={faCheckCircle} /> <span>{successMessage}</span>
+              </div>
+            )}
+            {pollingProgress && (
+              <div className="p-3 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl flex items-center gap-2">
+                <FontAwesomeIcon icon={faSpinner} className="animate-spin text-indigo-500" />
+                <span>{pollingProgress}</span>
               </div>
             )}
 

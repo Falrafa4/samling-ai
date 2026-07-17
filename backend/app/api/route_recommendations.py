@@ -21,13 +21,30 @@ router = APIRouter(tags=["route-recommendations"])
 
 def run_full_pipeline():
     print("[Manual Trigger] Starting full AI Pipeline (Collect data -> Forecast -> Route VRP)...")
+    errors = []
+
     try:
         collect_daily_data()
-        forecast_all_tps()
-        generate_routes()
-        print("[Manual Trigger] Full AI Pipeline completed successfully.")
     except Exception as e:
-        print(f"[Manual Trigger] Error running full AI Pipeline: {e}")
+        print(f"[Manual Trigger] Error in collect_daily_data: {e}")
+        errors.append(f"Data collection: {e}")
+
+    try:
+        forecast_all_tps()
+    except Exception as e:
+        print(f"[Manual Trigger] Error in forecast_all_tps: {e}")
+        errors.append(f"Forecast: {e}")
+
+    try:
+        generate_routes()
+    except Exception as e:
+        print(f"[Manual Trigger] Error in generate_routes: {e}")
+        errors.append(f"Route generation: {e}")
+
+    if errors:
+        print(f"[Manual Trigger] Pipeline completed with {len(errors)} error(s): {'; '.join(errors)}")
+    else:
+        print("[Manual Trigger] Full AI Pipeline completed successfully.")
 
 
 def _load_with_driver(db: Session, rec_id: int) -> RouteRecommendation:
@@ -37,24 +54,6 @@ def _load_with_driver(db: Session, rec_id: int) -> RouteRecommendation:
         .filter(RouteRecommendation.id == rec_id)
         .first()
     )
-
-@router.get("/route-recommendations")
-def get_route_recommendations(
-    status: str = None,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Mengambil semua rute rekomendasi (Memerlukan Autentikasi).
-    Dapat difilter berdasarkan status.
-    """
-    query = db.query(RouteRecommendation).options(joinedload(RouteRecommendation.driver))
-    if status:
-        query = query.filter(RouteRecommendation.status == status)
-    
-    routes = query.order_by(RouteRecommendation.created_at.desc()).all()
-    data = [RouteRecommendationResponse.model_validate(r) for r in routes]
-    return response_success(data=data, message="Daftar semua rute rekomendasi berhasil diambil.")
 
 
 @router.post("/route-recommendations", status_code=status.HTTP_201_CREATED)
@@ -304,10 +303,11 @@ def update_route_status(
 def list_route_recommendations(
     coverage_area: str | None = None,
     forecast_batch_id: str | None = None,
+    status: str | None = None,
     db: Session = Depends(get_db),
 ):
     """
-    List semua rekomendasi rute (opsional filter by area / batch).
+    List semua rekomendasi rute (opsional filter by area / batch / status).
     """
     query = db.query(RouteRecommendation).options(
         joinedload(RouteRecommendation.driver)
@@ -317,6 +317,8 @@ def list_route_recommendations(
         query = query.filter(RouteRecommendation.coverage_area == coverage_area)
     if forecast_batch_id:
         query = query.filter(RouteRecommendation.forecast_batch_id == forecast_batch_id)
+    if status:
+        query = query.filter(RouteRecommendation.status == status)
 
     routes = query.order_by(RouteRecommendation.created_at.desc()).all()
 

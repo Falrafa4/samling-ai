@@ -21,17 +21,25 @@ export default function Sidebar({ onLogout }) {
 
   const navItems = [
     { path: "/admin/overview", label: "Overview", icon: faGauge },
+
+    // Monitoring
     { path: "/admin/map", label: "Peta Pemantauan", icon: faMap },
     {
       path: "/admin/monitoring",
       label: "Wilayah dan Monitoring",
       icon: faMicrochip,
     },
+
+    // Data
+    { path: "/admin/data", label: "Kelola Data", icon: faDatabase },
+    { path: "/admin/reports", label: "Laporan Warga", icon: faCommentDots },
+
+    // AI
     { path: "/admin/predictions", label: "Prediksi Volume", icon: faBrain },
     { path: "/admin/model-ai", label: "Model AI Info", icon: faRobot },
-    { path: "/admin/data", label: "Kelola Data", icon: faDatabase },
+
+    // Action
     { path: "/admin/fleet", label: "Manajemen Rute", icon: faTruck },
-    { path: "/admin/reports", label: "Laporan Warga", icon: faCommentDots },
   ];
 
   return (
